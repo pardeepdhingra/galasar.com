@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us — Galasar</title>
+  <meta name="description" content="Get in touch with Galasar for IT services, cloud solutions, and consulting.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <a href="/" class="logo">
+        <div class="logo-mark">G</div>
+        Galasar
+      </a>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/team">Team</a>
+        <a href="/contact" class="active">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" style="padding-bottom:2rem">
+      <h1>Let's build<br><span>something great.</span></h1>
+      <p>Whether you need a full cloud migration, a custom application, or strategic IT guidance — we're here to help.</p>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="contact-layout">
+        <div class="contact-info">
+          <div class="contact-item">
+            <div class="contact-item-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div>
+              <h3>Email</h3>
+              <p><a href="mailto:hello@galasar.com">hello@galasar.com</a></p>
+              <p>We respond within one business day.</p>
+            </div>
+          </div>
+
+          <div class="contact-item">
+            <div class="contact-item-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div>
+              <h3>Phone</h3>
+              <p><a href="tel:+919876543210">+91 98765 43210</a></p>
+              <p>Mon–Fri, 9 AM – 6 PM IST</p>
+            </div>
+          </div>
+
+          <div class="contact-item">
+            <div class="contact-item-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div>
+              <h3>Office</h3>
+              <p>Gurugram, Haryana, India</p>
+              <p>Available for on-site and remote engagements worldwide.</p>
+            </div>
+          </div>
+
+          <div class="contact-item">
+            <div class="contact-item-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <div>
+              <h3>Global Reach</h3>
+              <p>Serving clients across India, North America, Europe, and the Middle East.</p>
+            </div>
+          </div>
+        </div>
+
+        <form class="card" id="contact-form" onsubmit="handleSubmit(event)">
+          <h3 style="font-size:1.15rem;margin-bottom:1.5rem">Send us a message</h3>
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" placeholder="Your name" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Work Email</label>
+            <input type="email" id="email" name="email" placeholder="you@company.com" required>
+          </div>
+          <div class="form-group">
+            <label for="service">Service Needed</label>
+            <select id="service" name="service">
+              <option value="cloud">Cloud Infrastructure</option>
+              <option value="software">Custom Software</option>
+              <option value="security">Cybersecurity</option>
+              <option value="devops">DevOps & Automation</option>
+              <option value="consulting">IT Consulting</option>
+              <option value="data">Data & Analytics</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="message">Tell us about your project</label>
+            <textarea id="message" name="message" placeholder="Brief description of what you need..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Send Message
+          </button>
+          <p id="form-status" style="margin-top:1rem;text-align:center;font-size:.875rem;color:var(--text-muted);display:none"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <p>&copy; 2026 Galasar. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/team">Team</a>
+        <a href="/contact">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function handleSubmit(e) {
+      e.preventDefault();
+      var form = document.getElementById('contact-form');
+      var status = document.getElementById('form-status');
+      var data = new FormData(form);
+      var subject = encodeURIComponent('[Galasar] ' + data.get('service') + ' inquiry from ' + data.get('name'));
+      var body = encodeURIComponent(data.get('message') + '\n\nFrom: ' + data.get('name') + ' (' + data.get('email') + ')' + '\nService: ' + data.get('service'));
+      window.location.href = 'mailto:hello@galasar.com?subject=' + subject + '&body=' + body;
+      status.style.display = 'block';
+      status.style.color = 'var(--accent)';
+      status.textContent = 'Opening your email client...';
+    }
+  </script>
+</body>
+</html>
