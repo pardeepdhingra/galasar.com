@@ -1,147 +1,352 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Architecture-First Thinking: Why I Design Before I Code — Pardeep Dhingra</title>
-  <meta name="description" content="The case for spending more time with diagrams and less time in your IDE. How upfront architecture thinking saves weeks of refactoring.">
-  <link rel="canonical" href="https://pardeepbuilds.com/blog/architecture-first-thinking">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@350;400;450;500;550;600;650;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture-First Thinking: Why I Design Before I Code | Pardeep Dhingra</title>
+    <meta name="description" content="Exploring the philosophy and practice of architecture-first thinking in software engineering. Why designing before coding leads to better systems.">
+    <link rel="canonical" href="https://galasar.com/blog/architecture-first-thinking/">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@350;400;450;500;550;600;650;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #e8dcc8;
+            --text-secondary: #a89f94;
+            --accent: #f5a962;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Header & Navigation */
+        header {
+            background-color: var(--bg-secondary);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--bg-tertiary);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--accent);
+        }
+
+        nav a.active {
+            color: var(--accent);
+        }
+
+        /* Main Content */
+        main {
+            max-width: 900px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+
+        .article-header {
+            margin-bottom: 3rem;
+        }
+
+        .article-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .article-meta {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .article-date {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .article-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            display: inline-block;
+            background-color: var(--bg-tertiary);
+            padding: 0.3rem 0.8rem;
+            border-radius: 3px;
+            font-size: 0.85rem;
+            color: var(--accent);
+            border: 1px solid var(--bg-tertiary);
+        }
+
+        .divider {
+            height: 1px;
+            background-color: var(--bg-tertiary);
+            margin: 2rem 0;
+        }
+
+        /* Article Content */
+        article {
+            line-height: 1.8;
+        }
+
+        article h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 2rem 0 1rem 0;
+            color: var(--text-primary);
+        }
+
+        article h2:first-child {
+            margin-top: 0;
+        }
+
+        article p {
+            margin-bottom: 1.2rem;
+            color: var(--text-primary);
+        }
+
+        article ul {
+            margin-left: 2rem;
+            margin-bottom: 1.2rem;
+        }
+
+        article ul li {
+            margin-bottom: 0.6rem;
+            color: var(--text-primary);
+        }
+
+        article ol {
+            margin-left: 2rem;
+            margin-bottom: 1.2rem;
+        }
+
+        article ol li {
+            margin-bottom: 0.6rem;
+            color: var(--text-primary);
+        }
+
+        article blockquote {
+            border-left: 3px solid var(--accent);
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        article code {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--bg-tertiary);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        article pre {
+            background-color: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin-bottom: 1.2rem;
+        }
+
+        article pre code {
+            background: none;
+            padding: 0;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--bg-secondary);
+            padding: 2rem;
+            border-top: 1px solid var(--bg-tertiary);
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .nav-toggle {
+                display: block;
+            }
+
+            nav {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background-color: var(--bg-secondary);
+                flex-direction: column;
+                gap: 0;
+                padding: 1rem 2rem;
+                border-bottom: 1px solid var(--bg-tertiary);
+                display: none;
+            }
+
+            nav.active {
+                display: flex;
+            }
+
+            nav a {
+                padding: 0.8rem 0;
+                border-bottom: 1px solid var(--bg-tertiary);
+            }
+
+            .article-header h1 {
+                font-size: 1.8rem;
+            }
+
+            article h2 {
+                font-size: 1.4rem;
+            }
+
+            main {
+                margin: 1.5rem auto;
+            }
+        }
+    </style>
 </head>
 <body>
-
-  <nav class="nav scrolled">
-    <div class="nav-inner">
-      <a href="/" class="nav-logo">pardeep<span>builds</span></a>
-      <div class="nav-links" id="navLinks">
-        <a href="/">Home</a>
-        <a href="/#about">About</a>
-        <a href="/#experience">Experience</a>
-        <a href="/#skills">Skills</a>
-        <a href="/blog" class="active">Blog</a>
-        <a href="/#contact">Contact</a>
-      </div>
-      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
-  </nav>
-
-  <main>
-    <header class="post-header">
-      <a href="/blog" class="post-back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to blog</a>
-      <h1 class="post-title">Architecture-First Thinking: Why I Design Before I Code</h1>
-      <div class="post-meta">
-        <span class="post-meta-date">Mar 20, 2026</span>
-        <span class="post-meta-tag">Architecture</span>
-        <span class="post-meta-tag">Engineering</span>
-      </div>
+    <header>
+        <div class="header-container">
+            <a href="/" class="logo">pardeep</a>
+            <button class="nav-toggle" id="navToggle">☰</button>
+            <nav id="navMenu">
+                <a href="/">Home</a>
+                <a href="/blog/" class="active">Blog</a>
+                <a href="/#contact">Contact</a>
+            </nav>
+        </div>
     </header>
 
-    <article class="post-content">
-      <p>
-        Early in my career, I'd jump straight into code the moment I understood the requirements.
-        Ship fast, iterate later. It worked — until it didn't. The more complex the system, the
-        more expensive it became to fix structural decisions made in haste.
-      </p>
-      <p>
-        Today, my workflow is different. Before I open my editor, I spend time thinking about
-        the architecture. Not writing documents nobody reads — but actively sketching data flows,
-        identifying boundaries, and stress-testing my assumptions.
-      </p>
+    <main>
+        <article>
+            <div class="article-header">
+                <h1>Architecture-First Thinking: Why I Design Before I Code</h1>
+                <div class="article-meta">
+                    <span class="article-date">Mar 20, 2026</span>
+                    <div class="article-tags">
+                        <span class="tag">Architecture</span>
+                        <span class="tag">Engineering</span>
+                    </div>
+                </div>
+            </div>
 
-      <h2>What "Architecture-First" Actually Means</h2>
-      <p>
-        It doesn't mean spending weeks on design docs. It means asking yourself a set of critical
-        questions before you write the first line of code:
-      </p>
-      <ul>
-        <li><strong>What are the system boundaries?</strong> — Which services are involved? What data crosses those boundaries?</li>
-        <li><strong>What are the access patterns?</strong> — How will data be read and written? What are the hot paths?</li>
-        <li><strong>What happens when things fail?</strong> — Network timeouts, partial writes, duplicate events. How does each component handle failure?</li>
-        <li><strong>What does 10x look like?</strong> — If usage grows by an order of magnitude, which parts break first?</li>
-        <li><strong>What's the deployment story?</strong> — Can this be deployed incrementally? What happens during rollback?</li>
-      </ul>
-      <p>
-        These questions take 30 minutes to think through. But they regularly save me days or weeks
-        of rework downstream.
-      </p>
+            <div class="divider"></div>
 
-      <h2>The Whiteboard Before the IDE</h2>
-      <p>
-        I keep it simple. My "architecture phase" for most features is a rough diagram — boxes
-        and arrows on paper or a quick Miro board. The goal isn't a polished artifact. It's
-        <strong>forcing myself to think about the system as a whole</strong> before zooming
-        into the details of any single component.
-      </p>
-      <p>
-        The act of drawing a data flow diagram exposes questions you wouldn't discover until
-        you're deep in implementation. "Wait, how does this service know about the user's
-        subscription tier?" is a much cheaper question to answer on a whiteboard than in a
-        code review.
-      </p>
+            <h2>What "Architecture-First" Actually Means</h2>
+            <p>Architecture-first thinking isn't about creating exhaustive documentation before writing a single line of code. It's about spending time to understand the problem space, constraints, and system boundaries before diving into implementation details.</p>
+            <p>I think of architecture as the skeleton of your system. Get the skeleton right, and you can add muscle (implementation) and skin (UI) effectively. Get it wrong, and you'll be constantly fighting structural problems.</p>
 
-      <h2>When Not to Over-Architect</h2>
-      <p>
-        Architecture-first doesn't mean architecture-everything. For a simple CRUD endpoint
-        that touches one table and has straightforward access patterns, just build it. The
-        investment in upfront design scales with the complexity and blast radius of the change.
-      </p>
+            <h2>The Whiteboard Before the IDE</h2>
+            <p>My process is simple: I spend 30-60 minutes whiteboarding before I open my IDE. I ask myself:</p>
+            <ul>
+                <li>What are the core data flows?</li>
+                <li>What are the system boundaries?</li>
+                <li>What are the failure modes?</li>
+                <li>How do components interact?</li>
+                <li>What are the scaling constraints?</li>
+            </ul>
+            <p>This isn't formal UML or architecture diagrams. It's rough sketches, arrows, and notes. The goal is clarity, not perfection.</p>
 
-      <blockquote>
-        <p>The goal isn't perfect architecture. It's making structural decisions consciously rather than accidentally.</p>
-      </blockquote>
+            <h2>When Not to Over-Architect</h2>
+            <p>I also recognize the risk of over-engineering. Not every system needs distributed transactions, event sourcing, or microservices. A well-designed monolith often beats a poorly-architected microservice setup.</p>
+            <blockquote>
+                The best architecture is the one that solves your problem with the least complexity.
+            </blockquote>
+            <p>I evaluate decisions based on constraints: team size, scale requirements, operational burden, and business timeline.</p>
 
-      <h2>My Lightweight Process</h2>
-      <p>
-        For any non-trivial feature, here's what I do before writing code:
-      </p>
-      <ol>
-        <li><strong>Restate the problem</strong> — Write 2-3 sentences about what we're actually solving. This catches misunderstandings early.</li>
-        <li><strong>Sketch the data flow</strong> — How does data move through the system? What's the happy path? What are the edge cases?</li>
-        <li><strong>Identify risks</strong> — What could go wrong? What's the blast radius? What's the rollback plan?</li>
-        <li><strong>Define the contract</strong> — What does the API look like? What events are published? What schemas change?</li>
-        <li><strong>Write the implementation plan</strong> — Ordered list of steps. Each step should be independently deployable if possible.</li>
-      </ol>
-      <p>
-        This entire process takes 30-60 minutes for most features. For larger projects, it might
-        be a half-day conversation with the team. Either way, the ROI is enormous.
-      </p>
+            <h2>My Lightweight Process</h2>
+            <p>Here's how I approach architecture decisions in practice:</p>
+            <ol>
+                <li><strong>Clarify requirements:</strong> What problem are we solving? What are the constraints?</li>
+                <li><strong>Sketch the system:</strong> Draw components, data flows, and boundaries. Ask "what can go wrong?"</li>
+                <li><strong>Identify risks:</strong> Scale, failure, operational complexity, and team knowledge gaps.</li>
+                <li><strong>Evaluate tradeoffs:</strong> Simplicity vs. power. What's the best fit?</li>
+                <li><strong>Document decisions:</strong> ADRs (Architecture Decision Records) for big choices. Keep it lightweight.</li>
+            </ol>
 
-      <h2>The Compound Effect</h2>
-      <p>
-        The real benefit of architecture-first thinking isn't any single decision — it's the
-        compound effect over time. When every engineer on the team thinks about system design
-        before implementation, you end up with a codebase that's coherent, consistent, and
-        remarkably easy to extend.
-      </p>
-      <p>
-        That's the kind of codebase I want to work in. And it starts with 30 minutes of thinking
-        before you type.
-      </p>
-    </article>
-  </main>
+            <h2>The Compound Effect</h2>
+            <p>The architecture-first approach pays dividends over time. Early decisions cascade through the entire project lifecycle. A well-architected system is easier to test, debug, scale, and modify. A poorly-architected system becomes a source of constant friction.</p>
+            <p>I've seen teams lose weeks to architectural refactoring that could have been avoided with 2 hours of upfront design. The time investment is small; the payoff is enormous.</p>
+        </article>
+    </main>
 
-  <footer class="footer">
-    <div class="footer-inner">
-      <div class="footer-left">&copy; 2026 Pardeep Dhingra. Built with curiosity.</div>
-      <div class="footer-right">
-        <a href="/">Home</a>
-        <a href="/blog">Blog</a>
-        <a href="https://linkedin.com/in/pardeep-dhingra" target="_blank" rel="noopener">LinkedIn</a>
-        <a href="https://github.com/pdhingra-mux" target="_blank" rel="noopener">GitHub</a>
-      </div>
-    </div>
-  </footer>
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2026 Pardeep Dhingra. All rights reserved.</p>
+        </div>
+    </footer>
 
-  <script>
-    const toggle = document.getElementById('navToggle');
-    const links = document.getElementById('navLinks');
-    toggle.addEventListener('click', () => links.classList.toggle('open'));
-    links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
-  </script>
+    <script>
+        document.getElementById('navToggle').addEventListener('click', function() {
+            document.getElementById('navMenu').classList.toggle('active');
+        });
+
+        // Close menu when a link is clicked
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.getElementById('navMenu').classList.remove('active');
+            });
+        });
+    </script>
 </body>
 </html>

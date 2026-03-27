@@ -6,7 +6,7 @@
   <title>404 — Page Not Found</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@350;400;450;500;550;600;650;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@350;400;450;500;550;600;650;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -14,11 +14,14 @@
   <nav class="nav scrolled">
     <div class="nav-inner">
       <a href="/" class="nav-logo">pardeep<span>builds</span></a>
-      <div class="nav-links">
+      <div class="nav-links" id="navLinks">
         <a href="/">Home</a>
         <a href="/blog">Blog</a>
         <a href="/#contact">Contact</a>
       </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </nav>
 
@@ -38,12 +41,15 @@
 
   <footer class="footer">
     <div class="footer-inner">
-      <div class="footer-left">&copy; 2026 Pardeep Dhingra.</div>
-      <div class="footer-right">
-        <a href="/">Home</a>
-        <a href="/blog">Blog</a>
-      </div>
+      <div class="footer-left">&copy; 2026 Pardeep Dhingra. Built with curiosity.</div>
     </div>
   </footer>
+
+  <script>
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => links.classList.toggle('open'));
+    links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
+  </script>
 </body>
 </html>

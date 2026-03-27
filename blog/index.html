@@ -8,71 +8,71 @@
   <link rel="canonical" href="https://pardeepbuilds.com/blog">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@350;400;450;500;550;600;650;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@350;400;450;500;550;600;650;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 
-  <nav class="nav" id="nav">
+  <nav class="nav scrolled">
     <div class="nav-inner">
       <a href="/" class="nav-logo">pardeep<span>builds</span></a>
       <div class="nav-links" id="navLinks">
         <a href="/">Home</a>
-        <a href="/#about">About</a>
-        <a href="/#experience">Experience</a>
-        <a href="/#skills">Skills</a>
         <a href="/blog" class="active">Blog</a>
         <a href="/#contact">Contact</a>
       </div>
-      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
     </div>
   </nav>
 
   <main>
-    <div class="blog-hero">
+    <section class="section section-narrow" style="padding-top:9rem">
       <div class="section-label">Blog</div>
-      <h1 class="section-title" style="font-size:clamp(2rem,4vw,3rem)">Writings & Learnings</h1>
-      <p class="section-subtitle">Practical thoughts on engineering, architecture decisions, and things I learn building software every day.</p>
-    </div>
+      <h1 class="section-title">Writings & Learnings.</h1>
+      <p class="section-desc">Practical notes on engineering, architecture decisions, and things I learn building software every day.</p>
 
-    <div class="section" style="padding-top:0">
-      <div class="blog-list">
-        <a href="/blog/building-scalable-apis-with-aws-cdk" class="blog-list-item">
-          <div class="blog-list-date">Mar 25, 2026</div>
-          <div class="blog-list-title">Building Scalable APIs with AWS CDK and Lambda</div>
-          <span class="blog-list-tag">Architecture</span>
+      <div class="blog-grid">
+        <a href="/blog/building-scalable-apis-with-aws-cdk" class="blog-item">
+          <div class="blog-item-meta">
+            <span class="blog-item-date">25 Mar 2026</span>
+            <span class="blog-item-tag">Architecture</span>
+            <span class="blog-item-readtime">6 min read</span>
+          </div>
+          <div class="blog-item-title">Building Scalable APIs with AWS CDK and Lambda</div>
+          <div class="blog-item-excerpt">How I structure production-grade serverless APIs using CDK constructs, custom middleware patterns, and clean architecture principles.</div>
+          <span class="blog-item-read">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
         </a>
-        <a href="/blog/architecture-first-thinking" class="blog-list-item">
-          <div class="blog-list-date">Mar 20, 2026</div>
-          <div class="blog-list-title">Architecture-First Thinking: Why I Design Before I Code</div>
-          <span class="blog-list-tag">Engineering</span>
+        <a href="/blog/architecture-first-thinking" class="blog-item">
+          <div class="blog-item-meta">
+            <span class="blog-item-date">20 Mar 2026</span>
+            <span class="blog-item-tag">Engineering</span>
+            <span class="blog-item-readtime">5 min read</span>
+          </div>
+          <div class="blog-item-title">Architecture-First Thinking: Why I Design Before I Code</div>
+          <div class="blog-item-excerpt">The case for spending more time with diagrams and less time with your IDE. How upfront architecture thinking saves weeks of refactoring.</div>
+          <span class="blog-item-read">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
         </a>
-        <a href="/blog/daily-learnings-week-1" class="blog-list-item">
-          <div class="blog-list-date">Mar 15, 2026</div>
-          <div class="blog-list-title">Daily Learnings: DynamoDB Single-Table Design Patterns</div>
-          <span class="blog-list-tag">Learning</span>
+        <a href="/blog/daily-learnings-week-1" class="blog-item">
+          <div class="blog-item-meta">
+            <span class="blog-item-date">15 Mar 2026</span>
+            <span class="blog-item-tag">Learning</span>
+            <span class="blog-item-readtime">7 min read</span>
+          </div>
+          <div class="blog-item-title">Daily Learnings: DynamoDB Single-Table Design Patterns</div>
+          <div class="blog-item-excerpt">Notes from a deep dive into single-table design — access patterns, GSIs, and the mental model shift from relational thinking.</div>
+          <span class="blog-item-read">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
         </a>
       </div>
-    </div>
+    </section>
   </main>
 
   <footer class="footer">
-    <div class="footer-inner">
-      <div class="footer-left">&copy; 2026 Pardeep Dhingra. Built with curiosity.</div>
-      <div class="footer-right">
-        <a href="/">Home</a>
-        <a href="/blog">Blog</a>
-        <a href="https://linkedin.com/in/pardeep-dhingra" target="_blank" rel="noopener">LinkedIn</a>
-        <a href="https://github.com/pdhingra-mux" target="_blank" rel="noopener">GitHub</a>
-      </div>
-    </div>
+    <p>&copy; 2026 Pardeep Dhingra. Built with curiosity.</p>
   </footer>
 
   <script>
-    const nav = document.getElementById('nav');
-    window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 40));
     const toggle = document.getElementById('navToggle');
     const links = document.getElementById('navLinks');
     toggle.addEventListener('click', () => links.classList.toggle('open'));
