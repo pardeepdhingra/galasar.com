@@ -8,6 +8,47 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@350;400;450;500;550;600;650;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
+  <style>
+    .error-section {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 12rem 2rem 6rem;
+      text-align: center;
+      min-height: 70vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .error-code {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+    .error-section h1 {
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+    .error-section h1 span { color: var(--accent); }
+    .error-section p {
+      font-size: 1rem;
+      color: var(--text-body);
+      line-height: 1.7;
+      max-width: 440px;
+      margin: 0 auto 2.5rem;
+    }
+    .error-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+  </style>
 </head>
 <body>
 
@@ -26,13 +67,11 @@
   </nav>
 
   <main>
-    <section class="hero" style="text-align:center;min-height:70vh">
-      <div class="hero-label">404 — Page Not Found</div>
-      <h1 style="font-size:clamp(2rem,4vw,3.5rem)">This page doesn't exist.<br><span class="gradient-text">Yet.</span></h1>
-      <p class="hero-description" style="margin-left:auto;margin-right:auto">
-        The page you're looking for has moved, been deleted, or never existed. Let's get you back on track.
-      </p>
-      <div class="hero-actions" style="justify-content:center">
+    <section class="error-section">
+      <div class="error-code">404 — Page Not Found</div>
+      <h1>This page doesn't exist.<br><span>Yet.</span></h1>
+      <p>The page you're looking for has moved, been deleted, or never existed. Let's get you back on track.</p>
+      <div class="error-actions">
         <a href="/" class="btn btn-primary">Go home</a>
         <a href="/blog" class="btn btn-ghost">Read the blog</a>
       </div>
@@ -40,9 +79,7 @@
   </main>
 
   <footer class="footer">
-    <div class="footer-inner">
-      <div class="footer-left">&copy; 2026 Pardeep Dhingra. Built with curiosity.</div>
-    </div>
+    <p>&copy; 2026 Pardeep Dhingra. Built with curiosity.</p>
   </footer>
 
   <script>

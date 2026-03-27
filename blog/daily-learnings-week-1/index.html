@@ -4,12 +4,309 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Daily Learnings: DynamoDB Single-Table Design Patterns — Pardeep Dhingra</title>
-  <meta name="description" content="Notes from a deep dive into single-table design with DynamoDB — access patterns, GSIs, and the mental model shift from relational thinking.">
+  <meta name="description" content="Interactive flashcard and quiz learning experience for DynamoDB single-table design patterns — access patterns, GSIs, and the mental model shift from relational thinking.">
   <link rel="canonical" href="https://pardeepbuilds.com/blog/daily-learnings-week-1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@350;400;450;500;550;600;650;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
+  <style>
+    :root {
+      --bg: #111110;
+      --bg-secondary: #1a1a18;
+      --accent: #e8c872;
+      --text-primary: #f5f5f0;
+      --text-secondary: #b8b8b0;
+      --border: #2a2a28;
+      --success: #6bd76b;
+      --error: #d97b7b;
+    }
+
+    .post-content {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .learning-section {
+      margin: 3rem 0;
+    }
+
+    .learning-section h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 0.75rem;
+    }
+
+    .flashcard-container {
+      perspective: 1000px;
+      margin-bottom: 2rem;
+    }
+
+    .flashcard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .flashcard {
+      position: relative;
+      width: 100%;
+      height: 280px;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition: transform 0.6s;
+    }
+
+    .flashcard.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+    }
+
+    .flashcard-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-secondary);
+      backface-visibility: hidden;
+      text-align: center;
+    }
+
+    .flashcard-front {
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, #1f1f1c 100%);
+    }
+
+    .flashcard-back {
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, #252523 100%);
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-front h3 {
+      font-size: 1.2rem;
+      color: var(--accent);
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .flashcard-front p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+    }
+
+    .flashcard-back p {
+      font-size: 1rem;
+      color: var(--text-primary);
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .flashcard-back code {
+      display: block;
+      background: var(--bg);
+      padding: 0.75rem;
+      border-radius: 6px;
+      margin-top: 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--accent);
+      overflow-x: auto;
+    }
+
+    .quiz-section {
+      margin: 3rem 0;
+      padding: 2rem;
+      background: var(--bg-secondary);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .quiz-question {
+      margin-bottom: 2rem;
+    }
+
+    .quiz-question p {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .quiz-option {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .quiz-option:hover {
+      border-color: var(--accent);
+      background: rgba(232, 200, 114, 0.05);
+    }
+
+    .quiz-option input[type="radio"] {
+      margin-right: 1rem;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+
+    .quiz-option label {
+      flex: 1;
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+
+    .quiz-feedback {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      font-weight: 500;
+      display: none;
+    }
+
+    .quiz-feedback.show {
+      display: block;
+    }
+
+    .quiz-feedback.correct {
+      background: rgba(107, 215, 107, 0.1);
+      color: var(--success);
+      border-left: 4px solid var(--success);
+    }
+
+    .quiz-feedback.incorrect {
+      background: rgba(217, 123, 123, 0.1);
+      color: var(--error);
+      border-left: 4px solid var(--error);
+    }
+
+    .quiz-button {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 0.75rem 2rem;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 1rem;
+    }
+
+    .quiz-button:hover {
+      background: #f0d588;
+      transform: translateY(-2px);
+    }
+
+    .quiz-button:disabled {
+      background: var(--text-secondary);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .score-summary {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: var(--bg);
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .score-summary h3 {
+      color: var(--accent);
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .score-percentage {
+      font-size: 2.5rem;
+      color: var(--accent);
+      font-weight: 700;
+      margin: 1rem 0;
+    }
+
+    .score-message {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+    }
+
+    @media (max-width: 768px) {
+      .flashcard-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+      }
+
+      .flashcard {
+        height: 240px;
+      }
+
+      .flashcard-face {
+        padding: 1rem;
+      }
+
+      .quiz-section {
+        padding: 1.5rem;
+      }
+
+      .learning-section h2 {
+        font-size: 1.25rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .flashcard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .flashcard {
+        height: 220px;
+      }
+
+      .flashcard-front h3 {
+        font-size: 1rem;
+      }
+
+      .quiz-question p {
+        font-size: 1rem;
+      }
+
+      .score-percentage {
+        font-size: 2rem;
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -40,97 +337,52 @@
 
     <article class="post-content">
       <p>
-        This week I went deep on DynamoDB single-table design. It's one of those topics where
-        the more you learn, the more you realize the mental model is fundamentally different
-        from relational databases. Here are my notes and key takeaways.
+        This week I went deep on DynamoDB single-table design. It's one of those topics where the more you learn, the more you realize the mental model is fundamentally different from relational databases. Use the interactive flashcards and quizzes below to test your understanding.
       </p>
 
-      <h2>The Core Mental Shift</h2>
-      <p>
-        In relational databases, you model your data first and figure out queries later. With
-        DynamoDB, it's the opposite: <strong>start with your access patterns, then design your
-        table structure to serve them</strong>.
-      </p>
-      <p>
-        This feels backwards at first, but it makes sense when you consider that DynamoDB is
-        optimized for known access patterns at any scale. You're essentially pre-computing
-        your query results in how you structure your data.
-      </p>
+      <div class="learning-section">
+        <h2>Core Concepts Flashcards</h2>
+        <p>Click each card to reveal the definition. Master these fundamental concepts before moving to advanced patterns.</p>
+        <div class="flashcard-container">
+          <div class="flashcard-grid" id="deck1">
+            <!-- Flashcards generated by JavaScript -->
+          </div>
+        </div>
+      </div>
 
-      <h2>Access Pattern Worksheet</h2>
-      <p>
-        Before touching any code, I now create an access pattern worksheet for every new
-        DynamoDB table. It looks like this:
-      </p>
-      <pre><code># Access Patterns for User Service
+      <div class="learning-section">
+        <h2>Core Concepts Quiz</h2>
+        <p>Test your understanding of the fundamental DynamoDB concepts with this 4-question quiz.</p>
+        <div class="quiz-section" id="quiz1">
+          <!-- Quiz generated by JavaScript -->
+        </div>
+      </div>
 
-1. Get user by ID              → PK: USER#userId, SK: PROFILE
-2. Get user's projects         → PK: USER#userId, SK: begins_with(PROJECT#)
-3. Get project by ID           → PK: PROJECT#projectId, SK: META
-4. List project members        → PK: PROJECT#projectId, SK: begins_with(MEMBER#)
-5. Get user by email (login)   → GSI1: email, GSI1SK: USER
-6. List recent projects        → GSI2: status, GSI2SK: createdAt</code></pre>
-      <p>
-        This worksheet becomes the single source of truth for the table design. Every key
-        structure and GSI exists to serve a specific, documented access pattern.
-      </p>
+      <div class="learning-section">
+        <h2>Advanced Patterns Flashcards</h2>
+        <p>These flashcards cover advanced techniques for optimizing DynamoDB table design at scale.</p>
+        <div class="flashcard-container">
+          <div class="flashcard-grid" id="deck2">
+            <!-- Flashcards generated by JavaScript -->
+          </div>
+        </div>
+      </div>
 
-      <h2>Composite Keys Are Everything</h2>
-      <p>
-        The power of single-table design comes from composite sort keys. By using prefixes
-        like <code>PROJECT#</code>, <code>MEMBER#</code>, and <code>INVOICE#</code> in your
-        sort key, you can store multiple entity types in one table and query them efficiently
-        using <code>begins_with</code>.
-      </p>
-      <p>
-        The partition key groups related items together, and the sort key lets you efficiently
-        query within that group. It's elegant once it clicks, but it requires discipline to
-        maintain the key design conventions.
-      </p>
+      <div class="learning-section">
+        <h2>Advanced Patterns Quiz</h2>
+        <p>Challenge yourself with advanced DynamoDB design patterns in this 4-question quiz.</p>
+        <div class="quiz-section" id="quiz2">
+          <!-- Quiz generated by JavaScript -->
+        </div>
+      </div>
 
-      <h2>When Single-Table Doesn't Make Sense</h2>
-      <p>
-        Not everything belongs in one table. I've found that single-table design works best when:
-      </p>
-      <ul>
-        <li>Your entities are genuinely related and frequently queried together</li>
-        <li>You have well-defined, stable access patterns</li>
-        <li>You need the performance benefits of co-locating related data</li>
-      </ul>
-      <p>
-        For truly independent services with no shared access patterns, separate tables are
-        simpler to reason about, deploy independently, and manage capacity for.
-      </p>
-
-      <h2>GSI Overloading</h2>
-      <p>
-        One of the more advanced patterns is GSI overloading — using the same Global Secondary
-        Index for multiple entity types by using generic attribute names like <code>GSI1PK</code>
-        and <code>GSI1SK</code>. This lets you keep your GSI count low (DynamoDB limits you to
-        20 per table) while supporting many different query patterns.
-      </p>
-      <p>
-        The tradeoff is readability. Your table structure becomes harder to understand at a
-        glance. Good documentation and naming conventions become essential.
-      </p>
-
-      <h2>Tools That Helped</h2>
-      <p>
-        A few resources that accelerated my understanding:
-      </p>
-      <ul>
-        <li><strong>Alex DeBrie's "The DynamoDB Book"</strong> — the definitive resource. Worth every penny.</li>
-        <li><strong>NoSQL Workbench</strong> — AWS's free visual tool for modeling DynamoDB tables. Great for validating your key design before writing code.</li>
-        <li><strong>Jeremy Daly's DynamoDB talks</strong> — excellent conference talks that walk through real-world design scenarios.</li>
-      </ul>
-
-      <h2>Key Takeaway</h2>
-      <blockquote>
-        <p>DynamoDB rewards you for knowing your access patterns upfront. If you design your keys around how you'll query, everything else falls into place. If you don't, you'll fight the database at every turn.</p>
-      </blockquote>
-      <p>
-        Next week I'm diving into DynamoDB Streams and event-driven patterns. Stay tuned.
-      </p>
+      <div class="learning-section">
+        <h2>Key Takeaway</h2>
+        <blockquote>
+          <p>DynamoDB rewards you for knowing your access patterns upfront. If you design your keys around how you'll query, everything else falls into place. If you don't, you'll fight the database at every turn.</p>
+        </blockquote>
+        <p>Next week I'm diving into DynamoDB Streams and event-driven patterns. Stay tuned.</p>
+      </div>
     </article>
   </main>
 
@@ -141,10 +393,179 @@
   </footer>
 
   <script>
+    // Flashcard Data
+    const deck1 = [
+      { question: "Partition Key (PK)", answer: "The primary identifier that determines which partition stores the item. All items with the same PK are stored together and can be queried efficiently." },
+      { question: "Sort Key (SK)", answer: "The secondary part of the primary key that determines ordering within a partition. Enables range queries and prefix matching with begins_with()." },
+      { question: "Global Secondary Index (GSI)", answer: "A secondary index with its own PK and SK that lets you query data using different access patterns. Can have different PK/SK than main table." },
+      { question: "Local Secondary Index (LSI)", answer: "A secondary index that shares the same PK as the main table but has a different SK. Must be created at table creation time." },
+      { question: "Access Pattern", answer: "A specific query your application needs to perform. DynamoDB design starts by documenting all access patterns, then structuring keys to serve them efficiently." },
+      { question: "Composite Key", answer: "Using prefixes in the SK (like USER#, PROJECT#, INVOICE#) to store multiple entity types in one table and query them with begins_with()." }
+    ];
+
+    const deck2 = [
+      { question: "PK/SK Naming Convention", answer: "Use entity prefixes in your keys like PK: USER#12345, SK: PROFILE or PK: PROJECT#789, SK: MEMBER#45. This makes keys self-documenting and enables filtering." },
+      { question: "Entity Relationships", answer: "Single-table design works best when entities have stable relationships. Co-locate related items (user and their projects) in same partition for efficient batch queries." },
+      { question: "Denormalization", answer: "Storing redundant data across items to avoid expensive queries. Trade storage for query speed. Document denormalized fields to ensure consistency." },
+      { question: "GSI Overloading", answer: "Using generic GSI attribute names (GSI1PK, GSI1SK) to serve multiple entity types. Keeps GSI count below 20 limit but requires good documentation." },
+      { question: "Query vs Scan", answer: "Query: Uses key conditions, returns sorted results, predictable cost. Scan: Full table read, expensive, should be avoided. Always prefer Query when possible." },
+      { question: "Hot Partitions", answer: "When disproportionate traffic hits one partition key, causing throttling. Mitigate with hash keys, distributed prefixes, or burst capacity." }
+    ];
+
+    const quiz1Data = [
+      {
+        question: "In DynamoDB single-table design, when should you determine your table structure?",
+        options: ["After you write queries", "Based on your access patterns upfront", "Never, let it evolve", "When you hit scaling problems"],
+        correct: 1
+      },
+      {
+        question: "What is the primary benefit of using composite sort keys with prefixes?",
+        options: ["Reduced storage costs", "Store multiple entity types and query them efficiently", "Better security", "Automatic encryption"],
+        correct: 1
+      },
+      {
+        question: "Which of the following is true about Local Secondary Indexes (LSI)?",
+        options: ["Can be added after table creation", "Must share the same PK as the main table", "Have unlimited throughput", "Support both strong and eventual consistency"],
+        correct: 1
+      },
+      {
+        question: "What is the main risk of single-table design?",
+        options: ["Higher costs", "Slower queries", "Reduced flexibility when access patterns change", "Automatic scaling issues"],
+        correct: 2
+      }
+    ];
+
+    const quiz2Data = [
+      {
+        question: "GSI Overloading allows you to keep GSI count below the limit of:",
+        options: ["10", "15", "20", "50"],
+        correct: 2
+      },
+      {
+        question: "What does 'denormalization' mean in DynamoDB context?",
+        options: ["Storing data in third normal form", "Duplicating data to avoid expensive queries", "Removing redundant attributes", "Creating more indexes"],
+        correct: 1
+      },
+      {
+        question: "How should you mitigate hot partition problems?",
+        options: ["Use only one partition key", "Distribute with hash suffixes or distributed prefixes", "Increase item size", "Disable caching"],
+        correct: 1
+      },
+      {
+        question: "Why is Query preferred over Scan in DynamoDB?",
+        options: ["It's always faster", "Uses key conditions and has predictable cost", "It returns more data", "It automatically handles throttling"],
+        correct: 1
+      }
+    ];
+
+    // Initialize flashcards
+    function initFlashcards(deckId, data) {
+      const container = document.getElementById(deckId);
+      container.innerHTML = data.map((card, idx) => `
+        <div class="flashcard" onclick="flipCard(this)">
+          <div class="flashcard-inner">
+            <div class="flashcard-face flashcard-front">
+              <h3>${card.question}</h3>
+              <p>Click to reveal</p>
+            </div>
+            <div class="flashcard-face flashcard-back">
+              <p>${card.answer}</p>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function flipCard(element) {
+      element.classList.toggle('flipped');
+    }
+
+    // Initialize quizzes
+    function initQuiz(quizId, questions) {
+      const container = document.getElementById(quizId);
+      container.innerHTML = questions.map((q, qIdx) => `
+        <div class="quiz-question">
+          <p><strong>Question ${qIdx + 1}:</strong> ${q.question}</p>
+          <div class="quiz-options">
+            ${q.options.map((opt, oIdx) => `
+              <div class="quiz-option">
+                <input type="radio" id="${quizId}_q${qIdx}_o${oIdx}" name="${quizId}_q${qIdx}" value="${oIdx}">
+                <label for="${quizId}_q${qIdx}_o${oIdx}">${opt}</label>
+              </div>
+            `).join('')}
+          </div>
+          <div class="quiz-feedback" id="${quizId}_feedback_${qIdx}"></div>
+        </div>
+      `).join('') + `
+        <button class="quiz-button" onclick="submitQuiz('${quizId}', ${questions.length})">Submit Quiz</button>
+        <div class="score-summary" id="${quizId}_score" style="display: none;">
+          <h3>Quiz Complete!</h3>
+          <div class="score-percentage" id="${quizId}_percentage">0%</div>
+          <div class="score-message" id="${quizId}_message"></div>
+        </div>
+      `;
+    }
+
+    function submitQuiz(quizId, totalQuestions) {
+      let correct = 0;
+      const quizData = quizId === 'quiz1' ? quiz1Data : quiz2Data;
+
+      for (let i = 0; i < totalQuestions; i++) {
+        const selected = document.querySelector(`input[name="${quizId}_q${i}"]:checked`);
+        const feedbackEl = document.getElementById(`${quizId}_feedback_${i}`);
+
+        if (!selected) {
+          feedbackEl.textContent = 'Please select an answer';
+          feedbackEl.className = 'quiz-feedback show incorrect';
+          continue;
+        }
+
+        const selectedValue = parseInt(selected.value);
+        const isCorrect = selectedValue === quizData[i].correct;
+
+        if (isCorrect) {
+          correct++;
+          feedbackEl.textContent = 'Correct!';
+          feedbackEl.className = 'quiz-feedback show correct';
+        } else {
+          feedbackEl.textContent = `Incorrect. The correct answer is: ${quizData[i].options[quizData[i].correct]}`;
+          feedbackEl.className = 'quiz-feedback show incorrect';
+        }
+      }
+
+      const percentage = Math.round((correct / totalQuestions) * 100);
+      const scoreEl = document.getElementById(`${quizId}_score`);
+      const percentageEl = document.getElementById(`${quizId}_percentage`);
+      const messageEl = document.getElementById(`${quizId}_message`);
+
+      percentageEl.textContent = percentage + '%';
+      if (percentage === 100) {
+        messageEl.textContent = 'Perfect score! You\'ve mastered these concepts.';
+      } else if (percentage >= 75) {
+        messageEl.textContent = 'Great job! You understand the core concepts well.';
+      } else if (percentage >= 50) {
+        messageEl.textContent = 'Good effort! Review the flashcards and try again.';
+      } else {
+        messageEl.textContent = 'Keep learning! Review all the flashcards before retrying.';
+      }
+
+      scoreEl.style.display = 'block';
+      scoreEl.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Navigation toggle
     const toggle = document.getElementById('navToggle');
     const links = document.getElementById('navLinks');
     toggle.addEventListener('click', () => links.classList.toggle('open'));
     links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      initFlashcards('deck1', deck1);
+      initFlashcards('deck2', deck2);
+      initQuiz('quiz1', quiz1Data);
+      initQuiz('quiz2', quiz2Data);
+    });
   </script>
 </body>
 </html>

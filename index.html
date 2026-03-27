@@ -63,17 +63,17 @@
       line-height: 1.65;
     }
     .chat-row.bot .chat-bubble {
-      background: #1a1a18;
-      color: var(--text-dim);
+      background: #222228;
+      color: var(--text-body);
       border-radius: 4px 18px 18px 18px;
       font-style: italic;
       font-size: 0.88rem;
     }
     .chat-row.me .chat-bubble {
-      background: #1e1e2a;
+      background: #1e2230;
       color: var(--text-body);
       border-radius: 18px 4px 18px 18px;
-      border: 1px solid rgba(99,102,241,0.08);
+      border: 1px solid rgba(99,102,241,0.1);
     }
     .chat-bubble strong { color: var(--text); font-weight: 600; }
     .chat-bubble .accent { color: var(--accent); font-weight: 550; }
@@ -81,7 +81,7 @@
     /* Typing dots */
     .typing { display: none; align-self: flex-start; gap: 0.75rem; align-items: flex-end; margin-bottom: 0.75rem; }
     .typing.active { display: flex; }
-    .typing-dots { display: flex; gap: 4px; padding: 0.9rem 1.1rem; background: #1a1a18; border-radius: 4px 18px 18px 18px; }
+    .typing-dots { display: flex; gap: 4px; padding: 0.9rem 1.1rem; background: #222228; border-radius: 4px 18px 18px 18px; }
     .typing-dots span {
       width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim);
       animation: blink 1.4s infinite both;
@@ -149,7 +149,7 @@
 
         <div class="chat-row me" data-q="1">
           <div class="chat-avatar">
-            <img src="/profile.jpg" alt="Pardeep" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=profile-initials>PD</span>'">
+            <img src="/profile.png" alt="Pardeep" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=profile-initials>PD</span>'">
           </div>
           <div class="chat-bubble">
             <strong>Full Stack Engineer & Solution Architect</strong> who's spent 12+ years
@@ -168,7 +168,7 @@
 
         <div class="chat-row me" data-q="2">
           <div class="chat-avatar">
-            <img src="/profile.jpg" alt="Pardeep" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=profile-initials>PD</span>'">
+            <img src="/profile.png" alt="Pardeep" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=profile-initials>PD</span>'">
           </div>
           <div class="chat-bubble">
             I think in systems. Before I write code, I draw the architecture — data flows,
@@ -187,7 +187,7 @@
 
         <div class="chat-row me" data-q="3">
           <div class="chat-avatar">
-            <img src="/profile.jpg" alt="Pardeep" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=profile-initials>PD</span>'">
+            <img src="/profile.png" alt="Pardeep" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=profile-initials>PD</span>'">
           </div>
           <div class="chat-bubble">
             Glad you asked:
@@ -218,7 +218,7 @@
 
         <div class="chat-row me" data-q="4">
           <div class="chat-avatar">
-            <img src="/profile.jpg" alt="Pardeep" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=profile-initials>PD</span>'">
+            <img src="/profile.png" alt="Pardeep" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=profile-initials>PD</span>'">
           </div>
           <div class="chat-bubble">
             The highlight reel:
@@ -250,7 +250,7 @@
 
         <div class="chat-row me" data-q="5">
           <div class="chat-avatar">
-            <img src="/profile.jpg" alt="Pardeep" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=profile-initials>PD</span>'">
+            <img src="/profile.png" alt="Pardeep" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=profile-initials>PD</span>'">
           </div>
           <div class="chat-bubble">
             <strong>DynamoDB single-table design</strong> — it rewires how you think about data.
@@ -269,7 +269,7 @@
 
         <div class="chat-row me" data-q="6">
           <div class="chat-avatar">
-            <img src="/profile.jpg" alt="Pardeep" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=profile-initials>PD</span>'">
+            <img src="/profile.png" alt="Pardeep" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=profile-initials>PD</span>'">
           </div>
           <div class="chat-bubble">
             Most teams write code too early. <strong>30 minutes with a whiteboard saves 3 weeks
@@ -287,7 +287,7 @@
 
         <div class="chat-row me" data-q="7">
           <div class="chat-avatar">
-            <img src="/profile.jpg" alt="Pardeep" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=profile-initials>PD</span>'">
+            <img src="/profile.png" alt="Pardeep" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=profile-initials>PD</span>'">
           </div>
           <div class="chat-bubble">Pick your channel — I'm friendly, I promise.</div>
         </div>
@@ -303,7 +303,7 @@
 
       <!-- CTA after chat -->
       <div class="chat-cta" id="chatCta">
-        <a href="mailto:pardeep@upflowy.com" class="btn btn-primary">Say hello</a>
+        <a href="mailto:pardeepdhingra.au@gmail.com" class="btn btn-primary">Say hello</a>
         <a href="/blog" class="btn btn-ghost">Read my blog</a>
         <div class="socials">
           <a href="https://linkedin.com/in/pardeep-dhingra" target="_blank" rel="noopener" aria-label="LinkedIn">
@@ -368,7 +368,7 @@
       <h2 class="section-title reveal">Let's build something.</h2>
       <p class="reveal">Whether it's a project, a question, or a chat about architecture — I'd love to hear from you.</p>
       <div class="contact-links reveal">
-        <a href="mailto:pardeep@upflowy.com" class="contact-link">
+        <a href="mailto:pardeepdhingra.au@gmail.com" class="contact-link">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           Email me
         </a>
@@ -420,7 +420,7 @@
     function showNextMessage() {
       if (animIndex >= chatRows.length) {
         typingEl.classList.remove('active');
-        setTimeout(() => chatCta.classList.add('visible'), 300);
+        setTimeout(() => chatCta.classList.add('visible'), 500);
         return;
       }
 
@@ -431,21 +431,18 @@
       // Show typing indicator before bot messages
       if (isBot) {
         typingEl.classList.add('active');
-        typingEl.scrollIntoView({ behavior: 'smooth', block: 'end' });
         setTimeout(() => {
           typingEl.classList.remove('active');
           row.classList.add('visible');
-          row.scrollIntoView({ behavior: 'smooth', block: 'end' });
           animIndex++;
-          // If next is "me" reply, show it after a short pause
-          setTimeout(showNextMessage, nextIsMe ? 400 : 800);
-        }, 700);
+          // If next is "me" reply, show after a pause
+          setTimeout(showNextMessage, nextIsMe ? 800 : 1400);
+        }, 1200);
       } else {
-        // "Me" response — show with slight delay
+        // "Me" response — show with delay
         row.classList.add('visible');
-        row.scrollIntoView({ behavior: 'smooth', block: 'end' });
         animIndex++;
-        setTimeout(showNextMessage, 1200);
+        setTimeout(showNextMessage, 2000);
       }
     }
 
@@ -454,7 +451,7 @@
       entries.forEach(entry => {
         if (entry.isIntersecting && !chatStarted) {
           chatStarted = true;
-          setTimeout(showNextMessage, 600);
+          setTimeout(showNextMessage, 1000);
           chatObserver.disconnect();
         }
       });

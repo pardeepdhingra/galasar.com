@@ -3,18 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Architecture-First Thinking: Why I Design Before I Code | Pardeep Dhingra</title>
-    <meta name="description" content="Exploring the philosophy and practice of architecture-first thinking in software engineering. Why designing before coding leads to better systems.">
-    <link rel="canonical" href="https://galasar.com/blog/architecture-first-thinking/">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@350;400;450;500;550;600;650;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Architecture-First Thinking: Why I Design Before I Code</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
     <style>
         :root {
-            --bg-primary: #0a0a0a;
-            --bg-secondary: #1a1a1a;
-            --bg-tertiary: #2a2a2a;
-            --text-primary: #e8dcc8;
-            --text-secondary: #a89f94;
-            --accent: #f5a962;
+            --scroll-progress: 0%;
         }
 
         * {
@@ -23,329 +19,690 @@
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
             line-height: 1.6;
         }
 
-        /* Header & Navigation */
-        header {
-            background-color: var(--bg-secondary);
-            padding: 1.5rem 2rem;
-            border-bottom: 1px solid var(--bg-tertiary);
-            position: sticky;
+        /* Progress indicator */
+        .progress-bar {
+            position: fixed;
+            left: 0;
             top: 0;
+            width: 4px;
+            height: var(--scroll-progress);
+            background: linear-gradient(to bottom, var(--accent), var(--accent-soft));
             z-index: 1000;
+            transition: height 0.1s linear;
         }
 
-        .header-container {
-            max-width: 900px;
-            margin: 0 auto;
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            background: rgba(20, 20, 25, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+        }
+
+        nav .logo {
+            font-weight: 700;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+
+        /* Main content */
+        main {
+            padding-top: 60px;
+            min-height: 100vh;
+        }
+
+        /* Hero section */
+        .hero {
+            min-height: 100vh;
             display: flex;
-            justify-content: space-between;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(255, 165, 0, 0.1));
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 8vw, 4rem);
+            margin-bottom: 1rem;
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: var(--text-dim);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Scroll section */
+        .scroll-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .scroll-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-content {
+            max-width: 900px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
             align-items: center;
         }
 
-        .logo {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: var(--accent);
-            text-decoration: none;
-        }
-
-        .nav-toggle {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--accent);
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        nav {
-            display: flex;
-            gap: 2rem;
-        }
-
-        nav a {
-            color: var(--text-primary);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-
-        nav a:hover {
-            color: var(--accent);
-        }
-
-        nav a.active {
-            color: var(--accent);
-        }
-
-        /* Main Content */
-        main {
-            max-width: 900px;
-            margin: 3rem auto;
-            padding: 0 2rem;
-        }
-
-        .article-header {
-            margin-bottom: 3rem;
-        }
-
-        .article-header h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 1rem;
-            line-height: 1.2;
-        }
-
-        .article-meta {
-            display: flex;
-            gap: 1.5rem;
+        .section-text h2 {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
             margin-bottom: 1.5rem;
-            flex-wrap: wrap;
+            color: var(--text);
+            font-weight: 700;
         }
 
-        .article-date {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .article-tags {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .tag {
-            display: inline-block;
-            background-color: var(--bg-tertiary);
-            padding: 0.3rem 0.8rem;
-            border-radius: 3px;
-            font-size: 0.85rem;
-            color: var(--accent);
-            border: 1px solid var(--bg-tertiary);
-        }
-
-        .divider {
-            height: 1px;
-            background-color: var(--bg-tertiary);
-            margin: 2rem 0;
-        }
-
-        /* Article Content */
-        article {
+        .section-text p {
+            color: var(--text-body);
+            margin-bottom: 1.5rem;
             line-height: 1.8;
         }
 
-        article h2 {
-            font-size: 1.8rem;
-            font-weight: 800;
-            margin: 2rem 0 1rem 0;
-            color: var(--text-primary);
+        .section-text ul {
+            list-style: none;
+            color: var(--text-body);
         }
 
-        article h2:first-child {
-            margin-top: 0;
-        }
-
-        article p {
-            margin-bottom: 1.2rem;
-            color: var(--text-primary);
-        }
-
-        article ul {
-            margin-left: 2rem;
-            margin-bottom: 1.2rem;
-        }
-
-        article ul li {
-            margin-bottom: 0.6rem;
-            color: var(--text-primary);
-        }
-
-        article ol {
-            margin-left: 2rem;
-            margin-bottom: 1.2rem;
-        }
-
-        article ol li {
-            margin-bottom: 0.6rem;
-            color: var(--text-primary);
-        }
-
-        article blockquote {
-            border-left: 3px solid var(--accent);
+        .section-text li {
+            margin-bottom: 1rem;
             padding-left: 1.5rem;
-            margin: 1.5rem 0;
-            color: var(--text-secondary);
-            font-style: italic;
+            position: relative;
         }
 
-        article code {
-            font-family: 'JetBrains Mono', monospace;
-            background-color: var(--bg-tertiary);
-            padding: 0.2rem 0.4rem;
-            border-radius: 3px;
-            font-size: 0.9em;
+        .section-text li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
         }
 
-        article pre {
-            background-color: var(--bg-tertiary);
-            padding: 1rem;
-            border-radius: 4px;
-            overflow-x: auto;
-            margin-bottom: 1.2rem;
+        /* SVG animations */
+        svg {
+            width: 100%;
+            height: auto;
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
         }
 
-        article pre code {
-            background: none;
-            padding: 0;
+        .stroke-animate {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: none;
+        }
+
+        .stroke-animate.animate {
+            animation: strokeDraw 2s ease-out forwards;
+        }
+
+        @keyframes strokeDraw {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+        }
+
+        .fade-in.animate {
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Parallax effect */
+        .parallax {
+            transform: translateY(0);
+            transition: transform 0.3s ease-out;
+        }
+
+        /* Sticky element */
+        .sticky-visual {
+            position: sticky;
+            top: 100px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .section-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .section-text h2 {
+                font-size: 1.5rem;
+            }
+
+            svg {
+                max-height: 400px;
+            }
+
+            .scroll-section {
+                min-height: auto;
+                padding: 2rem 1rem;
+            }
+
+            nav {
+                padding: 0.75rem 1rem;
+            }
         }
 
         /* Footer */
         footer {
-            background-color: var(--bg-secondary);
+            background: var(--bg-msg);
+            border-top: 1px solid var(--border);
             padding: 2rem;
-            border-top: 1px solid var(--bg-tertiary);
-            margin-top: 4rem;
-        }
-
-        .footer-content {
-            max-width: 900px;
-            margin: 0 auto;
             text-align: center;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
+            color: var(--text-dim);
         }
 
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .nav-toggle {
-                display: block;
-            }
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
 
-            nav {
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background-color: var(--bg-secondary);
-                flex-direction: column;
-                gap: 0;
-                padding: 1rem 2rem;
-                border-bottom: 1px solid var(--bg-tertiary);
-                display: none;
-            }
+        footer a:hover {
+            text-decoration: underline;
+        }
 
-            nav.active {
-                display: flex;
-            }
+        /* Section 1: The Problem */
+        .chaos-box {
+            fill: none;
+            stroke: #ff6b6b;
+            stroke-width: 2;
+        }
 
-            nav a {
-                padding: 0.8rem 0;
-                border-bottom: 1px solid var(--bg-tertiary);
-            }
+        .order-box {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 2;
+        }
 
-            .article-header h1 {
-                font-size: 1.8rem;
-            }
+        .chaos-text {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            fill: #ff6b6b;
+            opacity: 0;
+        }
 
-            article h2 {
-                font-size: 1.4rem;
-            }
+        .order-text {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            fill: var(--accent);
+            opacity: 0;
+        }
 
-            main {
-                margin: 1.5rem auto;
+        /* Section 2: Whiteboard */
+        .whiteboard-box {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 2;
+        }
+
+        .whiteboard-line {
+            stroke: var(--accent-soft);
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        .whiteboard-label {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            fill: var(--text-body);
+        }
+
+        /* Section 3: Scale animation */
+        .scale-left, .scale-right {
+            transform-origin: center;
+        }
+
+        /* Section 4: Pipeline */
+        .pipeline-step {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .pipeline-step.animate {
+            animation: slideInRight 0.6s ease-out forwards;
+        }
+
+        @keyframes slideInRight {
+            to {
+                opacity: 1;
+                transform: translateX(0);
             }
+        }
+
+        /* Section 5: Comparison */
+        .messy-code {
+            opacity: 0.3;
+        }
+
+        .messy-code.animate {
+            animation: fadeInOut 2s ease-in-out forwards;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0.3; }
+            50% { opacity: 0.1; }
+            100% { opacity: 1; }
+        }
+
+        .clean-code {
+            opacity: 0;
+        }
+
+        .clean-code.animate {
+            animation: fadeIn 1.2s ease-out 0.6s forwards;
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="header-container">
-            <a href="/" class="logo">pardeep</a>
-            <button class="nav-toggle" id="navToggle">☰</button>
-            <nav id="navMenu">
-                <a href="/">Home</a>
-                <a href="/blog/" class="active">Blog</a>
-                <a href="/#contact">Contact</a>
-            </nav>
-        </div>
-    </header>
+    <div class="progress-bar"></div>
+
+    <nav>
+        <a href="/" class="logo">Pardeep Dhingra</a>
+    </nav>
 
     <main>
-        <article>
-            <div class="article-header">
-                <h1>Architecture-First Thinking: Why I Design Before I Code</h1>
-                <div class="article-meta">
-                    <span class="article-date">Mar 20, 2026</span>
-                    <div class="article-tags">
-                        <span class="tag">Architecture</span>
-                        <span class="tag">Engineering</span>
-                    </div>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div>
+                <h1>Architecture-First Thinking</h1>
+                <p>Why I Design Before I Code</p>
+            </div>
+        </section>
+
+        <!-- Section 1: The Problem -->
+        <section class="scroll-section">
+            <div class="section-content">
+                <div class="section-text">
+                    <h2>The Problem</h2>
+                    <p>Most engineers jump straight into coding without thinking about the big picture. What happens?</p>
+                    <ul>
+                        <li>Code becomes unmaintainable</li>
+                        <li>Technical debt piles up</li>
+                        <li>Scaling becomes impossible</li>
+                        <li>Teams move slower over time</li>
+                    </ul>
+                    <p>The solution? Stop and think first.</p>
+                </div>
+                <div class="sticky-visual parallax">
+                    <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Chaotic code representation -->
+                        <g class="chaos-group">
+                            <rect x="30" y="50" width="80" height="60" class="chaos-box stroke-animate"/>
+                            <rect x="130" y="80" width="80" height="60" class="chaos-box stroke-animate"/>
+                            <rect x="230" y="40" width="80" height="60" class="chaos-box stroke-animate"/>
+                            <line x1="40" y1="100" x2="150" y2="100" class="chaos-box stroke-animate" stroke-dasharray="150"/>
+                            <line x1="140" y1="130" x2="320" y2="50" class="chaos-box stroke-animate" stroke-dasharray="200"/>
+                            <text x="70" y="90" class="chaos-text">CHAOS</text>
+                            <text x="160" y="120" class="chaos-text">NO ORDER</text>
+                            <text x="250" y="80" class="chaos-text">BROKEN</text>
+                        </g>
+
+                        <!-- Arrow pointing down -->
+                        <g class="fade-in">
+                            <line x1="200" y1="200" x2="200" y2="280" stroke="var(--accent-soft)" stroke-width="2"/>
+                            <polygon points="200,290 195,275 205,275" fill="var(--accent-soft)"/>
+                            <text x="160" y="240" font-family="var(--font)" font-size="14" fill="var(--text-dim)">Refactor</text>
+                        </g>
+
+                        <!-- Organized architecture -->
+                        <g class="order-group fade-in">
+                            <rect x="50" y="310" width="100" height="50" class="order-box"/>
+                            <rect x="200" y="310" width="100" height="50" class="order-box"/>
+                            <line x1="150" y1="335" x2="200" y2="335" stroke="var(--accent)" stroke-width="2"/>
+                            <text x="75" y="345" class="order-text">LOGIC</text>
+                            <text x="210" y="345" class="order-text">DATA</text>
+                        </g>
+                    </svg>
                 </div>
             </div>
+        </section>
 
-            <div class="divider"></div>
+        <!-- Section 2: The Whiteboard Before the IDE -->
+        <section class="scroll-section">
+            <div class="section-content">
+                <div class="sticky-visual parallax">
+                    <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Whiteboard representation -->
+                        <rect x="20" y="20" width="360" height="360" fill="none" stroke="var(--accent-soft)" stroke-width="1" stroke-dasharray="5,5"/>
+                        
+                        <!-- Architecture boxes -->
+                        <g class="whiteboard-elements">
+                            <rect x="50" y="50" width="100" height="70" class="whiteboard-box stroke-animate"/>
+                            <text x="100" y="92" text-anchor="middle" class="whiteboard-label fade-in">API</text>
 
-            <h2>What "Architecture-First" Actually Means</h2>
-            <p>Architecture-first thinking isn't about creating exhaustive documentation before writing a single line of code. It's about spending time to understand the problem space, constraints, and system boundaries before diving into implementation details.</p>
-            <p>I think of architecture as the skeleton of your system. Get the skeleton right, and you can add muscle (implementation) and skin (UI) effectively. Get it wrong, and you'll be constantly fighting structural problems.</p>
+                            <rect x="250" y="50" width="100" height="70" class="whiteboard-box stroke-animate" style="animation-delay: 0.2s"/>
+                            <text x="300" y="92" text-anchor="middle" class="whiteboard-label fade-in" style="animation-delay: 0.2s">DB</text>
 
-            <h2>The Whiteboard Before the IDE</h2>
-            <p>My process is simple: I spend 30-60 minutes whiteboarding before I open my IDE. I ask myself:</p>
-            <ul>
-                <li>What are the core data flows?</li>
-                <li>What are the system boundaries?</li>
-                <li>What are the failure modes?</li>
-                <li>How do components interact?</li>
-                <li>What are the scaling constraints?</li>
-            </ul>
-            <p>This isn't formal UML or architecture diagrams. It's rough sketches, arrows, and notes. The goal is clarity, not perfection.</p>
+                            <rect x="50" y="200" width="100" height="70" class="whiteboard-box stroke-animate" style="animation-delay: 0.4s"/>
+                            <text x="100" y="242" text-anchor="middle" class="whiteboard-label fade-in" style="animation-delay: 0.4s">Cache</text>
 
-            <h2>When Not to Over-Architect</h2>
-            <p>I also recognize the risk of over-engineering. Not every system needs distributed transactions, event sourcing, or microservices. A well-designed monolith often beats a poorly-architected microservice setup.</p>
-            <blockquote>
-                The best architecture is the one that solves your problem with the least complexity.
-            </blockquote>
-            <p>I evaluate decisions based on constraints: team size, scale requirements, operational burden, and business timeline.</p>
+                            <rect x="250" y="200" width="100" height="70" class="whiteboard-box stroke-animate" style="animation-delay: 0.6s"/>
+                            <text x="300" y="242" text-anchor="middle" class="whiteboard-label fade-in" style="animation-delay: 0.6s">Queue</text>
 
-            <h2>My Lightweight Process</h2>
-            <p>Here's how I approach architecture decisions in practice:</p>
-            <ol>
-                <li><strong>Clarify requirements:</strong> What problem are we solving? What are the constraints?</li>
-                <li><strong>Sketch the system:</strong> Draw components, data flows, and boundaries. Ask "what can go wrong?"</li>
-                <li><strong>Identify risks:</strong> Scale, failure, operational complexity, and team knowledge gaps.</li>
-                <li><strong>Evaluate tradeoffs:</strong> Simplicity vs. power. What's the best fit?</li>
-                <li><strong>Document decisions:</strong> ADRs (Architecture Decision Records) for big choices. Keep it lightweight.</li>
-            </ol>
+                            <!-- Arrows -->
+                            <line x1="150" y1="85" x2="250" y2="85" class="whiteboard-line stroke-animate" style="animation-delay: 0.8s" stroke-dasharray="100"/>
+                            <line x1="300" y1="120" x2="300" y2="200" class="whiteboard-line stroke-animate" style="animation-delay: 1s" stroke-dasharray="100"/>
+                            <line x1="150" y1="235" x2="250" y2="235" class="whiteboard-line stroke-animate" style="animation-delay: 1.2s" stroke-dasharray="100"/>
+                            <line x1="100" y1="200" x2="100" y2="120" class="whiteboard-line stroke-animate" style="animation-delay: 1.4s" stroke-dasharray="100"/>
+                        </g>
+                    </svg>
+                </div>
+                <div class="section-text">
+                    <h2>The Whiteboard Before the IDE</h2>
+                    <p>Before writing a single line of code, I design on a whiteboard. I think about:</p>
+                    <ul>
+                        <li>System components and their responsibilities</li>
+                        <li>Data flow between services</li>
+                        <li>API contracts and schemas</li>
+                        <li>Failure modes and edge cases</li>
+                        <li>Scaling bottlenecks</li>
+                    </ul>
+                    <p>This 30-minute investment saves weeks of refactoring later.</p>
+                </div>
+            </div>
+        </section>
 
-            <h2>The Compound Effect</h2>
-            <p>The architecture-first approach pays dividends over time. Early decisions cascade through the entire project lifecycle. A well-architected system is easier to test, debug, scale, and modify. A poorly-architected system becomes a source of constant friction.</p>
-            <p>I've seen teams lose weeks to architectural refactoring that could have been avoided with 2 hours of upfront design. The time investment is small; the payoff is enormous.</p>
-        </article>
+        <!-- Section 3: When Not to Over-Architect -->
+        <section class="scroll-section">
+            <div class="section-content">
+                <div class="section-text">
+                    <h2>When Not to Over-Architect</h2>
+                    <p>Architecture-first doesn't mean over-engineering. Sometimes simplicity wins:</p>
+                    <ul>
+                        <li>Prototype projects need speed, not perfection</li>
+                        <li>Unknown requirements demand flexibility</li>
+                        <li>Proof of concepts should be throwaway</li>
+                        <li>Early startups need to validate market fit first</li>
+                    </ul>
+                    <p>The key? Know when to architect and when to iterate.</p>
+                </div>
+                <div class="sticky-visual parallax">
+                    <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Balance scale -->
+                        <g class="scale-left" style="transform: rotateZ(-15deg); transform-origin: 200px 200px">
+                            <!-- Left side - over-architecture -->
+                            <circle cx="120" cy="200" r="50" fill="none" stroke="#ff6b6b" stroke-width="2"/>
+                            <text x="120" y="210" text-anchor="middle" font-size="12" fill="#ff6b6b">OVER-</text>
+                            <text x="120" y="225" text-anchor="middle" font-size="12" fill="#ff6b6b">BUILD</text>
+                        </g>
+
+                        <g class="scale-right" style="transform: rotateZ(15deg); transform-origin: 200px 200px">
+                            <!-- Right side - under-architecture -->
+                            <circle cx="280" cy="200" r="50" fill="none" stroke="#ffa500" stroke-width="2"/>
+                            <text x="280" y="210" text-anchor="middle" font-size="12" fill="#ffa500">TECH</text>
+                            <text x="280" y="225" text-anchor="middle" font-size="12" fill="#ffa500">DEBT</text>
+                        </g>
+
+                        <!-- Balance beam -->
+                        <line x1="80" y1="260" x2="320" y2="260" stroke="var(--accent)" stroke-width="3"/>
+                        <circle cx="200" cy="260" r="15" fill="var(--accent)"/>
+
+                        <!-- Center point - balance -->
+                        <text x="200" y="320" text-anchor="middle" font-size="14" fill="var(--accent)" font-weight="bold">SWEET SPOT</text>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: The Lightweight Process -->
+        <section class="scroll-section">
+            <div class="section-content">
+                <div class="sticky-visual parallax">
+                    <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Pipeline steps -->
+                        <g class="pipeline-step">
+                            <rect x="30" y="80" width="80" height="50" fill="none" stroke="var(--accent)" stroke-width="2"/>
+                            <text x="70" y="110" text-anchor="middle" font-size="12" fill="var(--text-body)">CLARIFY</text>
+                        </g>
+
+                        <line x1="110" y1="105" x2="150" y2="105" stroke="var(--accent-soft)" stroke-width="2" style="animation: none"/>
+                        <polygon points="155,105 145,100 145,110" fill="var(--accent-soft)" style="animation: none"/>
+
+                        <g class="pipeline-step" style="animation-delay: 0.2s">
+                            <rect x="160" y="80" width="80" height="50" fill="none" stroke="var(--accent)" stroke-width="2"/>
+                            <text x="200" y="110" text-anchor="middle" font-size="12" fill="var(--text-body)">DESIGN</text>
+                        </g>
+
+                        <line x1="240" y1="105" x2="280" y2="105" stroke="var(--accent-soft)" stroke-width="2" style="animation: none"/>
+                        <polygon points="285,105 275,100 275,110" fill="var(--accent-soft)" style="animation: none"/>
+
+                        <g class="pipeline-step" style="animation-delay: 0.4s">
+                            <rect x="290" y="80" width="80" height="50" fill="none" stroke="var(--accent)" stroke-width="2"/>
+                            <text x="330" y="110" text-anchor="middle" font-size="12" fill="var(--text-body)">BUILD</text>
+                        </g>
+
+                        <!-- Timeline below -->
+                        <line x1="30" y1="200" x2="370" y2="200" stroke="var(--accent-soft)" stroke-width="1" stroke-dasharray="5,5"/>
+                        
+                        <!-- Time blocks -->
+                        <g class="pipeline-step" style="animation-delay: 0.6s">
+                            <rect x="30" y="210" width="80" height="40" fill="var(--accent)" opacity="0.2"/>
+                            <text x="70" y="235" text-anchor="middle" font-size="11" fill="var(--text-dim)">30 min</text>
+                        </g>
+
+                        <g class="pipeline-step" style="animation-delay: 0.8s">
+                            <rect x="160" y="210" width="80" height="40" fill="var(--accent)" opacity="0.2"/>
+                            <text x="200" y="235" text-anchor="middle" font-size="11" fill="var(--text-dim)">1-2 hours</text>
+                        </g>
+
+                        <g class="pipeline-step" style="animation-delay: 1s">
+                            <rect x="290" y="210" width="80" height="40" fill="var(--accent)" opacity="0.2"/>
+                            <text x="330" y="235" text-anchor="middle" font-size="11" fill="var(--text-dim)">Days</text>
+                        </g>
+
+                        <text x="200" y="330" text-anchor="middle" font-size="13" fill="var(--text-body)">Small upfront investment</text>
+                        <text x="200" y="350" text-anchor="middle" font-size="13" fill="var(--text-body)">Massive long-term gains</text>
+                    </svg>
+                </div>
+                <div class="section-text">
+                    <h2>The Lightweight Process</h2>
+                    <p>My process is intentionally minimal:</p>
+                    <ul>
+                        <li><strong>Clarify (30 min):</strong> Understand the problem deeply</li>
+                        <li><strong>Design (1-2 hours):</strong> Whiteboard the solution</li>
+                        <li><strong>Build (days):</strong> Code with confidence</li>
+                    </ul>
+                    <p>This isn't analysis paralysis. It's deliberate thinking that prevents wasted effort.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: The Compound Effect -->
+        <section class="scroll-section">
+            <div class="section-content">
+                <div class="section-text">
+                    <h2>The Compound Effect</h2>
+                    <p>Architecture-first thinking compounds over time:</p>
+                    <ul>
+                        <li>Day 1: Code is clean and understandable</li>
+                        <li>Week 1: New features take half the time</li>
+                        <li>Month 1: Bugs are easier to find and fix</li>
+                        <li>Year 1: Your codebase is your competitive advantage</li>
+                    </ul>
+                    <p>Small decisions early create massive differences later.</p>
+                </div>
+                <div class="sticky-visual parallax">
+                    <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Two diverging paths -->
+                        <defs>
+                            <linearGradient id="cleanGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:var(--accent);stop-opacity:0.3" />
+                                <stop offset="100%" style="stop-color:var(--accent);stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="messyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:0.3" />
+                                <stop offset="100%" style="stop-color:#ff6b6b;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+
+                        <!-- Messy path -->
+                        <g class="messy-code">
+                            <path d="M 100 50 L 80 120 L 90 180 L 70 240 L 75 300" fill="none" stroke="#ff6b6b" stroke-width="3" opacity="0.5"/>
+                            <circle cx="100" cy="50" r="8" fill="#ff6b6b"/>
+                            <circle cx="80" cy="120" r="6" fill="#ff6b6b" opacity="0.7"/>
+                            <circle cx="90" cy="180" r="6" fill="#ff6b6b" opacity="0.7"/>
+                            <circle cx="70" cy="240" r="6" fill="#ff6b6b" opacity="0.7"/>
+                            <circle cx="75" cy="300" r="6" fill="#ff6b6b" opacity="0.7"/>
+                            <text x="50" y="160" font-size="12" fill="#ff6b6b">MESSY</text>
+                        </g>
+
+                        <!-- Clean path -->
+                        <g class="clean-code">
+                            <path d="M 300 50 L 320 120 L 330 180 L 340 240 L 350 300" fill="url(#cleanGrad)" stroke="var(--accent)" stroke-width="3"/>
+                            <circle cx="300" cy="50" r="8" fill="var(--accent)"/>
+                            <circle cx="320" cy="120" r="6" fill="var(--accent)"/>
+                            <circle cx="330" cy="180" r="6" fill="var(--accent)"/>
+                            <circle cx="340" cy="240" r="6" fill="var(--accent)"/>
+                            <circle cx="350" cy="300" r="6" fill="var(--accent)"/>
+                            <text x="355" y="160" font-size="12" fill="var(--accent)">CLEAN</text>
+                        </g>
+
+                        <!-- Divergence point -->
+                        <circle cx="200" cy="50" r="10" fill="none" stroke="var(--text-dim)" stroke-width="2"/>
+                        <text x="200" y="55" text-anchor="middle" font-size="12" fill="var(--text-dim)">START</text>
+
+                        <!-- Y-axis labels -->
+                        <text x="20" y="55" font-size="11" fill="var(--text-dim)">Time 0</text>
+                        <text x="20" y="310" font-size="11" fill="var(--text-dim)">Time 1Y</text>
+
+                        <!-- Growth annotation -->
+                        <text x="200" y="350" text-anchor="middle" font-size="12" fill="var(--accent)" font-weight="bold">Compound Effect</text>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- Closing section -->
+        <section class="scroll-section" style="min-height: 80vh;">
+            <div class="section-content" style="grid-template-columns: 1fr; max-width: 600px;">
+                <div class="section-text" style="text-align: center;">
+                    <h2>Start Architecting</h2>
+                    <p>The next time you face a complex problem, resist the urge to code immediately. Spend 30 minutes thinking. Whiteboard your design. Challenge your assumptions.</p>
+                    <p style="margin-top: 2rem; color: var(--accent); font-weight: 600;">Your future self will thank you.</p>
+                </div>
+            </div>
+        </section>
     </main>
 
     <footer>
-        <div class="footer-content">
-            <p>&copy; 2026 Pardeep Dhingra. All rights reserved.</p>
-        </div>
+        <p>Written by <a href="/">Pardeep Dhingra</a></p>
+        <p>Published on 2025-03-28 | <a href="/blog">Back to Blog</a></p>
     </footer>
 
     <script>
-        document.getElementById('navToggle').addEventListener('click', function() {
-            document.getElementById('navMenu').classList.toggle('active');
+        // Progress bar
+        function updateProgress() {
+            const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollProgress = (window.scrollY / scrollHeight) * 100;
+            document.documentElement.style.setProperty('--scroll-progress', scrollProgress + '%');
+        }
+
+        window.addEventListener('scroll', updateProgress);
+
+        // Intersection Observer for scroll animations
+        const observerOptions = {
+            threshold: 0.3,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Animate section
+                    entry.target.classList.add('visible');
+
+                    // Animate SVG elements within this section
+                    const strokeElements = entry.target.querySelectorAll('.stroke-animate');
+                    const fadeElements = entry.target.querySelectorAll('.fade-in');
+                    const pipelineSteps = entry.target.querySelectorAll('.pipeline-step');
+                    const messyCode = entry.target.querySelector('.messy-code');
+                    const cleanCode = entry.target.querySelector('.clean-code');
+
+                    strokeElements.forEach(el => el.classList.add('animate'));
+                    fadeElements.forEach(el => el.classList.add('animate'));
+                    pipelineSteps.forEach(el => el.classList.add('animate'));
+                    if (messyCode) messyCode.classList.add('animate');
+                    if (cleanCode) cleanCode.classList.add('animate');
+
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        // Observe all scroll sections
+        document.querySelectorAll('.scroll-section').forEach(section => {
+            observer.observe(section);
         });
 
-        // Close menu when a link is clicked
-        document.querySelectorAll('nav a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.getElementById('navMenu').classList.remove('active');
+        // Parallax effect
+        const parallaxElements = document.querySelectorAll('.parallax');
+        window.addEventListener('scroll', () => {
+            parallaxElements.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                const yPos = rect.top * 0.5;
+                el.style.transform = `translateY(${yPos}px)`;
             });
+        });
+
+        // Scale animation for section 3
+        window.addEventListener('scroll', () => {
+            const section3 = document.querySelectorAll('.scroll-section')[2];
+            if (section3) {
+                const rect = section3.getBoundingClientRect();
+                const visibility = 1 - (rect.top / window.innerHeight);
+                const scaleLeft = document.querySelector('.scale-left');
+                const scaleRight = document.querySelector('.scale-right');
+                if (scaleLeft && scaleRight && visibility > 0 && visibility < 1) {
+                    const rotation = Math.sin(visibility * Math.PI) * 15;
+                    scaleLeft.style.transform = `rotateZ(-${rotation}deg)`;
+                    scaleRight.style.transform = `rotateZ(${rotation}deg)`;
+                }
+            }
         });
     </script>
 </body>

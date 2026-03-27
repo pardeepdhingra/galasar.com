@@ -3,339 +3,679 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Building Scalable APIs with AWS CDK - Pardeep Dhingra</title>
-    <meta name="description" content="Learn how to build scalable APIs using AWS CDK and Lambda">
-    <meta name="author" content="Pardeep Dhingra">
+    <title>Building Scalable APIs with AWS CDK</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@350;400;450;500;550;600;650;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* Terminal-specific styles */
+        .terminal-container {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 32px 0;
+            font-family: var(--font-mono);
+            color: var(--text);
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0a0a0a;
-            color: #e8dcc8;
-            line-height: 1.6;
-            font-size: 16px;
-        }
-
-        header {
-            background-color: #1a1a1a;
-            padding: 1.5rem 2rem;
-            border-bottom: 1px solid #2a2a2a;
-        }
-
-        nav {
-            max-width: 1200px;
-            margin: 0 auto;
+        .terminal-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: var(--text-body);
         }
 
-        .logo {
-            font-weight: 800;
-            font-size: 1.5rem;
-            color: #f5a962;
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
         }
 
-        nav ul {
-            list-style: none;
+        .terminal-output {
+            min-height: 300px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .terminal-line {
+            margin: 8px 0;
+            word-break: break-word;
+        }
+
+        .terminal-prompt {
+            color: var(--accent);
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .terminal-typing {
+            display: inline;
+            animation: blink 0.7s infinite;
+        }
+
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+
+        .terminal-input-group {
             display: flex;
-            gap: 2rem;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
         }
 
-        nav a {
-            color: #e8dcc8;
-            text-decoration: none;
-            transition: color 0.3s ease;
+        .terminal-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: 14px;
+            outline: none;
+            padding: 0;
         }
 
-        nav a:hover {
-            color: #f5a962;
+        .terminal-input::placeholder {
+            color: var(--text-body);
         }
 
-        .nav-toggle {
-            display: none;
-            flex-direction: column;
+        .terminal-suggestions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .terminal-suggestion {
+            padding: 6px 12px;
+            background: rgba(232, 200, 114, 0.1);
+            border: 1px solid rgba(232, 200, 114, 0.3);
+            border-radius: 6px;
+            color: var(--accent);
             cursor: pointer;
-            gap: 5px;
+            font-size: 13px;
+            font-family: var(--font-mono);
+            transition: all 0.2s ease;
         }
 
-        .nav-toggle span {
-            width: 25px;
-            height: 3px;
-            background-color: #e8dcc8;
-            border-radius: 2px;
+        .terminal-suggestion:hover {
+            background: rgba(232, 200, 114, 0.2);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.3s var(--ease);
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 16px;
+            margin-top: 0;
+        }
+
+        .section-content {
+            color: var(--text-body);
+            line-height: 1.8;
+            font-size: 14px;
+        }
+
+        .section-content p {
+            margin: 12px 0;
+        }
+
+        .section-content ul {
+            margin: 12px 0;
+            padding-left: 20px;
+        }
+
+        .section-content li {
+            margin: 8px 0;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            margin: 12px 0;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--accent);
+        }
+
+        .highlight {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .mobile-nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 20px;
+            padding: 8px;
         }
 
         @media (max-width: 768px) {
-            nav ul {
-                display: none;
+            .terminal-container {
+                padding: 16px;
+            }
+
+            .terminal-output {
+                min-height: 200px;
+                font-size: 13px;
+            }
+
+            .terminal-input {
+                font-size: 13px;
+            }
+
+            .terminal-suggestions {
+                gap: 6px;
+            }
+
+            .terminal-suggestion {
+                padding: 4px 8px;
+                font-size: 12px;
+            }
+
+            .section-title {
+                font-size: 18px;
+            }
+
+            .section-content {
+                font-size: 13px;
+            }
+
+            .code-block {
+                font-size: 12px;
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .terminal-container {
+                padding: 12px;
+                margin: 24px 0;
+            }
+
+            .terminal-output {
+                min-height: 150px;
+                font-size: 12px;
+                line-height: 1.5;
+            }
+
+            .terminal-input {
+                font-size: 12px;
+            }
+
+            .terminal-input-group {
                 flex-direction: column;
-                gap: 1rem;
-                position: absolute;
-                top: 60px;
-                left: 0;
-                right: 0;
-                background-color: #1a1a1a;
-                padding: 1.5rem 2rem;
-                border-bottom: 1px solid #2a2a2a;
+                align-items: stretch;
             }
 
-            nav ul.active {
-                display: flex;
+            .section-title {
+                font-size: 16px;
+                margin-bottom: 12px;
             }
 
-            .nav-toggle {
-                display: flex;
+            .section-content {
+                font-size: 12px;
+                line-height: 1.6;
             }
-        }
 
-        main {
-            max-width: 800px;
-            margin: 3rem auto;
-            padding: 0 2rem;
-        }
+            .section-content p {
+                margin: 10px 0;
+            }
 
-        article h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #f5a962;
-            margin-bottom: 1rem;
-        }
+            .section-content ul {
+                padding-left: 16px;
+            }
 
-        article .meta {
-            color: #a89f94;
-            font-size: 0.95rem;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid #2a2a2a;
-            padding-bottom: 1.5rem;
-        }
+            .section-content li {
+                margin: 6px 0;
+            }
 
-        article p {
-            margin-bottom: 1.5rem;
-            color: #e8dcc8;
-        }
-
-        article h2 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #f5a962;
-            margin-top: 2.5rem;
-            margin-bottom: 1rem;
-        }
-
-        article h3 {
-            font-size: 1.35rem;
-            font-weight: 600;
-            color: #d4c4a8;
-            margin-top: 2rem;
-            margin-bottom: 0.75rem;
-        }
-
-        article code {
-            background-color: #1a1a1a;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-family: 'JetBrains Mono', monospace;
-            color: #f5a962;
-            font-size: 0.9em;
-        }
-
-        article pre {
-            background-color: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            padding: 1.5rem;
-            border-radius: 6px;
-            overflow-x: auto;
-            margin-bottom: 1.5rem;
-        }
-
-        article pre code {
-            padding: 0;
-            background-color: transparent;
-            color: #e8dcc8;
-        }
-
-        article ul, article ol {
-            margin-left: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        article li {
-            margin-bottom: 0.75rem;
-        }
-
-        article blockquote {
-            border-left: 4px solid #f5a962;
-            padding-left: 1.5rem;
-            margin-left: 0;
-            margin-bottom: 1.5rem;
-            color: #a89f94;
-            font-style: italic;
-        }
-
-        footer {
-            background-color: #1a1a1a;
-            border-top: 1px solid #2a2a2a;
-            padding: 2rem;
-            text-align: center;
-            color: #a89f94;
-            font-size: 0.95rem;
-            margin-top: 4rem;
-        }
-
-        footer a {
-            color: #f5a962;
-            text-decoration: none;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
+            .code-block {
+                font-size: 11px;
+                padding: 8px;
+                margin: 10px 0;
+            }
         }
     </style>
 </head>
 <body>
-    <header>
-        <nav>
-            <div class="logo">PD</div>
-            <ul id="navMenu">
-                <li><a href="/">Home</a></li>
-                <li><a href="/blog/">Blog</a></li>
-                <li><a href="/#contact">Contact</a></li>
-            </ul>
-            <div class="nav-toggle" id="navToggle">
-                <span></span>
-                <span></span>
-                <span></span>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-content">
+            <a href="/" class="nav-logo">PD</a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/blog" class="nav-link">Blog</a>
+                <a href="#" class="nav-link">Work</a>
+                <a href="#" class="nav-link">Contact</a>
             </div>
-        </nav>
-    </header>
+        </div>
+    </nav>
 
-    <main>
-        <article>
+    <!-- Main Content -->
+    <main class="post">
+        <div class="post-header">
             <h1>Building Scalable APIs with AWS CDK</h1>
-            <div class="meta">Published on March 20, 2024</div>
+            <p class="post-meta">March 28, 2026 • Architecture & Cloud</p>
+        </div>
 
-            <p>AWS CDK (Cloud Development Kit) has revolutionized the way we define cloud infrastructure using code. In this post, we'll explore how to build scalable APIs using AWS CDK and Lambda, focusing on best practices for production-ready applications.</p>
+        <!-- Interactive Terminal -->
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <div class="terminal-dot"></div>
+                <span>Interactive Terminal — Type a command or click suggestions below</span>
+            </div>
 
-            <h2>Why AWS CDK?</h2>
-            <p>Traditional Infrastructure as Code (IaC) tools like CloudFormation require writing verbose YAML or JSON. AWS CDK abstracts this complexity by allowing you to write infrastructure using familiar programming languages like TypeScript, Python, or Java.</p>
+            <div class="terminal-output" id="terminalOutput">
+                <div class="terminal-line">
+                    <span class="terminal-prompt">$</span>
+                    <span>Welcome to the AWS CDK API Scalability Guide</span>
+                </div>
+                <div class="terminal-line" style="color: var(--text-body); margin-top: 16px;">
+                    Try typing <span class="highlight">help</span> or click a suggestion below to explore different topics.
+                </div>
+            </div>
 
-            <p>The benefits include:</p>
-            <ul>
-                <li>Type safety and IDE support</li>
-                <li>Code reusability through constructs</li>
-                <li>Simpler CloudFormation template generation</li>
-                <li>Easier testing of infrastructure code</li>
-            </ul>
+            <div class="terminal-input-group">
+                <span class="terminal-prompt">$</span>
+                <input 
+                    type="text" 
+                    id="commandInput" 
+                    class="terminal-input" 
+                    placeholder="Type a command..."
+                    autocomplete="off"
+                >
+                <span class="terminal-typing" id="typingCursor">▌</span>
+            </div>
 
-            <h2>Architecture Overview</h2>
-            <p>A scalable API architecture typically consists of:</p>
-            <ul>
-                <li><strong>API Gateway:</strong> Entry point for HTTP requests</li>
-                <li><strong>Lambda Functions:</strong> Serverless compute</li>
-                <li><strong>DynamoDB:</strong> NoSQL database for scale</li>
-                <li><strong>CloudWatch:</strong> Monitoring and logging</li>
-            </ul>
+            <div class="terminal-suggestions" id="suggestions">
+                <button class="terminal-suggestion" onclick="executeCommand('intro')">intro</button>
+                <button class="terminal-suggestion" onclick="executeCommand('architecture')">architecture</button>
+                <button class="terminal-suggestion" onclick="executeCommand('api-gateway')">api-gateway</button>
+                <button class="terminal-suggestion" onclick="executeCommand('scalability')">scalability</button>
+                <button class="terminal-suggestion" onclick="executeCommand('deployment')">deployment</button>
+                <button class="terminal-suggestion" onclick="executeCommand('conclusion')">conclusion</button>
+                <button class="terminal-suggestion" onclick="executeCommand('help')">help</button>
+                <button class="terminal-suggestion" onclick="clearTerminal()">clear</button>
+            </div>
+        </div>
 
-            <h3>Building with CDK</h3>
-            <p>Here's a basic example of creating an API Gateway with Lambda integration using AWS CDK:</p>
-
-            <pre><code>import * as cdk from 'aws-cdk-lib';
-import * as apigateway from 'aws-cdk-lib/aws-apigateway';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
-
-export class ApiStack extends cdk.Stack {
-  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
-    super(scope, id, props);
-
-    // Create Lambda function
-    const handler = new lambda.Function(this, 'ApiHandler', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      code: lambda.Code.fromAsset('lambda'),
-      handler: 'index.handler',
-    });
-
-    // Create API Gateway
-    const api = new apigateway.RestApi(this, 'Api', {
-      restApiName: 'My Scalable API',
-    });
-
-    // Integrate Lambda with API Gateway
-    api.root.addMethod('GET', new apigateway.LambdaIntegration(handler));
-  }
-}</code></pre>
-
-            <h2>Key Considerations for Scalability</h2>
-
-            <h3>1. Concurrency and Throttling</h3>
-            <p>Lambda has default concurrent execution limits. For production workloads, you may need to request higher limits or implement circuit breakers.</p>
-
-            <h3>2. Cold Starts</h3>
-            <p>Minimize cold start latency by:</p>
-            <ul>
-                <li>Keeping functions lean</li>
-                <li>Using provisioned concurrency for critical paths</li>
-                <li>Implementing warming strategies</li>
-            </ul>
-
-            <h3>3. Database Scalability</h3>
-            <p>DynamoDB offers automatic scaling, but requires careful design:</p>
-            <ul>
-                <li>Choose partition keys wisely to avoid hot partitions</li>
-                <li>Use on-demand billing for unpredictable workloads</li>
-                <li>Implement caching with ElastiCache or DynamoDB DAX</li>
-            </ul>
-
-            <h3>4. Observability</h3>
-            <p>Deploy with comprehensive logging and monitoring:</p>
-
-            <pre><code>const handler = new lambda.Function(this, 'ApiHandler', {
-  runtime: lambda.Runtime.NODEJS_18_X,
-  code: lambda.Code.fromAsset('lambda'),
-  handler: 'index.handler',
-  logRetention: logs.RetentionDays.ONE_WEEK,
-  environment: {
-    LOG_LEVEL: 'INFO',
-  },
-});</code></pre>
-
-            <h2>Deployment Strategies</h2>
-
-            <p>Use CDK pipelines for continuous deployment:</p>
-
-            <pre><code>import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
-import * as pipelines from 'aws-cdk-lib/pipelines';
-
-const pipeline = new pipelines.CodePipeline(this, 'Pipeline', {
-  synth: new pipelines.ShellStep('Synth', {
-    input: pipelines.CodePipelineSource.gitHub('owner/repo', 'main'),
-    commands: ['npm ci', 'npm run build', 'npx cdk synth'],
-  }),
-});</code></pre>
-
-            <h2>Conclusion</h2>
-            <p>AWS CDK provides a powerful way to build scalable, maintainable APIs on AWS. By following infrastructure-as-code best practices and considering scalability from the start, you can build systems that grow with your business needs.</p>
-
-            <p>Start small, monitor carefully, and iterate. Your future self will thank you for the solid foundation you've built.</p>
-        </article>
+        <!-- Content Sections (Hidden by default) -->
+        <div id="contentSections"></div>
     </main>
 
-    <footer>
-        <p>&copy; 2024 Pardeep Dhingra. All rights reserved.</p>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 Pardeep Dhingra. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="https://linkedin.com/in/pa" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                <a href="https://medium.com/@pardeepdhingra.01" target="_blank" rel="noopener noreferrer">Medium</a>
+                <a href="#" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </div>
+        </div>
     </footer>
 
     <script>
-        document.getElementById('navToggle').addEventListener('click', function() {
-            document.getElementById('navMenu').classList.toggle('active');
+        const commands = {
+            intro: {
+                title: 'Introduction',
+                content: `
+                    <p>Building scalable APIs is one of the most critical challenges in modern backend engineering. As your application grows from thousands to millions of requests per second, the decisions you make early can make or break your infrastructure.</p>
+                    
+                    <p>AWS CDK (Cloud Development Kit) provides a powerful, programmatic way to define and deploy cloud infrastructure. Instead of clicking through the AWS Console or writing CloudFormation YAML, you can write infrastructure as code using TypeScript, Python, or other supported languages.</p>
+                    
+                    <p>In this guide, we'll explore how to architect scalable APIs using AWS CDK, covering API Gateway, Lambda, DynamoDB, and best practices for production systems.</p>
+                    
+                    <p class="highlight">Ready to dive deeper? Try the 'architecture' command next.</p>
+                `
+            },
+            architecture: {
+                title: 'System Architecture',
+                content: `
+                    <p>A scalable API architecture on AWS typically consists of these layers:</p>
+                    
+                    <ul>
+                        <li><strong>API Gateway</strong> - Your entry point, handles rate limiting, authentication, and request routing</li>
+                        <li><strong>Lambda Functions</strong> - Serverless compute, scales automatically based on demand</li>
+                        <li><strong>DynamoDB</strong> - NoSQL database with built-in scaling and automatic replication</li>
+                        <li><strong>CloudWatch</strong> - Monitoring, logging, and observability across all components</li>
+                        <li><strong>IAM</strong> - Fine-grained access control and service-to-service authentication</li>
+                    </ul>
+                    
+                    <p>This architecture provides <strong>automatic scaling</strong>, <strong>high availability</strong>, and <strong>minimal operational overhead</strong>.</p>
+                    
+                    <div class="code-block">
+// Example CDK Stack Structure
+const stack = new Stack(app, 'ApiStack');
+const api = new RestApi(stack, 'api');
+const lambdaFunction = new Function(stack, 'handler', {...});
+api.root.addMethod('GET', new LambdaIntegration(lambdaFunction));
+                    </div>
+                `
+            },
+            'api-gateway': {
+                title: 'API Gateway Design',
+                content: `
+                    <p>API Gateway is your first line of defense against traffic spikes and malicious requests. Here's how to configure it for scale:</p>
+                    
+                    <ul>
+                        <li><strong>Request/Response Transformations</strong> - Validate input before it reaches your Lambda</li>
+                        <li><strong>Caching</strong> - Enable CloudFront caching for GET requests to reduce Lambda invocations</li>
+                        <li><strong>Rate Limiting & Throttling</strong> - Protect your backend from being overwhelmed</li>
+                        <li><strong>CORS Configuration</strong> - Allow cross-origin requests only from trusted domains</li>
+                        <li><strong>Authorization</strong> - Use Lambda authorizers for custom authentication logic</li>
+                    </ul>
+                    
+                    <p>API Gateway can handle millions of concurrent connections and automatically scales to handle traffic spikes without any configuration needed.</p>
+                    
+                    <p class="highlight">Tip:</strong> Use API Gateway caching to dramatically reduce costs and latency for read-heavy workloads.</p>
+                `
+            },
+            scalability: {
+                title: 'Achieving Scalability',
+                content: `
+                    <p>Scalability doesn't happen by accident. Here are the key principles:</p>
+                    
+                    <ul>
+                        <li><strong>Stateless Design</strong> - Each Lambda invocation should be independent and self-contained</li>
+                        <li><strong>Database Optimization</strong> - Use DynamoDB partition keys wisely to avoid hot partitions</li>
+                        <li><strong>Asynchronous Processing</strong> - Offload long-running tasks to SQS + Lambda workers</li>
+                        <li><strong>Connection Pooling</strong> - Reuse database connections across Lambda invocations with provisioned concurrency</li>
+                        <li><strong>Monitoring & Alerting</strong> - Track p99 latencies, error rates, and database throttling</li>
+                    </ul>
+                    
+                    <div class="code-block">
+// Provisioned Concurrency for consistent performance
+const fn = new Function(stack, 'api-handler', {
+  runtime: Runtime.NODEJS_18_X,
+  handler: 'index.handler',
+  code: Code.fromAsset('src'),
+});
+
+fn.addAlias('live', {
+  provisionedConcurrentExecutions: 100,
+});
+                    </div>
+                `
+            },
+            deployment: {
+                title: 'Deployment Strategy',
+                content: `
+                    <p>Deploying scalable APIs requires careful planning and automation:</p>
+                    
+                    <ul>
+                        <li><strong>CI/CD Pipeline</strong> - Automate testing and deployment with GitHub Actions or CodePipeline</li>
+                        <li><strong>Infrastructure as Code</strong> - Version control your entire stack, making rollbacks trivial</li>
+                        <li><strong>Canary Deployments</strong> - Route 5-10% of traffic to new versions before full rollout</li>
+                        <li><strong>Automated Rollbacks</strong> - Monitor error rates and automatically rollback if issues are detected</li>
+                        <li><strong>Database Migrations</strong> - Plan for zero-downtime migrations with blue-green strategies</li>
+                    </ul>
+                    
+                    <p>AWS CDK integrates seamlessly with your CI/CD pipeline through the CDK CLI and automated Stack updates.</p>
+                    
+                    <div class="code-block">
+// Deploy via CI/CD
+npm run build
+npm run test
+cdk deploy --require-approval never
+                    </div>
+                `
+            },
+            conclusion: {
+                title: 'Key Takeaways',
+                content: `
+                    <p>Building scalable APIs with AWS CDK gives you:</p>
+                    
+                    <ul>
+                        <li><strong>Infrastructure as Code</strong> - Reproducible, versionable infrastructure</li>
+                        <li><strong>Automatic Scaling</strong> - Handle traffic spikes without intervention</li>
+                        <li><strong>High Availability</strong> - Multi-AZ deployment with no extra configuration</li>
+                        <li><strong>Cost Efficiency</strong> - Pay only for what you use with serverless compute</li>
+                        <li><strong>Operational Excellence</strong> - Built-in monitoring, logging, and alerting</li>
+                    </ul>
+                    
+                    <p>The combination of AWS CDK's expressive infrastructure definitions and AWS's managed services creates a powerful foundation for building the next generation of scalable APIs.</p>
+                    
+                    <p style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--text-body);">Ready to build? Start with the AWS CDK getting started guide and experiment with smaller projects before scaling to production.</p>
+                `
+            },
+            help: {
+                title: 'Available Commands',
+                content: `
+                    <p><strong>Available commands:</strong></p>
+                    
+                    <ul>
+                        <li><span class="highlight">intro</span> - Introduction to scalable API design</li>
+                        <li><span class="highlight">architecture</span> - Overview of the system architecture</li>
+                        <li><span class="highlight">api-gateway</span> - API Gateway configuration and best practices</li>
+                        <li><span class="highlight">scalability</span> - Techniques for achieving high scalability</li>
+                        <li><span class="highlight">deployment</span> - Deployment strategies and automation</li>
+                        <li><span class="highlight">conclusion</span> - Key takeaways and next steps</li>
+                        <li><span class="highlight">clear</span> - Clear the terminal and start fresh</li>
+                        <li><span class="highlight">help</span> - Show this help message</li>
+                    </ul>
+                    
+                    <p>Click any of the suggestions below or type a command to explore.</p>
+                `
+            }
+        };
+
+        const terminalOutput = document.getElementById('terminalOutput');
+        const commandInput = document.getElementById('commandInput');
+        const typingCursor = document.getElementById('typingCursor');
+        const contentSections = document.getElementById('contentSections');
+        let commandHistory = [];
+        let historyIndex = -1;
+        let isInitialized = false;
+
+        // Initialize content sections HTML
+        function initializeContentSections() {
+            let html = '';
+            for (const [key, data] of Object.entries(commands)) {
+                if (key !== 'help') {
+                    html += `
+                        <div class="content-section" id="section-${key}">
+                            <h2 class="section-title">${data.title}</h2>
+                            <div class="section-content">
+                                ${data.content}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            contentSections.innerHTML = html;
+        }
+
+        // Execute command
+        function executeCommand(cmd) {
+            cmd = cmd.trim().toLowerCase();
+            
+            if (!cmd) return;
+
+            // Add command to history
+            commandHistory.push(cmd);
+            historyIndex = -1;
+
+            // Display command in terminal
+            addOutputLine(cmd, true);
+
+            // Process command
+            if (commands[cmd]) {
+                setTimeout(() => {
+                    const data = commands[cmd];
+                    addOutputLine('', false);
+                    
+                    // Type out the title
+                    typeOutput(data.title, 30);
+                    
+                    // Show the content section
+                    if (cmd !== 'help') {
+                        showContentSection(cmd);
+                    }
+                }, 300);
+            } else {
+                addOutputLine(`Command not found: ${cmd}. Type 'help' for available commands.`, false);
+            }
+
+            // Clear input
+            commandInput.value = '';
+        }
+
+        // Add line to terminal output
+        function addOutputLine(text, isCommand) {
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            
+            if (isCommand) {
+                line.innerHTML = `<span class="terminal-prompt">$</span> ${text}`;
+            } else if (text) {
+                line.textContent = text;
+            }
+            
+            terminalOutput.appendChild(line);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+
+        // Type effect for output
+        function typeOutput(text, speed = 30) {
+            let index = 0;
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            terminalOutput.appendChild(line);
+
+            function type() {
+                if (index < text.length) {
+                    line.textContent += text.charAt(index);
+                    index++;
+                    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+                    setTimeout(type, speed);
+                }
+            }
+
+            type();
+        }
+
+        // Show content section
+        function showContentSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show the requested section
+            const section = document.getElementById(`section-${sectionId}`);
+            if (section) {
+                section.classList.add('active');
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // Clear terminal
+        function clearTerminal() {
+            terminalOutput.innerHTML = `
+                <div class="terminal-line">
+                    <span class="terminal-prompt">$</span>
+                    <span>Terminal cleared</span>
+                </div>
+            `;
+            
+            // Hide all content sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            commandInput.value = '';
+        }
+
+        // Event listeners
+        commandInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                executeCommand(commandInput.value);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (commandHistory.length > 0) {
+                    historyIndex = Math.min(historyIndex + 1, commandHistory.length - 1);
+                    commandInput.value = commandHistory[commandHistory.length - 1 - historyIndex];
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    commandInput.value = commandHistory[commandHistory.length - 1 - historyIndex];
+                } else {
+                    historyIndex = -1;
+                    commandInput.value = '';
+                }
+            }
         });
+
+        // Focus input on page load
+        commandInput.addEventListener('focus', () => {
+            typingCursor.style.opacity = '1';
+        });
+
+        commandInput.addEventListener('blur', () => {
+            typingCursor.style.opacity = '0.5';
+        });
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeContentSections();
+            commandInput.focus();
+            
+            // Auto-run intro command after delay
+            setTimeout(() => {
+                if (!isInitialized) {
+                    isInitialized = true;
+                    executeCommand('intro');
+                }
+            }, 800);
+        });
+
+        // Typing cursor animation control
+        setInterval(() => {
+            if (document.activeElement === commandInput) {
+                typingCursor.style.opacity = typingCursor.style.opacity === '1' ? '0' : '1';
+            }
+        }, 700);
     </script>
 </body>
 </html>
