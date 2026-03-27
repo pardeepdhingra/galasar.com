@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Building Scalable APIs with AWS CDK and Lambda — Pardeep Dhingra</title>
+  <meta name="description" content="How I structure production-grade serverless APIs using CDK constructs, custom middleware patterns, and clean architecture principles.">
+  <link rel="canonical" href="https://pardeepbuilds.com/blog/building-scalable-apis-with-aws-cdk">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@350;400;450;500;550;600;650;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+  <nav class="nav scrolled">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">pardeep<span>builds</span></a>
+      <div class="nav-links" id="navLinks">
+        <a href="/">Home</a>
+        <a href="/#about">About</a>
+        <a href="/#experience">Experience</a>
+        <a href="/#skills">Skills</a>
+        <a href="/blog" class="active">Blog</a>
+        <a href="/#contact">Contact</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <main>
+    <header class="post-header">
+      <a href="/blog" class="post-back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to blog</a>
+      <h1 class="post-title">Building Scalable APIs with AWS CDK and Lambda</h1>
+      <div class="post-meta">
+        <span class="post-meta-date">Mar 25, 2026</span>
+        <span class="post-meta-tag">Architecture</span>
+        <span class="post-meta-tag">AWS</span>
+        <span class="post-meta-tag">CDK</span>
+      </div>
+    </header>
+
+    <article class="post-content">
+      <p>
+        Over the past few years, I've built dozens of serverless APIs on AWS. Along the way, I've developed
+        a set of patterns and conventions that make CDK-based APIs more maintainable, testable, and
+        production-ready. This post shares the approach I use daily.
+      </p>
+
+      <h2>The Problem with "Quick Start" Serverless</h2>
+      <p>
+        Most CDK tutorials show you a single Lambda behind an API Gateway and call it a day. That's fine
+        for a demo, but production APIs need structure. You need authorization middleware, request
+        validation, structured error handling, observability, and a clean separation between your
+        infrastructure code and business logic.
+      </p>
+      <p>
+        Without these patterns, serverless projects tend to become a tangled mess of Lambda functions
+        with duplicated boilerplate and inconsistent error responses.
+      </p>
+
+      <h2>Architecture Overview</h2>
+      <p>
+        Here's the high-level structure I use for every new API service:
+      </p>
+      <pre><code>service/
+  ├── lib/
+  │   ├── constructs/        # Reusable CDK constructs
+  │   ├── stacks/            # CDK stacks
+  │   └── config.ts          # Environment config
+  ├── src/
+  │   ├── handlers/          # Lambda entry points
+  │   ├── middleware/         # Auth, validation, logging
+  │   ├── services/          # Business logic
+  │   ├── repositories/      # Data access layer
+  │   └── types/             # Shared TypeScript types
+  └── tests/
+      ├── unit/
+      └── integration/</code></pre>
+      <p>
+        The key insight is separating the CDK infrastructure (<code>lib/</code>) from the application
+        code (<code>src/</code>). Your Lambda handlers should be thin — they parse the event, call
+        the service layer, and return a response. All the interesting logic lives in <code>services/</code>.
+      </p>
+
+      <h2>The Middleware Pattern</h2>
+      <p>
+        Instead of repeating authorization checks, input validation, and error handling in every
+        handler, I use a middleware wrapper that composes these concerns:
+      </p>
+      <pre><code>export const withMiddleware = (handler: Handler, options: MiddlewareOptions) => {
+  return async (event: APIGatewayEvent) => {
+    try {
+      // 1. Parse and validate request
+      const request = parseRequest(event, options.schema);
+
+      // 2. Authorize
+      if (options.auth) {
+        await authorize(event, options.auth);
+      }
+
+      // 3. Execute handler
+      const result = await handler(request);
+
+      // 4. Return structured response
+      return formatResponse(200, result);
+    } catch (error) {
+      return formatError(error);
+    }
+  };
+};</code></pre>
+      <p>
+        This keeps every handler clean and consistent. New endpoints take minutes to scaffold
+        because the cross-cutting concerns are already handled.
+      </p>
+
+      <h2>CDK Constructs for Consistency</h2>
+      <p>
+        I create a base <code>ApiLambda</code> construct that standardizes how every Lambda is
+        configured — memory, timeout, environment variables, log retention, tracing, and alarms.
+        New endpoints inherit these defaults, and you can override per-function where needed.
+      </p>
+
+      <blockquote>
+        <p>The best infrastructure code is boring. It should be predictable, consistent, and easy for any team member to extend.</p>
+      </blockquote>
+
+      <h2>What I'd Do Differently</h2>
+      <p>
+        If I were starting fresh today, I'd invest earlier in contract testing between services.
+        Integration tests catch a lot, but as your service count grows, contract tests
+        (using something like Pact) pay for themselves quickly.
+      </p>
+      <p>
+        I'd also consider using <strong>Powertools for AWS Lambda</strong> from day one for
+        structured logging, tracing, and metrics — it removes a lot of custom boilerplate.
+      </p>
+
+      <h2>Key Takeaways</h2>
+      <ul>
+        <li>Separate infrastructure code from application code — they change for different reasons</li>
+        <li>Use a middleware pattern to DRY up cross-cutting concerns</li>
+        <li>Create base CDK constructs that enforce team conventions</li>
+        <li>Invest in testing at every layer: unit, integration, and contract</li>
+        <li>Keep Lambda handlers thin — push logic into service classes</li>
+      </ul>
+      <p>
+        Building scalable APIs is less about the technology and more about the patterns you establish
+        early. Get the structure right, and adding new endpoints becomes a joy rather than a chore.
+      </p>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-left">&copy; 2026 Pardeep Dhingra. Built with curiosity.</div>
+      <div class="footer-right">
+        <a href="/">Home</a>
+        <a href="/blog">Blog</a>
+        <a href="https://linkedin.com/in/pardeep-dhingra" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://github.com/pdhingra-mux" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => links.classList.toggle('open'));
+    links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
+  </script>
+</body>
+</html>

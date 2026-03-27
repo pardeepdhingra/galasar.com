@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture-First Thinking: Why I Design Before I Code — Pardeep Dhingra</title>
+  <meta name="description" content="The case for spending more time with diagrams and less time in your IDE. How upfront architecture thinking saves weeks of refactoring.">
+  <link rel="canonical" href="https://pardeepbuilds.com/blog/architecture-first-thinking">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@350;400;450;500;550;600;650;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+  <nav class="nav scrolled">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">pardeep<span>builds</span></a>
+      <div class="nav-links" id="navLinks">
+        <a href="/">Home</a>
+        <a href="/#about">About</a>
+        <a href="/#experience">Experience</a>
+        <a href="/#skills">Skills</a>
+        <a href="/blog" class="active">Blog</a>
+        <a href="/#contact">Contact</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <main>
+    <header class="post-header">
+      <a href="/blog" class="post-back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to blog</a>
+      <h1 class="post-title">Architecture-First Thinking: Why I Design Before I Code</h1>
+      <div class="post-meta">
+        <span class="post-meta-date">Mar 20, 2026</span>
+        <span class="post-meta-tag">Architecture</span>
+        <span class="post-meta-tag">Engineering</span>
+      </div>
+    </header>
+
+    <article class="post-content">
+      <p>
+        Early in my career, I'd jump straight into code the moment I understood the requirements.
+        Ship fast, iterate later. It worked — until it didn't. The more complex the system, the
+        more expensive it became to fix structural decisions made in haste.
+      </p>
+      <p>
+        Today, my workflow is different. Before I open my editor, I spend time thinking about
+        the architecture. Not writing documents nobody reads — but actively sketching data flows,
+        identifying boundaries, and stress-testing my assumptions.
+      </p>
+
+      <h2>What "Architecture-First" Actually Means</h2>
+      <p>
+        It doesn't mean spending weeks on design docs. It means asking yourself a set of critical
+        questions before you write the first line of code:
+      </p>
+      <ul>
+        <li><strong>What are the system boundaries?</strong> — Which services are involved? What data crosses those boundaries?</li>
+        <li><strong>What are the access patterns?</strong> — How will data be read and written? What are the hot paths?</li>
+        <li><strong>What happens when things fail?</strong> — Network timeouts, partial writes, duplicate events. How does each component handle failure?</li>
+        <li><strong>What does 10x look like?</strong> — If usage grows by an order of magnitude, which parts break first?</li>
+        <li><strong>What's the deployment story?</strong> — Can this be deployed incrementally? What happens during rollback?</li>
+      </ul>
+      <p>
+        These questions take 30 minutes to think through. But they regularly save me days or weeks
+        of rework downstream.
+      </p>
+
+      <h2>The Whiteboard Before the IDE</h2>
+      <p>
+        I keep it simple. My "architecture phase" for most features is a rough diagram — boxes
+        and arrows on paper or a quick Miro board. The goal isn't a polished artifact. It's
+        <strong>forcing myself to think about the system as a whole</strong> before zooming
+        into the details of any single component.
+      </p>
+      <p>
+        The act of drawing a data flow diagram exposes questions you wouldn't discover until
+        you're deep in implementation. "Wait, how does this service know about the user's
+        subscription tier?" is a much cheaper question to answer on a whiteboard than in a
+        code review.
+      </p>
+
+      <h2>When Not to Over-Architect</h2>
+      <p>
+        Architecture-first doesn't mean architecture-everything. For a simple CRUD endpoint
+        that touches one table and has straightforward access patterns, just build it. The
+        investment in upfront design scales with the complexity and blast radius of the change.
+      </p>
+
+      <blockquote>
+        <p>The goal isn't perfect architecture. It's making structural decisions consciously rather than accidentally.</p>
+      </blockquote>
+
+      <h2>My Lightweight Process</h2>
+      <p>
+        For any non-trivial feature, here's what I do before writing code:
+      </p>
+      <ol>
+        <li><strong>Restate the problem</strong> — Write 2-3 sentences about what we're actually solving. This catches misunderstandings early.</li>
+        <li><strong>Sketch the data flow</strong> — How does data move through the system? What's the happy path? What are the edge cases?</li>
+        <li><strong>Identify risks</strong> — What could go wrong? What's the blast radius? What's the rollback plan?</li>
+        <li><strong>Define the contract</strong> — What does the API look like? What events are published? What schemas change?</li>
+        <li><strong>Write the implementation plan</strong> — Ordered list of steps. Each step should be independently deployable if possible.</li>
+      </ol>
+      <p>
+        This entire process takes 30-60 minutes for most features. For larger projects, it might
+        be a half-day conversation with the team. Either way, the ROI is enormous.
+      </p>
+
+      <h2>The Compound Effect</h2>
+      <p>
+        The real benefit of architecture-first thinking isn't any single decision — it's the
+        compound effect over time. When every engineer on the team thinks about system design
+        before implementation, you end up with a codebase that's coherent, consistent, and
+        remarkably easy to extend.
+      </p>
+      <p>
+        That's the kind of codebase I want to work in. And it starts with 30 minutes of thinking
+        before you type.
+      </p>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-left">&copy; 2026 Pardeep Dhingra. Built with curiosity.</div>
+      <div class="footer-right">
+        <a href="/">Home</a>
+        <a href="/blog">Blog</a>
+        <a href="https://linkedin.com/in/pardeep-dhingra" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://github.com/pdhingra-mux" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => links.classList.toggle('open'));
+    links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
+  </script>
+</body>
+</html>

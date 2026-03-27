@@ -3,43 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>404 — Galasar</title>
+  <title>404 — Page Not Found</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@350;400;450;500;550;600;650;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 
-  <header>
-    <div class="header-inner">
-      <a href="/" class="logo">
-        <div class="logo-mark">G</div>
-        Galasar
-      </a>
-      <nav>
+  <nav class="nav scrolled">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">pardeep<span>builds</span></a>
+      <div class="nav-links">
         <a href="/">Home</a>
-        <a href="/team">Team</a>
-        <a href="/contact">Contact</a>
-      </nav>
+        <a href="/blog">Blog</a>
+        <a href="/#contact">Contact</a>
+      </div>
     </div>
-  </header>
+  </nav>
 
-  <main style="display:flex;align-items:center;justify-content:center;flex:1;text-align:center;padding:2rem">
-    <div>
-      <h1 style="font-size:6rem;line-height:1">4<span>0</span>4</h1>
-      <p style="color:var(--text-muted);font-size:1.1rem;margin:1rem 0 2rem">This page doesn't exist.</p>
-      <a href="/" class="btn btn-primary">Go Home</a>
-    </div>
+  <main>
+    <section class="hero" style="text-align:center;min-height:70vh">
+      <div class="hero-label">404 — Page Not Found</div>
+      <h1 style="font-size:clamp(2rem,4vw,3.5rem)">This page doesn't exist.<br><span class="gradient-text">Yet.</span></h1>
+      <p class="hero-description" style="margin-left:auto;margin-right:auto">
+        The page you're looking for has moved, been deleted, or never existed. Let's get you back on track.
+      </p>
+      <div class="hero-actions" style="justify-content:center">
+        <a href="/" class="btn btn-primary">Go home</a>
+        <a href="/blog" class="btn btn-ghost">Read the blog</a>
+      </div>
+    </section>
   </main>
 
-  <footer>
+  <footer class="footer">
     <div class="footer-inner">
-      <p>&copy; 2026 Galasar. All rights reserved.</p>
-      <div class="footer-links">
+      <div class="footer-left">&copy; 2026 Pardeep Dhingra.</div>
+      <div class="footer-right">
         <a href="/">Home</a>
-        <a href="/team">Team</a>
-        <a href="/contact">Contact</a>
+        <a href="/blog">Blog</a>
       </div>
     </div>
   </footer>

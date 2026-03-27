@@ -3,130 +3,453 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Galasar — IT Services & Solutions</title>
-  <meta name="description" content="Galasar delivers enterprise IT services, cloud solutions, and digital transformation for businesses of all sizes.">
+  <title>Pardeep Dhingra — Full Stack Engineer & Solution Architect</title>
+  <meta name="description" content="Pardeep Dhingra is a Full Stack Engineer and Solution Architect building scalable products, sharing daily learnings, and exploring modern tech.">
+  <meta property="og:title" content="Pardeep Dhingra — Full Stack Engineer & Solution Architect">
+  <meta property="og:description" content="Portfolio, blog, and tech learnings by Pardeep Dhingra.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://pardeepbuilds.com">
+  <link rel="canonical" href="https://pardeepbuilds.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@350;400;450;500;550;600;650;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 
-  <header>
-    <div class="header-inner">
-      <a href="/" class="logo">
-        <div class="logo-mark">G</div>
-        Galasar  | Netlify
-      </a>
-      <nav>
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">pardeep<span>builds</span></a>
+      <div class="nav-links" id="navLinks">
         <a href="/" class="active">Home</a>
-        <a href="/team">Team</a>
-        <a href="/contact">Contact</a>
-      </nav>
+        <a href="#about">About</a>
+        <a href="#experience">Experience</a>
+        <a href="#skills">Skills</a>
+        <a href="/blog">Blog</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
     </div>
-  </header>
+  </nav>
 
   <main>
+    <!-- Hero -->
     <section class="hero">
-      <h1>IT solutions that<br><span>scale with you.</span></h1>
-      <p>From cloud infrastructure to custom software, we help businesses modernize their technology stack and accelerate growth.</p>
-      <div class="cta-group">
-        <a href="/contact" class="btn btn-primary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          Get in Touch
+      <div class="hero-label">Full Stack Engineer & Solution Architect</div>
+      <h1>I build products that<br><span class="gradient-text">scale and delight.</span></h1>
+      <p class="hero-description">
+        Engineer at heart, architect by craft. I design and build end-to-end solutions
+        — from clean APIs to polished interfaces — and share what I learn along the way.
+      </p>
+      <div class="hero-actions">
+        <a href="#contact" class="btn btn-primary">Get in touch</a>
+        <a href="/blog" class="btn btn-ghost">Read my blog</a>
+        <div class="hero-socials">
+          <a href="https://linkedin.com/in/pardeep-dhingra" target="_blank" rel="noopener" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          </a>
+          <a href="https://github.com/pdhingra-mux" target="_blank" rel="noopener" aria-label="GitHub">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          </a>
+          <a href="https://medium.com/@pardeep-dhingra" target="_blank" rel="noopener" aria-label="Medium">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zm7.42 0c0 3.54-1.51 6.42-3.38 6.42S14.2 15.54 14.2 12s1.52-6.42 3.38-6.42 3.38 2.88 3.38 6.42zm2.94 0c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75c.66 0 1.19 2.58 1.19 5.75z"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- About -->
+    <section class="section" id="about">
+      <div class="reveal">
+        <div class="section-label">About</div>
+        <div class="about-grid">
+          <div class="about-text">
+            <h2 class="section-title">Building at the intersection of<br>engineering & product.</h2>
+            <p>
+              I'm <strong>Pardeep Dhingra</strong>, a Full Stack Engineer and Solution Architect
+              with over a decade of experience building production systems at scale. Currently
+              working at <strong>Upflowy</strong>, where I design and architect solutions that help
+              businesses optimize their growth funnels.
+            </p>
+            <p>
+              My approach is architecture-first — I believe great software starts with clear
+              thinking about system design, data flow, and scalability before a single line
+              of code is written. I work across the full stack, from cloud infrastructure
+              (AWS, CDK) to frontend interfaces (React, TypeScript).
+            </p>
+            <p>
+              When I'm not building products, I'm writing about what I learn — sharing practical
+              insights on engineering, architecture patterns, and the evolving tech landscape.
+            </p>
+            <div class="about-stats">
+              <div class="about-stat">
+                <div class="about-stat-number">12+</div>
+                <div class="about-stat-label">Years in Engineering</div>
+              </div>
+              <div class="about-stat">
+                <div class="about-stat-number">50+</div>
+                <div class="about-stat-label">Projects Delivered</div>
+              </div>
+              <div class="about-stat">
+                <div class="about-stat-number">5+</div>
+                <div class="about-stat-label">Countries Worked</div>
+              </div>
+              <div class="about-stat">
+                <div class="about-stat-number">&#8734;</div>
+                <div class="about-stat-label">Curiosity Level</div>
+              </div>
+            </div>
+          </div>
+          <div class="about-highlights">
+            <div class="about-highlight">
+              <h4><span class="icon">&#9889;</span> System Design</h4>
+              <p>Designing distributed systems, microservices architectures, and event-driven platforms that handle real-world scale and complexity.</p>
+            </div>
+            <div class="about-highlight">
+              <h4><span class="icon">&#9729;&#65039;</span> Cloud Architecture</h4>
+              <p>Deep expertise in AWS — from Lambda and CDK to ECS, DynamoDB, and building infrastructure as code for production workloads.</p>
+            </div>
+            <div class="about-highlight">
+              <h4><span class="icon">&#128640;</span> Product Engineering</h4>
+              <p>Bridging the gap between business needs and technical execution. I care about shipping things that users actually love to use.</p>
+            </div>
+            <div class="about-highlight">
+              <h4><span class="icon">&#128221;</span> Technical Writing</h4>
+              <p>Sharing knowledge through blog posts, architecture docs, and team knowledge bases. Writing clarifies thinking.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Experience -->
+    <section class="section" id="experience">
+      <div class="reveal">
+        <div class="section-label">Experience</div>
+        <h2 class="section-title">Where I've built things.</h2>
+        <p class="section-subtitle">A timeline of roles where I've designed systems, led teams, and shipped products.</p>
+      </div>
+      <div class="timeline">
+        <div class="timeline-item reveal">
+          <div class="timeline-dot"></div>
+          <div class="timeline-date">2022 — Present</div>
+          <div class="timeline-role">Full Stack Engineer / Solution Architect</div>
+          <div class="timeline-company">Upflowy</div>
+          <div class="timeline-desc">
+            Architecting and building the core platform — a no-code flow builder that helps growth teams
+            optimize signup and onboarding experiences. Designing microservices, API contracts,
+            and cloud infrastructure on AWS using CDK. Leading technical decisions across the stack.
+          </div>
+          <div class="timeline-tags">
+            <span class="timeline-tag">TypeScript</span>
+            <span class="timeline-tag">AWS CDK</span>
+            <span class="timeline-tag">React</span>
+            <span class="timeline-tag">Node.js</span>
+            <span class="timeline-tag">DynamoDB</span>
+            <span class="timeline-tag">Lambda</span>
+          </div>
+        </div>
+        <div class="timeline-item reveal">
+          <div class="timeline-dot"></div>
+          <div class="timeline-date">2019 — 2022</div>
+          <div class="timeline-role">Senior Software Engineer</div>
+          <div class="timeline-company">Previous Role</div>
+          <div class="timeline-desc">
+            Built scalable backend services and APIs for enterprise clients. Designed data pipelines,
+            implemented CI/CD workflows, and mentored junior engineers. Focused on system reliability,
+            performance optimization, and clean architecture patterns.
+          </div>
+          <div class="timeline-tags">
+            <span class="timeline-tag">Node.js</span>
+            <span class="timeline-tag">PostgreSQL</span>
+            <span class="timeline-tag">Docker</span>
+            <span class="timeline-tag">REST APIs</span>
+            <span class="timeline-tag">CI/CD</span>
+          </div>
+        </div>
+        <div class="timeline-item reveal">
+          <div class="timeline-dot"></div>
+          <div class="timeline-date">2015 — 2019</div>
+          <div class="timeline-role">Software Engineer</div>
+          <div class="timeline-company">Earlier Career</div>
+          <div class="timeline-desc">
+            Cut my teeth on full-stack development across multiple domains — e-commerce, SaaS,
+            and analytics platforms. Developed a deep appreciation for well-designed systems
+            and the craft of writing maintainable code.
+          </div>
+          <div class="timeline-tags">
+            <span class="timeline-tag">JavaScript</span>
+            <span class="timeline-tag">Python</span>
+            <span class="timeline-tag">MySQL</span>
+            <span class="timeline-tag">AWS</span>
+            <span class="timeline-tag">React</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Skills -->
+    <section class="section" id="skills">
+      <div class="reveal">
+        <div class="section-label">Tech Stack</div>
+        <h2 class="section-title">Tools I work with daily.</h2>
+        <p class="section-subtitle">Technologies I've used in production and trust to build things that last.</p>
+      </div>
+      <div class="skills-grid">
+        <div class="skill-category reveal">
+          <div class="skill-category-title">Languages</div>
+          <div class="skill-list">
+            <span class="skill-pill">TypeScript</span>
+            <span class="skill-pill">JavaScript</span>
+            <span class="skill-pill">Python</span>
+            <span class="skill-pill">SQL</span>
+            <span class="skill-pill">HTML/CSS</span>
+            <span class="skill-pill">Bash</span>
+          </div>
+        </div>
+        <div class="skill-category reveal">
+          <div class="skill-category-title">Frontend</div>
+          <div class="skill-list">
+            <span class="skill-pill">React</span>
+            <span class="skill-pill">Next.js</span>
+            <span class="skill-pill">Tailwind CSS</span>
+            <span class="skill-pill">Storybook</span>
+            <span class="skill-pill">Playwright</span>
+          </div>
+        </div>
+        <div class="skill-category reveal">
+          <div class="skill-category-title">Backend & APIs</div>
+          <div class="skill-list">
+            <span class="skill-pill">Node.js</span>
+            <span class="skill-pill">Express</span>
+            <span class="skill-pill">REST</span>
+            <span class="skill-pill">GraphQL</span>
+            <span class="skill-pill">Microservices</span>
+            <span class="skill-pill">Event-Driven</span>
+          </div>
+        </div>
+        <div class="skill-category reveal">
+          <div class="skill-category-title">Cloud & Infrastructure</div>
+          <div class="skill-list">
+            <span class="skill-pill">AWS</span>
+            <span class="skill-pill">CDK</span>
+            <span class="skill-pill">Lambda</span>
+            <span class="skill-pill">ECS</span>
+            <span class="skill-pill">DynamoDB</span>
+            <span class="skill-pill">S3</span>
+            <span class="skill-pill">CloudFront</span>
+          </div>
+        </div>
+        <div class="skill-category reveal">
+          <div class="skill-category-title">Databases</div>
+          <div class="skill-list">
+            <span class="skill-pill">PostgreSQL</span>
+            <span class="skill-pill">DynamoDB</span>
+            <span class="skill-pill">Redis</span>
+            <span class="skill-pill">MongoDB</span>
+            <span class="skill-pill">Elasticsearch</span>
+          </div>
+        </div>
+        <div class="skill-category reveal">
+          <div class="skill-category-title">DevOps & Tooling</div>
+          <div class="skill-list">
+            <span class="skill-pill">Docker</span>
+            <span class="skill-pill">CI/CD</span>
+            <span class="skill-pill">Git</span>
+            <span class="skill-pill">Terraform</span>
+            <span class="skill-pill">Monitoring</span>
+            <span class="skill-pill">Jest</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Blog Preview -->
+    <section class="section" id="blog">
+      <div class="reveal">
+        <div class="section-label">Blog</div>
+        <h2 class="section-title">Latest writings.</h2>
+        <p class="section-subtitle">Thoughts on engineering, architecture, and things I'm learning every day.</p>
+      </div>
+      <div class="blog-grid">
+        <a href="/blog/building-scalable-apis-with-aws-cdk" class="blog-card reveal">
+          <div class="blog-card-date">Mar 25, 2026</div>
+          <div class="blog-card-title">Building Scalable APIs with AWS CDK and Lambda</div>
+          <div class="blog-card-excerpt">
+            How I structure production-grade serverless APIs using CDK constructs,
+            custom middleware patterns, and clean architecture principles.
+          </div>
+          <div class="blog-card-tags">
+            <span class="blog-card-tag">AWS</span>
+            <span class="blog-card-tag">CDK</span>
+            <span class="blog-card-tag">Architecture</span>
+          </div>
+          <span class="blog-card-link">Read post <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
         </a>
-        <a href="/team" class="btn btn-secondary">Meet the Team</a>
+        <a href="/blog/architecture-first-thinking" class="blog-card reveal">
+          <div class="blog-card-date">Mar 20, 2026</div>
+          <div class="blog-card-title">Architecture-First Thinking: Why I Design Before I Code</div>
+          <div class="blog-card-excerpt">
+            The case for spending more time with diagrams and less time with your IDE.
+            How upfront architecture thinking saves weeks of refactoring.
+          </div>
+          <div class="blog-card-tags">
+            <span class="blog-card-tag">Architecture</span>
+            <span class="blog-card-tag">Engineering</span>
+          </div>
+          <span class="blog-card-link">Read post <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+        </a>
+        <a href="/blog/daily-learnings-week-1" class="blog-card reveal">
+          <div class="blog-card-date">Mar 15, 2026</div>
+          <div class="blog-card-title">Daily Learnings: DynamoDB Single-Table Design Patterns</div>
+          <div class="blog-card-excerpt">
+            Notes from a deep dive into single-table design with DynamoDB — access patterns,
+            GSIs, and the mental model shift from relational thinking.
+          </div>
+          <div class="blog-card-tags">
+            <span class="blog-card-tag">DynamoDB</span>
+            <span class="blog-card-tag">Learning</span>
+          </div>
+          <span class="blog-card-link">Read post <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+        </a>
       </div>
+      <a href="/blog" class="view-all-link reveal">View all posts <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
     </section>
 
-    <div class="stats-bar">
-      <div class="stats-inner">
-        <div>
-          <div class="stat-number">50+</div>
-          <div class="stat-label">Projects Delivered</div>
-        </div>
-        <div>
-          <div class="stat-number">12+</div>
-          <div class="stat-label">Years Experience</div>
-        </div>
-        <div>
-          <div class="stat-number">30+</div>
-          <div class="stat-label">Happy Clients</div>
-        </div>
-        <div>
-          <div class="stat-number">99.9%</div>
-          <div class="stat-label">Uptime SLA</div>
-        </div>
-      </div>
-    </div>
+    <div class="divider"></div>
 
-    <section class="section section-center">
-      <h2>Our <span>Services</span></h2>
-      <p class="subtitle">End-to-end IT services tailored to your business needs.</p>
-      <div class="grid-3">
-        <div class="card">
-          <div class="card-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
-          </div>
-          <h3>Cloud Infrastructure</h3>
-          <p>Design, migrate, and manage your cloud environment on AWS, Azure, or GCP with best-in-class security and cost optimization.</p>
-        </div>
-        <div class="card">
-          <div class="card-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-          </div>
-          <h3>Custom Software</h3>
-          <p>Full-stack development from web applications to microservices — built to your specs with modern frameworks and clean architecture.</p>
-        </div>
-        <div class="card">
-          <div class="card-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          </div>
-          <h3>Cybersecurity</h3>
-          <p>Protect your business with vulnerability assessments, penetration testing, and 24/7 security monitoring and incident response.</p>
-        </div>
-        <div class="card">
-          <div class="card-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          </div>
-          <h3>DevOps & Automation</h3>
-          <p>Streamline your development pipeline with CI/CD, infrastructure as code, container orchestration, and monitoring solutions.</p>
-        </div>
-        <div class="card">
-          <div class="card-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          </div>
-          <h3>IT Consulting</h3>
-          <p>Strategic technology guidance to align your IT investments with business goals — from architecture reviews to digital roadmaps.</p>
-        </div>
-        <div class="card">
-          <div class="card-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
-          </div>
-          <h3>Data & Analytics</h3>
-          <p>Turn your data into actionable insights with data pipelines, warehousing, BI dashboards, and machine learning solutions.</p>
-        </div>
+    <!-- Contact -->
+    <section class="section" id="contact">
+      <div class="reveal">
+        <div class="section-label">Contact</div>
+        <h2 class="section-title">Let's connect.</h2>
+        <p class="section-subtitle">Whether it's a project, a question, or just a conversation about tech — I'd love to hear from you.</p>
       </div>
-    </section>
-
-    <section class="section" style="padding-bottom:6rem">
-      <div class="cta-banner">
-        <h2>Ready to transform your business?</h2>
-        <p>Let's discuss how we can help you modernize your technology and drive growth.</p>
-        <a href="/contact" class="btn">Start a Conversation</a>
+      <div class="contact-grid reveal">
+        <div>
+          <div class="contact-methods">
+            <a href="mailto:pardeep@upflowy.com" class="contact-method">
+              <div class="contact-method-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </div>
+              <div>
+                <div class="contact-method-label">Email</div>
+                <div class="contact-method-value">pardeep@upflowy.com</div>
+              </div>
+            </a>
+            <a href="https://linkedin.com/in/pardeep-dhingra" target="_blank" rel="noopener" class="contact-method">
+              <div class="contact-method-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+              </div>
+              <div>
+                <div class="contact-method-label">LinkedIn</div>
+                <div class="contact-method-value">linkedin.com/in/pardeep-dhingra</div>
+              </div>
+            </a>
+            <a href="https://github.com/pdhingra-mux" target="_blank" rel="noopener" class="contact-method">
+              <div class="contact-method-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+              </div>
+              <div>
+                <div class="contact-method-label">GitHub</div>
+                <div class="contact-method-value">github.com/pdhingra-mux</div>
+              </div>
+            </a>
+            <a href="https://medium.com/@pardeep-dhingra" target="_blank" rel="noopener" class="contact-method">
+              <div class="contact-method-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zm7.42 0c0 3.54-1.51 6.42-3.38 6.42S14.2 15.54 14.2 12s1.52-6.42 3.38-6.42 3.38 2.88 3.38 6.42zm2.94 0c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75c.66 0 1.19 2.58 1.19 5.75z"/></svg>
+              </div>
+              <div>
+                <div class="contact-method-label">Medium</div>
+                <div class="contact-method-value">@pardeep-dhingra</div>
+              </div>
+            </a>
+          </div>
+        </div>
+        <form class="contact-form" action="https://formspree.io/f/your-form-id" method="POST">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" placeholder="Your name" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" placeholder="What's on your mind?" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="align-self:flex-start">Send message</button>
+        </form>
       </div>
     </section>
   </main>
 
-  <footer>
+  <!-- Footer -->
+  <footer class="footer">
     <div class="footer-inner">
-      <p>&copy; 2026 Galasar. All rights reserved.</p>
-      <div class="footer-links">
+      <div class="footer-left">&copy; 2026 Pardeep Dhingra. Built with curiosity.</div>
+      <div class="footer-right">
         <a href="/">Home</a>
-        <a href="/team">Team</a>
-        <a href="/contact">Contact</a>
+        <a href="/blog">Blog</a>
+        <a href="https://linkedin.com/in/pardeep-dhingra" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://github.com/pdhingra-mux" target="_blank" rel="noopener">GitHub</a>
       </div>
     </div>
   </footer>
+
+  <script>
+    // Nav scroll effect
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    // Mobile toggle
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      links.classList.toggle('open');
+    });
+
+    // Close menu on link click
+    links.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => links.classList.remove('open'));
+    });
+
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    reveals.forEach(el => observer.observe(el));
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
 </body>
 </html>

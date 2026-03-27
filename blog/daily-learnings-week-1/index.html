@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Learnings: DynamoDB Single-Table Design Patterns — Pardeep Dhingra</title>
+  <meta name="description" content="Notes from a deep dive into single-table design with DynamoDB — access patterns, GSIs, and the mental model shift from relational thinking.">
+  <link rel="canonical" href="https://pardeepbuilds.com/blog/daily-learnings-week-1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@350;400;450;500;550;600;650;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+  <nav class="nav scrolled">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">pardeep<span>builds</span></a>
+      <div class="nav-links" id="navLinks">
+        <a href="/">Home</a>
+        <a href="/#about">About</a>
+        <a href="/#experience">Experience</a>
+        <a href="/#skills">Skills</a>
+        <a href="/blog" class="active">Blog</a>
+        <a href="/#contact">Contact</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <main>
+    <header class="post-header">
+      <a href="/blog" class="post-back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to blog</a>
+      <h1 class="post-title">Daily Learnings: DynamoDB Single-Table Design Patterns</h1>
+      <div class="post-meta">
+        <span class="post-meta-date">Mar 15, 2026</span>
+        <span class="post-meta-tag">DynamoDB</span>
+        <span class="post-meta-tag">Learning</span>
+      </div>
+    </header>
+
+    <article class="post-content">
+      <p>
+        This week I went deep on DynamoDB single-table design. It's one of those topics where
+        the more you learn, the more you realize the mental model is fundamentally different
+        from relational databases. Here are my notes and key takeaways.
+      </p>
+
+      <h2>The Core Mental Shift</h2>
+      <p>
+        In relational databases, you model your data first and figure out queries later. With
+        DynamoDB, it's the opposite: <strong>start with your access patterns, then design your
+        table structure to serve them</strong>.
+      </p>
+      <p>
+        This feels backwards at first, but it makes sense when you consider that DynamoDB is
+        optimized for known access patterns at any scale. You're essentially pre-computing
+        your query results in how you structure your data.
+      </p>
+
+      <h2>Access Pattern Worksheet</h2>
+      <p>
+        Before touching any code, I now create an access pattern worksheet for every new
+        DynamoDB table. It looks like this:
+      </p>
+      <pre><code># Access Patterns for User Service
+
+1. Get user by ID              → PK: USER#userId, SK: PROFILE
+2. Get user's projects         → PK: USER#userId, SK: begins_with(PROJECT#)
+3. Get project by ID           → PK: PROJECT#projectId, SK: META
+4. List project members        → PK: PROJECT#projectId, SK: begins_with(MEMBER#)
+5. Get user by email (login)   → GSI1: email, GSI1SK: USER
+6. List recent projects        → GSI2: status, GSI2SK: createdAt</code></pre>
+      <p>
+        This worksheet becomes the single source of truth for the table design. Every key
+        structure and GSI exists to serve a specific, documented access pattern.
+      </p>
+
+      <h2>Composite Keys Are Everything</h2>
+      <p>
+        The power of single-table design comes from composite sort keys. By using prefixes
+        like <code>PROJECT#</code>, <code>MEMBER#</code>, and <code>INVOICE#</code> in your
+        sort key, you can store multiple entity types in one table and query them efficiently
+        using <code>begins_with</code>.
+      </p>
+      <p>
+        The partition key groups related items together, and the sort key lets you efficiently
+        query within that group. It's elegant once it clicks, but it requires discipline to
+        maintain the key design conventions.
+      </p>
+
+      <h2>When Single-Table Doesn't Make Sense</h2>
+      <p>
+        Not everything belongs in one table. I've found that single-table design works best when:
+      </p>
+      <ul>
+        <li>Your entities are genuinely related and frequently queried together</li>
+        <li>You have well-defined, stable access patterns</li>
+        <li>You need the performance benefits of co-locating related data</li>
+      </ul>
+      <p>
+        For truly independent services with no shared access patterns, separate tables are
+        simpler to reason about, deploy independently, and manage capacity for.
+      </p>
+
+      <h2>GSI Overloading</h2>
+      <p>
+        One of the more advanced patterns is GSI overloading — using the same Global Secondary
+        Index for multiple entity types by using generic attribute names like <code>GSI1PK</code>
+        and <code>GSI1SK</code>. This lets you keep your GSI count low (DynamoDB limits you to
+        20 per table) while supporting many different query patterns.
+      </p>
+      <p>
+        The tradeoff is readability. Your table structure becomes harder to understand at a
+        glance. Good documentation and naming conventions become essential.
+      </p>
+
+      <h2>Tools That Helped</h2>
+      <p>
+        A few resources that accelerated my understanding:
+      </p>
+      <ul>
+        <li><strong>Alex DeBrie's "The DynamoDB Book"</strong> — the definitive resource. Worth every penny.</li>
+        <li><strong>NoSQL Workbench</strong> — AWS's free visual tool for modeling DynamoDB tables. Great for validating your key design before writing code.</li>
+        <li><strong>Jeremy Daly's DynamoDB talks</strong> — excellent conference talks that walk through real-world design scenarios.</li>
+      </ul>
+
+      <h2>Key Takeaway</h2>
+      <blockquote>
+        <p>DynamoDB rewards you for knowing your access patterns upfront. If you design your keys around how you'll query, everything else falls into place. If you don't, you'll fight the database at every turn.</p>
+      </blockquote>
+      <p>
+        Next week I'm diving into DynamoDB Streams and event-driven patterns. Stay tuned.
+      </p>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-left">&copy; 2026 Pardeep Dhingra. Built with curiosity.</div>
+      <div class="footer-right">
+        <a href="/">Home</a>
+        <a href="/blog">Blog</a>
+        <a href="https://linkedin.com/in/pardeep-dhingra" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://github.com/pdhingra-mux" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => links.classList.toggle('open'));
+    links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
+  </script>
+</body>
+</html>
