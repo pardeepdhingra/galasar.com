@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Cost of a Bad Database Migration — Pardeep Dhingra</title>
+    <meta name="description" content="War stories and battle-tested patterns for zero-downtime database migrations. Expand-contract, dual-write, rollback strategies, and Postgres-specific tips from production.">
+    <link rel="canonical" href="https://pardeepbuilds.com/blog/cost-of-bad-migrations">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .back-link {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            color: var(--text-dim); text-decoration: none; font-size: 0.85rem;
+            margin-bottom: 1.5rem; transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+
+        .blog-meta {
+            display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .blog-item-author {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.8rem; color: var(--text-dim); margin-bottom: 2.5rem;
+        }
+        .blog-item-author img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+        .blog-item-author strong { color: var(--text-body); font-weight: 550; }
+
+        /* Prose */
+        .prose { font-size: 0.95rem; line-height: 1.8; color: var(--text-body); }
+        .prose p { margin-bottom: 1.25rem; }
+        .prose h2 {
+            font-size: 1.35rem; font-weight: 700; color: var(--text);
+            margin: 2.5rem 0 1rem; letter-spacing: -0.02em;
+        }
+        .prose h3 {
+            font-size: 1.1rem; font-weight: 600; color: var(--accent);
+            margin: 2rem 0 0.75rem;
+        }
+        .prose strong { color: var(--text); font-weight: 600; }
+        .prose code {
+            font-family: var(--font-mono); background: rgba(95,202,201,0.08);
+            padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.85em;
+            color: var(--accent);
+        }
+        .callout {
+            padding: 1.25rem 1.5rem; background: rgba(95,202,201,0.06);
+            border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0; font-size: 0.9rem; color: var(--text-body); line-height: 1.7;
+        }
+        .callout-warn {
+            background: rgba(239,68,68,0.06); border-left-color: #ef4444;
+        }
+        .callout-gold {
+            background: rgba(174,154,100,0.08); border-left-color: #ae9a64;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: #0a0a0c; border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden; margin: 1.5rem 0;
+        }
+        .code-header {
+            display: flex; align-items: center; gap: 8px; padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border); font-size: 0.75rem;
+            color: var(--text-dim); font-family: var(--font-mono);
+        }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.r { background: #ef4444; }
+        .code-dot.y { background: #eab308; }
+        .code-dot.g { background: #22c55e; }
+        .code-body {
+            padding: 1rem 1.25rem; font-family: var(--font-mono);
+            font-size: 0.82rem; line-height: 1.7; color: var(--text-body);
+            overflow-x: auto;
+        }
+        .code-body .kw { color: var(--accent); }
+        .code-body .str { color: #ae9a64; }
+        .code-body .cmt { color: var(--text-dim); font-style: italic; }
+        .code-body .fn { color: #c084fc; }
+        .code-body .prop { color: #60a5fa; }
+        .code-body .num { color: #c084fc; }
+
+        /* Timeline Diagram */
+        .timeline {
+            position: relative; margin: 2rem 0; padding-left: 2rem;
+        }
+        .timeline::before {
+            content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+            width: 2px; background: var(--border);
+        }
+        .timeline-step {
+            position: relative; margin-bottom: 1.5rem; padding: 1.25rem 1.5rem;
+            background: var(--bg-chat); border: 1px solid var(--border);
+            border-radius: 12px; cursor: pointer; transition: all 0.3s;
+        }
+        .timeline-step::before {
+            content: ''; position: absolute; left: -1.75rem; top: 1.5rem;
+            width: 12px; height: 12px; border-radius: 50%;
+            border: 2px solid var(--border); background: var(--bg);
+            transition: all 0.3s;
+        }
+        .timeline-step:hover { border-color: rgba(95,202,201,0.3); }
+        .timeline-step.safe::before { border-color: #22c55e; background: rgba(34,197,94,0.2); }
+        .timeline-step.danger::before { border-color: #ef4444; background: rgba(239,68,68,0.2); }
+        .timeline-step.warn::before { border-color: #eab308; background: rgba(234,179,8,0.2); }
+        .timeline-label {
+            font-size: 0.75rem; font-family: var(--font-mono); text-transform: uppercase;
+            letter-spacing: 0.05em; margin-bottom: 0.3rem;
+        }
+        .timeline-step.safe .timeline-label { color: #22c55e; }
+        .timeline-step.danger .timeline-label { color: #ef4444; }
+        .timeline-step.warn .timeline-label { color: #eab308; }
+        .timeline-title {
+            font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 0.3rem;
+        }
+        .timeline-desc {
+            font-size: 0.85rem; color: var(--text-dim); line-height: 1.6;
+        }
+        .timeline-detail {
+            max-height: 0; overflow: hidden; transition: max-height 0.4s ease;
+        }
+        .timeline-step.open .timeline-detail { max-height: 600px; }
+        .timeline-detail-inner {
+            padding-top: 1rem; font-size: 0.88rem; color: var(--text-body); line-height: 1.7;
+        }
+
+        /* Comparison Cards */
+        .compare-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0;
+        }
+        .compare-card {
+            padding: 1.25rem; background: var(--bg-chat);
+            border: 1px solid var(--border); border-radius: 12px;
+        }
+        .compare-card.bad { border-color: rgba(239,68,68,0.3); }
+        .compare-card.good { border-color: rgba(34,197,94,0.3); }
+        .compare-label {
+            font-size: 0.72rem; font-family: var(--font-mono); text-transform: uppercase;
+            letter-spacing: 0.06em; margin-bottom: 0.6rem; font-weight: 600;
+        }
+        .compare-card.bad .compare-label { color: #ef4444; }
+        .compare-card.good .compare-label { color: #22c55e; }
+        .compare-card .code-body { padding: 0; background: none; font-size: 0.78rem; }
+
+        /* Expandable Sections */
+        .expand-section {
+            margin: 1.5rem 0; border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden;
+        }
+        .expand-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 1.25rem; cursor: pointer;
+            background: var(--bg-chat); transition: background 0.2s;
+        }
+        .expand-header:hover { background: rgba(95,202,201,0.05); }
+        .expand-header h3 {
+            font-size: 1rem; font-weight: 600; color: var(--text);
+            display: flex; align-items: center; gap: 0.6rem; margin: 0;
+        }
+        .expand-arrow {
+            color: var(--text-dim); transition: transform 0.3s; font-size: 0.9rem;
+        }
+        .expand-section.open .expand-arrow { transform: rotate(180deg); }
+        .expand-body {
+            max-height: 0; overflow: hidden; transition: max-height 0.4s ease;
+        }
+        .expand-section.open .expand-body { max-height: 2000px; }
+        .expand-content {
+            padding: 0 1.25rem 1.25rem; color: var(--text-body);
+            font-size: 0.9rem; line-height: 1.7;
+        }
+
+        /* Impact Counter */
+        .impact-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
+            margin: 2rem 0;
+        }
+        .impact-card {
+            padding: 1.5rem; background: var(--bg-chat); border: 1px solid var(--border);
+            border-radius: 12px; text-align: center;
+        }
+        .impact-number {
+            font-family: var(--font-mono); font-size: 2rem; font-weight: 700;
+            color: #ef4444; margin-bottom: 0.3rem;
+        }
+        .impact-number.gold { color: #ae9a64; }
+        .impact-label {
+            font-size: 0.8rem; color: var(--text-dim); line-height: 1.5;
+        }
+
+        /* Tabbed Panels */
+        .tab-container { margin: 1.5rem 0; }
+        .tab-nav {
+            display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 0;
+        }
+        .tab-btn {
+            padding: 0.75rem 1.25rem; background: none; border: none;
+            font-family: var(--font-body); font-size: 0.85rem; color: var(--text-dim);
+            cursor: pointer; border-bottom: 2px solid transparent;
+            transition: all 0.2s; font-weight: 500;
+        }
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab-panel {
+            display: none; padding: 1.25rem; background: var(--bg-chat);
+            border: 1px solid var(--border); border-top: none; border-radius: 0 0 12px 12px;
+            font-size: 0.9rem; line-height: 1.7; color: var(--text-body);
+        }
+        .tab-panel.active { display: block; }
+
+        /* Quiz Card */
+        .quiz-card {
+            margin: 2rem 0; padding: 1.5rem; background: var(--bg-chat);
+            border: 1px solid var(--border); border-radius: 12px;
+        }
+        .quiz-question {
+            font-size: 1.05rem; font-weight: 600; color: var(--text);
+            margin-bottom: 1rem;
+        }
+        .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+        .quiz-option {
+            display: block; padding: 0.75rem 1rem; background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+            font-size: 0.88rem; color: var(--text-body); transition: all 0.2s;
+            text-align: left; font-family: inherit;
+        }
+        .quiz-option:hover { border-color: rgba(95,202,201,0.3); }
+        .quiz-option.correct {
+            border-color: #22c55e; background: rgba(34,197,94,0.08); color: #22c55e;
+        }
+        .quiz-option.wrong {
+            border-color: #ef4444; background: rgba(239,68,68,0.08); color: #ef4444;
+        }
+        .quiz-explanation {
+            display: none; margin-top: 1rem; padding: 1rem; font-size: 0.85rem;
+            background: rgba(95,202,201,0.05); border-radius: 8px;
+            color: var(--text-body); line-height: 1.7;
+        }
+        .quiz-explanation.visible { display: block; animation: fadeSlide 0.3s ease; }
+
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            .compare-grid { grid-template-columns: 1fr; }
+            .impact-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+  <nav class="nav scrolled">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">pardeep<span>builds</span></a>
+      <div class="nav-links" id="navLinks">
+        <a href="/">Home</a>
+        <a href="/portfolio">Portfolio</a>
+        <a href="/resume">Resume</a>
+        <a href="/blog" class="active">Blog</a>
+        <a href="/#contact">Contact</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <main>
+    <article class="section section-narrow" style="padding-top:9rem">
+      <div class="section-label">Blog</div>
+      <a href="/blog" class="back-link">&larr; Back to Blog</a>
+
+      <div class="blog-meta">
+        <span class="blog-item-date">28 Mar 2026</span>
+        <span class="blog-item-tag">Engineering</span>
+        <span class="blog-item-readtime">10 min read</span>
+      </div>
+
+      <h1 class="section-title">The Cost of a Bad<br>Database Migration</h1>
+
+      <div class="blog-item-author">
+        <img src="/profile.png" alt="Pardeep" onerror="this.style.display='none'">
+        By <strong>Pardeep Dhingra</strong>
+      </div>
+
+      <div class="prose">
+        <p>In fifteen years of shipping backend systems, nothing has aged me faster than bad database migrations. Not outages, not scaling emergencies, not even production hotfixes at 2am. Those feel urgent in the moment but resolve cleanly. A bad migration is different — it's a slow poison that corrupts your data layer, blocks deploys, and makes every subsequent change harder.</p>
+
+        <p>I've watched teams lose <strong>entire weekends</strong> to a migration that "looked simple." I've personally shipped a column rename that took down a payment service for forty minutes. These aren't hypothetical — they're scars. This post is the playbook I wish I'd had.</p>
+
+        <h2>The Real Cost: By the Numbers</h2>
+        <p>Before we talk patterns, let's talk consequences. These numbers are composites from incidents I've been involved in or seen firsthand across teams:</p>
+      </div>
+
+      <!-- Interactive: Animated Impact Counters -->
+      <div class="impact-grid" id="impactGrid">
+        <div class="impact-card">
+          <div class="impact-number" data-target="47">0</div>
+          <div class="impact-label">Minutes average downtime per bad migration</div>
+        </div>
+        <div class="impact-card">
+          <div class="impact-number gold" data-target="12">0</div>
+          <div class="impact-label">Engineer-hours average recovery time</div>
+        </div>
+        <div class="impact-card">
+          <div class="impact-number" data-target="3">0</div>
+          <div class="impact-label">Dependent services typically affected</div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>And those are the <em>measurable</em> costs. The unmeasurable ones — lost trust from your team, the deploy freeze that slows everyone down for a week, the lingering fear every time someone opens a migration file — those compound.</p>
+
+        <h2>The Five Migration Anti-Patterns</h2>
+        <p>Most migration disasters follow one of five patterns. Click each to see the war story and the fix:</p>
+      </div>
+
+      <!-- Interactive: Expandable Anti-Pattern Sections -->
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>1. The Big-Bang Rename</h3>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p><strong>What happens:</strong> You rename a column in a single migration — <code>ALTER TABLE users RENAME COLUMN name TO full_name</code>. Looks clean. Deploys fine in staging. In production, your app servers are still running old code that references <code>name</code>. Every query crashes for the duration of the rolling deploy.</p>
+            <p><strong>Why it hurts:</strong> Postgres acquires an <code>ACCESS EXCLUSIVE</code> lock on <code>RENAME</code>. On a table with any traffic, this blocks reads and writes. Combined with a rolling deploy where old code references the old name, you get cascading failures.</p>
+            <p><strong>The fix:</strong> Add a new column, backfill, dual-write for one deploy cycle, then drop the old column in a separate migration after all code is updated. Yes, it's three deploys. That's the point.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>2. The Unindexed Foreign Key</h3>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p><strong>What happens:</strong> You add a foreign key constraint to an existing table: <code>ALTER TABLE orders ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)</code>. On a 50M-row table, Postgres validates every single row. Your migration holds a <code>SHARE ROW EXCLUSIVE</code> lock for the entire validation.</p>
+            <p><strong>Why it hurts:</strong> On a hot table, this blocks inserts and updates for the entire validation duration — which can be minutes on large tables. I once saw this take 11 minutes on a 200M-row orders table.</p>
+            <p><strong>The fix:</strong> Use <code>NOT VALID</code> to add the constraint without checking existing rows, then run <code>VALIDATE CONSTRAINT</code> separately. The validation step only needs a <code>SHARE UPDATE EXCLUSIVE</code> lock, which doesn't block reads or normal writes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>3. The Default-Value Trap</h3>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p><strong>What happens:</strong> Before Postgres 11, adding a column with a default value rewrote the entire table. In Postgres 11+, this is instant for non-volatile defaults — but many teams still hit the volatile variant: <code>ALTER TABLE events ADD COLUMN created_at TIMESTAMPTZ DEFAULT now()</code>. The <code>now()</code> is volatile. Full table rewrite.</p>
+            <p><strong>Why it hurts:</strong> A table rewrite on a 100M-row table can take tens of minutes, during which the table is effectively locked for writes.</p>
+            <p><strong>The fix:</strong> Add the column with no default (or a constant default), then backfill in batches using an UPDATE with a WHERE clause that limits each batch. For <code>now()</code> defaults, use <code>DEFAULT CURRENT_TIMESTAMP</code> which Postgres treats as non-volatile in the DDL context on 11+, or add with null default and backfill.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>4. The Index That Locks the Table</h3>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p><strong>What happens:</strong> You run <code>CREATE INDEX idx_orders_email ON orders(email)</code> inside a migration. Standard <code>CREATE INDEX</code> takes a <code>SHARE</code> lock on the table — blocking all inserts and updates until the index is fully built.</p>
+            <p><strong>Why it hurts:</strong> Index creation on large tables can take minutes. Every write to the table queues behind the lock. Your API starts returning 504s. Your on-call gets paged.</p>
+            <p><strong>The fix:</strong> Always use <code>CREATE INDEX CONCURRENTLY</code>. Yes, it's slower and can't run inside a transaction block. That's why most migration tools support a "non-transactional" flag. Use it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>5. The Irreversible Migration</h3>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p><strong>What happens:</strong> You drop a column or table, discover the code still needs it, and realize there's no going back. Your "down" migration is a comment that says <code>-- cannot reverse this</code>.</p>
+            <p><strong>Why it hurts:</strong> Without a rollback path, any issue post-deploy becomes a fire drill. You can't revert cleanly, so you're doing emergency data recovery while the production system is degraded.</p>
+            <p><strong>The fix:</strong> Never drop columns immediately. Rename them first (e.g., <code>_deprecated_name</code>), wait a full release cycle to confirm nothing references them, then drop. For tables, consider creating a backup table first. Every destructive migration should have a tested rollback script — even if it's a separate file.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>Safe vs. Dangerous: The Migration Timeline</h2>
+        <p>Here's how the same schema change — adding a NOT NULL column with a default — looks when done dangerously versus safely. Click each step for detail:</p>
+      </div>
+
+      <!-- Interactive: Migration Timeline -->
+      <div class="tab-container">
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="dangerous">Dangerous Approach</button>
+          <button class="tab-btn" data-tab="safe">Safe (Expand-Contract)</button>
+        </div>
+        <div class="tab-panel active" data-panel="dangerous">
+          <div class="timeline" id="dangerousTimeline">
+            <div class="timeline-step danger" data-timeline>
+              <div class="timeline-label">Deploy 1 — The Only Deploy</div>
+              <div class="timeline-title">Single migration: ADD COLUMN + NOT NULL + DEFAULT</div>
+              <div class="timeline-desc">One ALTER statement does everything at once</div>
+              <div class="timeline-detail">
+                <div class="timeline-detail-inner">
+                  <p><code>ALTER TABLE orders ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'pending';</code></p>
+                  <p>On Postgres &lt;11, this rewrites the entire table. On Postgres 11+, the constant default is instant BUT the <code>NOT NULL</code> constraint still requires a full table scan to validate. With a <code>SHARE ROW EXCLUSIVE</code> lock held the entire time, writes are blocked.</p>
+                  <p>On a 50M-row table: estimated <strong>3-8 minutes of write blocking</strong>. Your order creation endpoint returns 500s. Customers see failed checkouts.</p>
+                </div>
+              </div>
+            </div>
+            <div class="timeline-step danger" data-timeline>
+              <div class="timeline-label">Outcome</div>
+              <div class="timeline-title">Downtime window: 3-8 minutes</div>
+              <div class="timeline-desc">No rollback path — column is there, constraint is enforced</div>
+              <div class="timeline-detail">
+                <div class="timeline-detail-inner">
+                  <p>If anything goes wrong during the lock, you have to wait for it to complete or kill the migration — which may leave the schema in a partial state. Rolling back the code deploy doesn't help because the column now exists and old code doesn't know about it.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" data-panel="safe">
+          <div class="timeline" id="safeTimeline">
+            <div class="timeline-step safe" data-timeline>
+              <div class="timeline-label">Deploy 1 — Add Column (nullable)</div>
+              <div class="timeline-title">ALTER TABLE orders ADD COLUMN status VARCHAR(20) DEFAULT 'pending'</div>
+              <div class="timeline-desc">Instant on Postgres 11+ — no table rewrite, no lock contention</div>
+              <div class="timeline-detail">
+                <div class="timeline-detail-inner">
+                  <p>By adding the column as nullable with a constant default, Postgres stores the default in the catalog without rewriting existing rows. Zero downtime. Old code that doesn't know about this column works fine.</p>
+                </div>
+              </div>
+            </div>
+            <div class="timeline-step safe" data-timeline>
+              <div class="timeline-label">Deploy 2 — Backfill + Dual-Write</div>
+              <div class="timeline-title">Batch UPDATE + application code writes to new column</div>
+              <div class="timeline-desc">Backfill in chunks of 10K rows with 100ms sleep between batches</div>
+              <div class="timeline-detail">
+                <div class="timeline-detail-inner">
+                  <p><code>UPDATE orders SET status = 'pending' WHERE status IS NULL AND id BETWEEN $1 AND $2;</code></p>
+                  <p>Run this in a script, not a migration. Use batches of 5K-10K rows with short pauses to avoid overwhelming WAL and replication. Monitor <code>pg_stat_activity</code> for lock contention during each batch.</p>
+                </div>
+              </div>
+            </div>
+            <div class="timeline-step safe" data-timeline>
+              <div class="timeline-label">Deploy 3 — Add Constraint</div>
+              <div class="timeline-title">ALTER TABLE orders ADD CONSTRAINT status_not_null CHECK (status IS NOT NULL) NOT VALID</div>
+              <div class="timeline-desc">Instant — constraint added but not validated against existing rows</div>
+              <div class="timeline-detail">
+                <div class="timeline-detail-inner">
+                  <p>The <code>NOT VALID</code> flag tells Postgres to enforce the constraint on new writes only, without scanning existing rows. This is instant and non-blocking. New inserts/updates must satisfy the constraint.</p>
+                </div>
+              </div>
+            </div>
+            <div class="timeline-step safe" data-timeline>
+              <div class="timeline-label">Deploy 4 — Validate</div>
+              <div class="timeline-title">ALTER TABLE orders VALIDATE CONSTRAINT status_not_null</div>
+              <div class="timeline-desc">Scans existing rows, but only takes SHARE UPDATE EXCLUSIVE lock</div>
+              <div class="timeline-detail">
+                <div class="timeline-detail-inner">
+                  <p>This lock allows concurrent reads AND writes — only blocking DDL and vacuum. The validation scans rows but doesn't modify them. On a 50M-row table, this takes seconds to a couple minutes but with <strong>zero write blocking</strong>.</p>
+                </div>
+              </div>
+            </div>
+            <div class="timeline-step safe" data-timeline>
+              <div class="timeline-label">Outcome</div>
+              <div class="timeline-title">Zero downtime. Full rollback at every step.</div>
+              <div class="timeline-desc">Four deploys over 2 days vs. 5 minutes of terror</div>
+              <div class="timeline-detail">
+                <div class="timeline-detail-inner">
+                  <p>At any point in this sequence, you can stop and roll back. Column added? Drop it. Backfill partial? No harm. Constraint added NOT VALID? Drop it. Each step is independently reversible. This is the expand-contract pattern in practice.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>Postgres Lock Types: A Cheat Sheet</h2>
+        <p>Most migration disasters come from not understanding which DDL operations acquire which locks. Here's the critical subset:</p>
+      </div>
+
+      <!-- Side-by-side comparison -->
+      <div class="compare-grid">
+        <div class="compare-card bad">
+          <div class="compare-label">Blocks writes</div>
+          <div class="code-body">
+<span class="kw">CREATE INDEX</span> (non-concurrent)<br>
+<span class="kw">ALTER TABLE</span> ... <span class="kw">ADD COLUMN</span> ... <span class="kw">NOT NULL</span><br>
+<span class="kw">ALTER TABLE</span> ... <span class="kw">RENAME COLUMN</span><br>
+<span class="kw">ALTER TABLE</span> ... <span class="kw">SET DATA TYPE</span><br>
+<span class="kw">ALTER TABLE</span> ... <span class="kw">ADD FOREIGN KEY</span>
+          </div>
+        </div>
+        <div class="compare-card good">
+          <div class="compare-label">Writes continue</div>
+          <div class="code-body">
+<span class="kw">CREATE INDEX CONCURRENTLY</span><br>
+<span class="kw">ALTER TABLE</span> ... <span class="kw">ADD COLUMN</span> (nullable)<br>
+<span class="kw">ADD CONSTRAINT</span> ... <span class="kw">NOT VALID</span><br>
+<span class="kw">VALIDATE CONSTRAINT</span><br>
+<span class="kw">ALTER TABLE</span> ... <span class="kw">SET DEFAULT</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <div class="callout">
+          <strong>Rule of thumb:</strong> If a DDL statement takes an <code>ACCESS EXCLUSIVE</code> or <code>SHARE ROW EXCLUSIVE</code> lock on a table with more than 1M rows or any concurrent write traffic, it needs the expand-contract treatment.
+        </div>
+
+        <h2>The Expand-Contract Pattern</h2>
+        <p>This is the single most important pattern for zero-downtime migrations. Every safe migration I've ever run follows this structure:</p>
+
+        <h3>Phase 1: Expand</h3>
+        <p>Add new schema elements alongside existing ones. The old code continues working because nothing it depends on has changed. New columns are nullable, new tables are empty, new constraints are <code>NOT VALID</code>.</p>
+
+        <h3>Phase 2: Migrate</h3>
+        <p>Deploy code that writes to both old and new schema. Backfill historical data in batches. Run validation queries to confirm data integrity. This phase might span multiple deploys.</p>
+
+        <h3>Phase 3: Contract</h3>
+        <p>Once all code reads from the new schema and writes to the new schema, remove the old schema elements. But not immediately — wait a full release cycle. Run a check for any remaining references in application code, background jobs, and analytics queries.</p>
+
+        <div class="callout-warn callout">
+          <strong>The most common mistake:</strong> Skipping Phase 2 and going straight from Expand to Contract. "The backfill ran, data looks good, let's drop the old column." Then a background worker that processes delayed jobs references the old column at 3am. Ask me how I know.
+        </div>
+
+        <h2>Postgres-Specific Tips</h2>
+        <p>Some hard-won lessons specific to Postgres that you won't find in most "safe migration" guides:</p>
+      </div>
+
+      <!-- Interactive: Quiz Card -->
+      <div class="quiz-card" id="quiz1">
+        <div class="quiz-question">Quick check: What happens if you run CREATE INDEX CONCURRENTLY inside a transaction block?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" data-correct="false">It runs fine but takes longer</button>
+          <button class="quiz-option" data-correct="false">It silently falls back to a regular CREATE INDEX</button>
+          <button class="quiz-option" data-correct="true">It fails with an error immediately</button>
+          <button class="quiz-option" data-correct="false">It creates the index but marks it as INVALID</button>
+        </div>
+        <div class="quiz-explanation" id="quiz1Explanation">
+          <strong>Correct.</strong> Postgres will raise: <code>ERROR: CREATE INDEX CONCURRENTLY cannot run inside a transaction block</code>. Most migration frameworks wrap each migration in a transaction by default. You need to explicitly opt out — in Knex, use <code>knex.schema.raw()</code> outside the transaction; in Django, set <code>atomic = False</code> on the migration; in Flyway, use non-transactional mode.
+        </div>
+      </div>
+
+      <div class="prose">
+        <h3>1. Check pg_stat_activity Before Migrating</h3>
+        <p>Before running any DDL, check for long-running transactions. A migration that needs an <code>ACCESS EXCLUSIVE</code> lock will queue behind any open transaction on the same table — and block all subsequent transactions while it waits. One idle-in-transaction session can turn a 50ms DDL into a 10-minute outage.</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span>
+          check_before_migrate.sql
+        </div>
+        <div class="code-body">
+<span class="cmt">-- Find transactions older than 30 seconds</span>
+<span class="kw">SELECT</span> pid, now() - xact_start <span class="kw">AS</span> duration,
+       state, query
+<span class="kw">FROM</span> pg_stat_activity
+<span class="kw">WHERE</span> xact_start <span class="kw">IS NOT NULL</span>
+  <span class="kw">AND</span> now() - xact_start > interval <span class="str">'30 seconds'</span>
+<span class="kw">ORDER BY</span> duration <span class="kw">DESC</span>;
+
+<span class="cmt">-- Set a lock timeout so your migration fails fast</span>
+<span class="cmt">-- instead of waiting (and blocking) forever</span>
+<span class="kw">SET</span> lock_timeout = <span class="str">'5s'</span>;
+        </div>
+      </div>
+
+      <div class="prose">
+        <h3>2. Use Advisory Locks for Backfill Scripts</h3>
+        <p>When running batch backfills, use <code>pg_advisory_lock</code> to ensure only one instance runs at a time. If your deploy spawns multiple replicas that all try to backfill simultaneously, you'll hammer the database with overlapping updates and WAL throughput spikes.</p>
+
+        <h3>3. Monitor Replication Lag</h3>
+        <p>Large migrations generate significant WAL traffic. If you have read replicas, monitor replication lag during and after migrations. A backfill that generates 10GB of WAL can push a replica minutes behind, causing stale reads in any service using the replica.</p>
+
+        <h3>4. Set statement_timeout on Migration Connections</h3>
+        <p>A runaway migration that holds a lock for 30 minutes is worse than a migration that fails after 5. Set <code>statement_timeout = '60s'</code> on your migration database connection. If a single statement takes longer than that, something is wrong and it's better to fail loud.</p>
+
+        <h2>The Migration Checklist</h2>
+        <p>I run through this before every production migration. It's saved me more than once:</p>
+      </div>
+
+      <!-- Interactive: Quiz Card 2 -->
+      <div class="quiz-card" id="quiz2">
+        <div class="quiz-question">You need to change a column from VARCHAR(100) to VARCHAR(255) on a 20M-row table. What's the safest approach?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" data-correct="false">ALTER TABLE ... ALTER COLUMN ... SET DATA TYPE VARCHAR(255)</button>
+          <button class="quiz-option" data-correct="true">Just run the ALTER — increasing VARCHAR length doesn't rewrite the table in Postgres</button>
+          <button class="quiz-option" data-correct="false">Create a new column, backfill, swap names</button>
+          <button class="quiz-option" data-correct="false">Use a CHECK constraint instead of changing the type</button>
+        </div>
+        <div class="quiz-explanation" id="quiz2Explanation">
+          <strong>Correct.</strong> In Postgres, increasing the length of a <code>VARCHAR</code> column (or changing to <code>TEXT</code>) doesn't rewrite the table. It only updates catalog metadata. This is one of those cases where the "safe" thing is also the simple thing. However, <em>decreasing</em> the length requires a full table rewrite — know the difference.
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>The Rollback Question</h2>
+        <p>Every migration review should start with: <strong>"How do we roll this back?"</strong> If the answer is "we can't," that's not automatically disqualifying — but it means you need a higher bar of confidence before deploying.</p>
+
+        <p>For truly irreversible operations (dropping a column that's confirmed unused), I follow a three-step gate:</p>
+
+        <p><strong>Step 1:</strong> Soft-delete the column — rename it to <code>_deprecated_columnname</code> and deploy. Wait one full release cycle.<br>
+        <strong>Step 2:</strong> Audit all queries touching that table — check <code>pg_stat_statements</code> for any reference to the old name. Check background jobs and analytics queries.<br>
+        <strong>Step 3:</strong> Only after both steps pass, drop the renamed column in a separate migration.</p>
+
+        <p>Three deploys for one column drop feels excessive until the day it saves you.</p>
+
+        <h2>Tooling That Helps</h2>
+        <p>A few tools I've found genuinely useful for migration safety:</p>
+
+        <p><strong><code>strong_migrations</code></strong> (Ruby) and <strong><code>django-pg-zero-downtime-migrations</code></strong> (Python) — these will actively reject unsafe migrations and suggest safe alternatives. If you're in one of these ecosystems, install them immediately.</p>
+
+        <p><strong><code>squawk</code></strong> — a Postgres migration linter. Run it in CI to catch unsafe DDL before it hits production. It checks for missing <code>CONCURRENTLY</code>, non-validated constraints, and other footguns.</p>
+
+        <p><strong><code>pgroll</code></strong> — newer tool from Xata that automates the expand-contract pattern. It manages dual-write versioning at the database level. Worth evaluating if you run many migrations.</p>
+
+        <div class="callout-gold callout">
+          <strong>My general rule:</strong> The migration tool doesn't matter as much as the discipline. If you can't explain the lock behavior of every DDL statement in your migration, you shouldn't be running it against production. Review the Postgres docs on <code>explicit locking</code> — it's the most important single page in the Postgres documentation.
+        </div>
+
+        <h2>Closing Thought</h2>
+        <p>Database migrations are one of those rare areas where being "boring" is a feature. The teams that do migrations well aren't the ones with clever tooling — they're the ones with a culture of caution. They review every migration like a code review. They test against production-sized datasets. They ask "what if we need to roll this back at 3am?"</p>
+
+        <p>The cost of a bad migration isn't just the downtime. It's the trust erosion — from your team, from your users, from yourself. Treat your schema changes like the production changes they are, and you'll sleep a lot better.</p>
+      </div>
+
+    </article>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 Pardeep Dhingra. Built with curiosity.</p>
+  </footer>
+
+  <script>
+    // Nav toggle
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => links.classList.toggle('open'));
+    links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
+
+    // Expandable sections
+    document.querySelectorAll('[data-expand]').forEach(section => {
+      section.querySelector('.expand-header').addEventListener('click', () => {
+        section.classList.toggle('open');
+      });
+    });
+
+    // Timeline step expand
+    document.querySelectorAll('[data-timeline]').forEach(step => {
+      step.addEventListener('click', () => {
+        step.classList.toggle('open');
+      });
+    });
+
+    // Tabbed panels
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const container = btn.closest('.tab-container');
+        container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        container.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        container.querySelector(`[data-panel="${btn.dataset.tab}"]`).classList.add('active');
+      });
+    });
+
+    // Impact counter animation
+    const impactGrid = document.getElementById('impactGrid');
+    let impactAnimated = false;
+    const impactObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !impactAnimated) {
+          impactAnimated = true;
+          impactGrid.querySelectorAll('.impact-number').forEach(el => {
+            const target = parseInt(el.dataset.target);
+            let current = 0;
+            const increment = Math.max(1, Math.floor(target / 30));
+            const timer = setInterval(() => {
+              current += increment;
+              if (current >= target) {
+                current = target;
+                clearInterval(timer);
+              }
+              el.textContent = current;
+            }, 40);
+          });
+        }
+      });
+    }, { threshold: 0.5 });
+    impactObserver.observe(impactGrid);
+
+    // Quiz functionality
+    document.querySelectorAll('.quiz-card').forEach(card => {
+      let answered = false;
+      card.querySelectorAll('.quiz-option').forEach(option => {
+        option.addEventListener('click', () => {
+          if (answered) return;
+          answered = true;
+          const isCorrect = option.dataset.correct === 'true';
+          option.classList.add(isCorrect ? 'correct' : 'wrong');
+          if (!isCorrect) {
+            card.querySelector('[data-correct="true"]').classList.add('correct');
+          }
+          card.querySelector('.quiz-explanation').classList.add('visible');
+        });
+      });
+    });
+  </script>
+
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" id="lightbox">
+    <button class="lightbox-close" aria-label="Close">&times;</button>
+    <img src="" alt="">
+  </div>
+  <script>
+  (function(){
+    var overlay = document.getElementById("lightbox");
+    var lbImg = overlay.querySelector("img");
+    var lbClose = overlay.querySelector(".lightbox-close");
+    document.querySelectorAll("img").forEach(function(img){
+      if (img.closest(".nav") || img.closest(".lightbox-overlay")) return;
+      img.setAttribute("data-lightbox","");
+    });
+    document.addEventListener("click", function(e){
+      var img = e.target.closest("img[data-lightbox]");
+      if (!img) return;
+      e.preventDefault(); e.stopPropagation();
+      lbImg.src = img.src; lbImg.alt = img.alt || "";
+      overlay.classList.add("active");
+      document.body.style.overflow = "hidden";
+    });
+    function closeLightbox(){
+      overlay.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+    lbClose.addEventListener("click", closeLightbox);
+    overlay.addEventListener("click", function(e){ if(e.target===overlay) closeLightbox(); });
+    document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeLightbox(); });
+  })();
+  </script>
+
+</body>
+</html>
