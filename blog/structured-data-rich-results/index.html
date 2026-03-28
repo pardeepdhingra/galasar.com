@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why Valid Structured Data Isn't Enough for Rich Results — Pardeep Dhingra</title>
+    <meta name="description" content="Schema.org validity doesn't guarantee Google Rich Results. Learn the gap between passing validation and earning enhanced search listings.">
+    <link rel="canonical" href="https://pardeepbuilds.com/blog/structured-data-rich-results">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .back-link {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            color: var(--text-dim); text-decoration: none; font-size: 0.85rem;
+            margin-bottom: 1.5rem; transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+        .blog-meta {
+            display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .blog-item-author {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.8rem; color: var(--text-dim); margin-bottom: 2.5rem;
+        }
+        .blog-item-author img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+        .blog-item-author strong { color: var(--text-body); font-weight: 550; }
+
+        /* Prose */
+        .prose { font-size: 0.95rem; line-height: 1.8; color: var(--text-body); }
+        .prose p { margin-bottom: 1.25rem; }
+        .prose h2 {
+            font-size: 1.35rem; font-weight: 700; color: var(--text);
+            margin: 2.5rem 0 1rem; letter-spacing: -0.02em;
+        }
+        .prose h3 {
+            font-size: 1.1rem; font-weight: 600; color: var(--accent);
+            margin: 2rem 0 0.75rem;
+        }
+        .prose strong { color: var(--text); font-weight: 600; }
+        .prose code {
+            font-family: var(--font-mono); background: rgba(95,202,201,0.08);
+            padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.85em;
+            color: var(--accent);
+        }
+
+        /* Code Compare */
+        .code-compare {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .code-panel {
+            background: #0a0a0c; border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden;
+        }
+        .code-panel.fail { border-color: rgba(239,68,68,0.3); }
+        .code-panel.pass { border-color: rgba(34,197,94,0.3); }
+        .code-panel-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.6rem 1rem; border-bottom: 1px solid var(--border);
+            font-size: 0.72rem; font-family: var(--font-mono);
+        }
+        .code-panel.fail .code-panel-header { color: #ef4444; background: rgba(239,68,68,0.05); }
+        .code-panel.pass .code-panel-header { color: #22c55e; background: rgba(34,197,94,0.05); }
+        .code-panel-body {
+            padding: 1rem 1.1rem; font-family: var(--font-mono);
+            font-size: 0.78rem; line-height: 1.7; color: var(--text-body);
+            overflow-x: auto; white-space: pre;
+        }
+        .json-key { color: var(--accent); }
+        .json-str { color: #ae9a64; }
+        .json-miss { color: #ef4444; opacity: 0.5; text-decoration: line-through; }
+        .json-add { color: #22c55e; background: rgba(34,197,94,0.08); display: inline; }
+
+        /* Quiz */
+        .quiz-card {
+            margin: 1.5rem 0; border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden;
+            background: var(--bg-chat);
+        }
+        .quiz-header {
+            padding: 1rem 1.25rem; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 1px solid var(--border);
+        }
+        .quiz-num {
+            font-family: var(--font-mono); font-size: 0.75rem;
+            color: var(--accent); font-weight: 600;
+        }
+        .quiz-type {
+            font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 4px;
+            background: rgba(95,202,201,0.1); color: var(--accent);
+            font-family: var(--font-mono);
+        }
+        .quiz-code {
+            padding: 1rem 1.25rem; font-family: var(--font-mono);
+            font-size: 0.78rem; line-height: 1.7; color: var(--text-body);
+            background: #0a0a0c; overflow-x: auto; white-space: pre;
+        }
+        .quiz-actions {
+            padding: 1rem 1.25rem; display: flex; gap: 0.75rem;
+        }
+        .quiz-btn {
+            flex: 1; padding: 0.7rem; border-radius: 8px; border: 1px solid var(--border);
+            background: transparent; color: var(--text-body); cursor: pointer;
+            font-size: 0.85rem; font-weight: 550; transition: all 0.2s;
+            font-family: var(--font);
+        }
+        .quiz-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .quiz-btn.selected-correct {
+            background: rgba(34,197,94,0.12); border-color: #22c55e; color: #22c55e;
+        }
+        .quiz-btn.selected-wrong {
+            background: rgba(239,68,68,0.12); border-color: #ef4444; color: #ef4444;
+        }
+        .quiz-btn.correct-reveal {
+            border-color: #22c55e; color: #22c55e;
+        }
+        .quiz-explain {
+            display: none; padding: 1rem 1.25rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.85rem; color: var(--text-body); line-height: 1.6;
+        }
+        .quiz-explain.visible { display: block; }
+
+        /* Validator Sim */
+        .validator {
+            margin: 2rem 0; padding: 1.5rem; background: var(--bg-chat);
+            border: 1px solid var(--border); border-radius: 12px;
+        }
+        .validator-title {
+            font-size: 1.1rem; font-weight: 600; color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+        .validator-desc {
+            font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1.25rem;
+        }
+        .validator-tabs {
+            display: flex; gap: 0.5rem; margin-bottom: 1.25rem;
+        }
+        .validator-tab {
+            padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border);
+            background: transparent; color: var(--text-dim); cursor: pointer;
+            font-size: 0.82rem; font-weight: 550; transition: all 0.2s;
+            font-family: var(--font);
+        }
+        .validator-tab.active {
+            background: rgba(95,202,201,0.1); border-color: var(--accent); color: var(--accent);
+        }
+        .validator-fields { margin-bottom: 1.25rem; }
+        .field-row {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .field-toggle {
+            position: relative; width: 38px; height: 22px;
+            background: rgba(255,255,255,0.08); border-radius: 11px;
+            cursor: pointer; transition: background 0.2s; flex-shrink: 0;
+        }
+        .field-toggle.on { background: var(--accent); }
+        .field-toggle::after {
+            content: ''; position: absolute; top: 3px; left: 3px;
+            width: 16px; height: 16px; background: white;
+            border-radius: 50%; transition: transform 0.2s;
+        }
+        .field-toggle.on::after { transform: translateX(16px); }
+        .field-name {
+            font-size: 0.85rem; color: var(--text-body); flex: 1;
+        }
+        .field-req {
+            font-size: 0.7rem; font-family: var(--font-mono);
+            padding: 0.15rem 0.5rem; border-radius: 4px;
+        }
+        .field-req.required { background: rgba(239,68,68,0.12); color: #ef4444; }
+        .field-req.recommended { background: rgba(234,179,8,0.12); color: #eab308; }
+        .validator-result {
+            padding: 1rem; border-radius: 8px; text-align: center;
+            font-size: 0.9rem; font-weight: 600; transition: all 0.3s;
+        }
+        .validator-result.pass {
+            background: rgba(34,197,94,0.1); color: #22c55e;
+            border: 1px solid rgba(34,197,94,0.2);
+        }
+        .validator-result.fail {
+            background: rgba(239,68,68,0.1); color: #ef4444;
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+        .validator-result.partial {
+            background: rgba(234,179,8,0.1); color: #eab308;
+            border: 1px solid rgba(234,179,8,0.2);
+        }
+
+        /* Callout */
+        .callout {
+            padding: 1.25rem 1.5rem; background: rgba(95,202,201,0.06);
+            border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0; font-size: 0.9rem; color: var(--text-body); line-height: 1.7;
+        }
+
+        /* Two-step flow */
+        .steps-flow {
+            display: grid; grid-template-columns: 1fr auto 1fr; gap: 0;
+            align-items: center; margin: 2rem 0;
+        }
+        .step-box {
+            padding: 1.25rem; background: var(--bg-chat);
+            border: 1px solid var(--border); border-radius: 12px;
+            text-align: center;
+        }
+        .step-box h4 {
+            font-size: 0.9rem; color: var(--text); margin-bottom: 0.4rem;
+        }
+        .step-box p {
+            font-size: 0.8rem; color: var(--text-dim); line-height: 1.5;
+        }
+        .step-arrow {
+            font-size: 1.5rem; color: var(--accent); padding: 0 0.75rem;
+        }
+
+        @media (max-width: 600px) {
+            .code-compare { grid-template-columns: 1fr; }
+            .steps-flow { grid-template-columns: 1fr; text-align: center; }
+            .step-arrow { transform: rotate(90deg); padding: 0.5rem 0; }
+        }
+    </style>
+</head>
+<body>
+
+  <nav class="nav scrolled">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">pardeep<span>builds</span></a>
+      <div class="nav-links" id="navLinks">
+        <a href="/">Home</a>
+        <a href="/portfolio">Portfolio</a>
+        <a href="/resume">Resume</a>
+        <a href="/blog" class="active">Blog</a>
+        <a href="/#contact">Contact</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <main>
+    <article class="section section-narrow" style="padding-top:9rem">
+      <div class="section-label">Blog</div>
+      <a href="/blog" class="back-link">← Back to Blog</a>
+
+      <div class="blog-meta">
+        <span class="blog-item-date">27 Jan 2026</span>
+        <span class="blog-item-tag">SEO</span>
+        <span class="blog-item-readtime">8 min read</span>
+      </div>
+
+      <h1 class="section-title">Why Valid Structured Data Isn't Enough for Google Rich Results</h1>
+
+      <div class="blog-item-author">
+        <img src="/profile.png" alt="Pardeep" onerror="this.style.display='none'">
+        By <strong>Pardeep Dhingra</strong>
+      </div>
+
+      <div class="prose">
+        <p>I spent hours adding schema.org markup to dozens of pages. Validated everything — every page passed with flying colors. Then I tested with Google's Rich Results Test. Nothing. No errors, no warnings. Just "Not eligible for rich results."</p>
+
+        <p>That's when it hit me: <strong>schema.org validity and Google's eligibility for rich results are two completely different things.</strong> Passing the schema.org validator is like passing a spell-check — it confirms your syntax is correct, but says nothing about whether Google will actually use it.</p>
+
+        <h2>The Gap: Valid ≠ Eligible</h2>
+        <p>Schema.org defines hundreds of types and properties. Google only supports a subset — and for each supported type, there are specific <strong>required fields</strong> that must be present for rich results to appear. Without them, your markup is invisible to Google's enhanced listings.</p>
+
+        <h3>FAQ Schema: The Missing Answer</h3>
+        <p>This is the most common mistake. Compare these two snippets — one earns rich results, one doesn't:</p>
+      </div>
+
+      <div class="code-compare">
+        <div class="code-panel pass">
+          <div class="code-panel-header">
+            <span>✓ Rich Results Eligible</span>
+            <span>FAQPage</span>
+          </div>
+          <div class="code-panel-body">{
+  <span class="json-key">"@context"</span>: <span class="json-str">"https://schema.org"</span>,
+  <span class="json-key">"@type"</span>: <span class="json-str">"FAQPage"</span>,
+  <span class="json-key">"mainEntity"</span>: [{
+    <span class="json-key">"@type"</span>: <span class="json-str">"Question"</span>,
+    <span class="json-key">"name"</span>: <span class="json-str">"What is structured data?"</span>,
+    <span class="json-add"><span class="json-key">"acceptedAnswer"</span>: {
+      <span class="json-key">"@type"</span>: <span class="json-str">"Answer"</span>,
+      <span class="json-key">"text"</span>: <span class="json-str">"A standardized format..."</span>
+    }</span>
+  }]
+}</div>
+        </div>
+        <div class="code-panel fail">
+          <div class="code-panel-header">
+            <span>✗ Valid but NOT Eligible</span>
+            <span>FAQPage</span>
+          </div>
+          <div class="code-panel-body">{
+  <span class="json-key">"@context"</span>: <span class="json-str">"https://schema.org"</span>,
+  <span class="json-key">"@type"</span>: <span class="json-str">"FAQPage"</span>,
+  <span class="json-key">"mainEntity"</span>: [{
+    <span class="json-key">"@type"</span>: <span class="json-str">"Question"</span>,
+    <span class="json-key">"name"</span>: <span class="json-str">"What is structured data?"</span>
+    <span class="json-miss">// Missing: acceptedAnswer</span>
+    <span class="json-miss">// Google requires this field</span>
+  }]
+}</div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h3>Product Schema: More Than Just a Name</h3>
+      </div>
+
+      <div class="code-compare">
+        <div class="code-panel pass">
+          <div class="code-panel-header">
+            <span>✓ Rich Results Eligible</span>
+            <span>Product</span>
+          </div>
+          <div class="code-panel-body">{
+  <span class="json-key">"@type"</span>: <span class="json-str">"Product"</span>,
+  <span class="json-key">"name"</span>: <span class="json-str">"SuperSoft Pillow"</span>,
+  <span class="json-add"><span class="json-key">"image"</span>: <span class="json-str">"https://example.com/pillow.jpg"</span>,
+  <span class="json-key">"offers"</span>: {
+    <span class="json-key">"@type"</span>: <span class="json-str">"Offer"</span>,
+    <span class="json-key">"price"</span>: <span class="json-str">"29.99"</span>,
+    <span class="json-key">"priceCurrency"</span>: <span class="json-str">"USD"</span>,
+    <span class="json-key">"availability"</span>: <span class="json-str">"InStock"</span>
+  },
+  <span class="json-key">"aggregateRating"</span>: {
+    <span class="json-key">"ratingValue"</span>: <span class="json-str">"4.5"</span>,
+    <span class="json-key">"reviewCount"</span>: <span class="json-str">"89"</span>
+  }</span>
+}</div>
+        </div>
+        <div class="code-panel fail">
+          <div class="code-panel-header">
+            <span>✗ Valid but NOT Eligible</span>
+            <span>Product</span>
+          </div>
+          <div class="code-panel-body">{
+  <span class="json-key">"@type"</span>: <span class="json-str">"Product"</span>,
+  <span class="json-key">"name"</span>: <span class="json-str">"SuperSoft Pillow"</span>
+  <span class="json-miss">// Missing: image</span>
+  <span class="json-miss">// Missing: offers (price, currency)</span>
+  <span class="json-miss">// Missing: aggregateRating</span>
+  <span class="json-miss">// Google needs these for stars + price</span>
+}</div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>Quiz: Will This Schema Earn Rich Results?</h2>
+        <p>Test your understanding — look at each snippet and decide before revealing the answer:</p>
+      </div>
+
+      <!-- Quiz 1 -->
+      <div class="quiz-card" data-quiz="0">
+        <div class="quiz-header">
+          <span class="quiz-num">Q1</span>
+          <span class="quiz-type">Review</span>
+        </div>
+        <div class="quiz-code">{
+  <span class="json-key">"@type"</span>: <span class="json-str">"Review"</span>,
+  <span class="json-key">"author"</span>: { <span class="json-key">"name"</span>: <span class="json-str">"Jane Doe"</span> },
+  <span class="json-key">"reviewRating"</span>: { <span class="json-key">"ratingValue"</span>: <span class="json-str">"5"</span> }
+}</div>
+        <div class="quiz-actions">
+          <button class="quiz-btn" data-answer="yes">✓ Yes — Eligible</button>
+          <button class="quiz-btn" data-answer="no">✗ No — Not Eligible</button>
+        </div>
+        <div class="quiz-explain">
+          <strong>Answer: Not eligible.</strong> Missing <code>itemReviewed</code> — Google needs to know what's being reviewed. A review without a subject is meaningless for rich results.
+        </div>
+      </div>
+
+      <!-- Quiz 2 -->
+      <div class="quiz-card" data-quiz="1">
+        <div class="quiz-header">
+          <span class="quiz-num">Q2</span>
+          <span class="quiz-type">FAQPage</span>
+        </div>
+        <div class="quiz-code">{
+  <span class="json-key">"@type"</span>: <span class="json-str">"FAQPage"</span>,
+  <span class="json-key">"mainEntity"</span>: [{
+    <span class="json-key">"@type"</span>: <span class="json-str">"Question"</span>,
+    <span class="json-key">"name"</span>: <span class="json-str">"How much does shipping cost?"</span>,
+    <span class="json-key">"acceptedAnswer"</span>: {
+      <span class="json-key">"@type"</span>: <span class="json-str">"Answer"</span>,
+      <span class="json-key">"text"</span>: <span class="json-str">"Free shipping on orders over $50."</span>
+    }
+  }]
+}</div>
+        <div class="quiz-actions">
+          <button class="quiz-btn" data-answer="yes">✓ Yes — Eligible</button>
+          <button class="quiz-btn" data-answer="no">✗ No — Not Eligible</button>
+        </div>
+        <div class="quiz-explain">
+          <strong>Answer: Eligible!</strong> This FAQ has both the <code>Question</code> and <code>acceptedAnswer</code> with <code>text</code>. All required fields are present. Note: since August 2023, Google only shows FAQ rich results for government and health sites — but the schema still matters for AI search engines.
+        </div>
+      </div>
+
+      <!-- Quiz 3 -->
+      <div class="quiz-card" data-quiz="2">
+        <div class="quiz-header">
+          <span class="quiz-num">Q3</span>
+          <span class="quiz-type">Product</span>
+        </div>
+        <div class="quiz-code">{
+  <span class="json-key">"@type"</span>: <span class="json-str">"Product"</span>,
+  <span class="json-key">"name"</span>: <span class="json-str">"ErgoChair Pro"</span>,
+  <span class="json-key">"image"</span>: <span class="json-str">"https://example.com/chair.jpg"</span>,
+  <span class="json-key">"offers"</span>: {
+    <span class="json-key">"price"</span>: <span class="json-str">"349.99"</span>,
+    <span class="json-key">"priceCurrency"</span>: <span class="json-str">"USD"</span>
+  }
+}</div>
+        <div class="quiz-actions">
+          <button class="quiz-btn" data-answer="yes">✓ Yes — Eligible</button>
+          <button class="quiz-btn" data-answer="no">✗ No — Not Eligible</button>
+        </div>
+        <div class="quiz-explain">
+          <strong>Answer: Partially eligible.</strong> Has name, image, and offers with price — enough for a basic product listing. But missing <code>availability</code> in offers and <code>aggregateRating</code> means you won't get star ratings or "In Stock" badges. You'll get a minimal rich result at best.
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>Interactive Validator</h2>
+        <p>Toggle fields on and off to see which combinations pass Google's Rich Results requirements:</p>
+      </div>
+
+      <!-- Interactive Validator -->
+      <div class="validator" id="validator">
+        <div class="validator-title">Schema Field Simulator</div>
+        <div class="validator-desc">Select a schema type and toggle fields to test eligibility</div>
+
+        <div class="validator-tabs" id="validatorTabs">
+          <button class="validator-tab active" data-schema="faq">FAQPage</button>
+          <button class="validator-tab" data-schema="product">Product</button>
+          <button class="validator-tab" data-schema="review">Review</button>
+        </div>
+
+        <div class="validator-fields" id="validatorFields"></div>
+        <div class="validator-result" id="validatorResult">Toggle fields above to test</div>
+      </div>
+
+      <div class="prose">
+        <h2>The Two-Step Validation Process</h2>
+        <p>Most developers only use step one and wonder why nothing shows up in search. You need both:</p>
+      </div>
+
+      <div class="steps-flow">
+        <div class="step-box">
+          <h4>Step 1: Schema.org Validator</h4>
+          <p>Confirms syntax is correct. Catches typos, nesting errors, and type mismatches. Use during development.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step-box">
+          <h4>Step 2: Google Rich Results Test</h4>
+          <p>Checks if your markup meets Google's eligibility criteria. Highlights missing required fields. Use before shipping.</p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>Key insight:</strong> Validation tells you your code is correct. The Rich Results Test tells you Google will actually use it. Always run both — and monitor via Search Console's Enhancements Reports for ongoing detection.
+      </div>
+
+      <div class="prose">
+        <h2>What I Learned the Hard Way</h2>
+        <p>Structured data isn't a one-time implementation. It's an ongoing technical SEO discipline. Google updates their eligibility criteria regularly, and what worked last quarter might not work today.</p>
+        <p>The biggest shift I've seen: while Google deprioritized FAQ rich results in August 2023 (restricting them to government and health sites), AI search engines like ChatGPT Search, Perplexity, and Google AI Overviews actively <strong>consume</strong> FAQ structured data to decide which brands to cite. Pages with well-structured FAQ content see significantly higher citation rates in AI-generated answers.</p>
+        <p>So even if Google's traditional search results don't display your FAQ schema as a rich result, that same schema is being read by AI systems. The lesson: <strong>don't strip out structured data just because one consumer stopped using it.</strong> The audience for your markup is growing, not shrinking.</p>
+      </div>
+
+    </article>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 Pardeep Dhingra. Built with curiosity.</p>
+  </footer>
+
+  <script>
+    // Nav toggle
+    const toggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+    navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+    // Quiz
+    const quizAnswers = ['no', 'yes', 'yes']; // correct answers
+    document.querySelectorAll('.quiz-card').forEach(card => {
+      const idx = parseInt(card.dataset.quiz);
+      const btns = card.querySelectorAll('.quiz-btn');
+      const explain = card.querySelector('.quiz-explain');
+      btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (card.classList.contains('answered')) return;
+          card.classList.add('answered');
+          const answer = btn.dataset.answer;
+          const correct = quizAnswers[idx];
+          if (answer === correct) {
+            btn.classList.add('selected-correct');
+          } else {
+            btn.classList.add('selected-wrong');
+            btns.forEach(b => { if (b.dataset.answer === correct) b.classList.add('correct-reveal'); });
+          }
+          explain.classList.add('visible');
+        });
+      });
+    });
+
+    // Validator simulator
+    const schemas = {
+      faq: {
+        fields: [
+          { name: '@type: FAQPage', on: true, locked: true },
+          { name: 'mainEntity (Question array)', required: true, on: true },
+          { name: 'Question → name', required: true, on: true },
+          { name: 'Question → acceptedAnswer', required: true, on: false },
+          { name: 'acceptedAnswer → text', required: true, on: false },
+        ],
+        check: (states) => {
+          if (states.every(s => s)) return { status: 'pass', msg: '✓ Eligible for FAQ rich results (Note: restricted to gov/health sites since Aug 2023, but still consumed by AI search)' };
+          const missing = [];
+          if (!states[3]) missing.push('acceptedAnswer');
+          if (!states[4]) missing.push('answer text');
+          return { status: 'fail', msg: '✗ Not eligible — missing: ' + missing.join(', ') };
+        }
+      },
+      product: {
+        fields: [
+          { name: '@type: Product', on: true, locked: true },
+          { name: 'name', required: true, on: true },
+          { name: 'image', required: true, on: false },
+          { name: 'offers → price + currency', required: true, on: false },
+          { name: 'offers → availability', recommended: true, on: false },
+          { name: 'aggregateRating', recommended: true, on: false },
+        ],
+        check: (states) => {
+          const hasRequired = states[1] && states[2] && states[3];
+          const hasRecommended = states[4] && states[5];
+          if (hasRequired && hasRecommended) return { status: 'pass', msg: '✓ Fully eligible — will show price, stars, and availability' };
+          if (hasRequired) return { status: 'partial', msg: '⚠ Basic eligibility — missing recommended fields for full rich result' };
+          const missing = [];
+          if (!states[2]) missing.push('image');
+          if (!states[3]) missing.push('offers/price');
+          return { status: 'fail', msg: '✗ Not eligible — missing: ' + missing.join(', ') };
+        }
+      },
+      review: {
+        fields: [
+          { name: '@type: Review', on: true, locked: true },
+          { name: 'itemReviewed', required: true, on: false },
+          { name: 'author', required: true, on: true },
+          { name: 'reviewRating → ratingValue', required: true, on: true },
+          { name: 'reviewBody', recommended: true, on: false },
+        ],
+        check: (states) => {
+          const hasRequired = states[1] && states[2] && states[3];
+          if (hasRequired && states[4]) return { status: 'pass', msg: '✓ Fully eligible for review rich result' };
+          if (hasRequired) return { status: 'partial', msg: '⚠ Eligible but incomplete — reviewBody recommended for quality' };
+          const missing = [];
+          if (!states[1]) missing.push('itemReviewed');
+          if (!states[2]) missing.push('author');
+          if (!states[3]) missing.push('reviewRating');
+          return { status: 'fail', msg: '✗ Not eligible — missing: ' + missing.join(', ') };
+        }
+      }
+    };
+
+    let currentSchema = 'faq';
+    const fieldsContainer = document.getElementById('validatorFields');
+    const resultEl = document.getElementById('validatorResult');
+
+    function renderValidator() {
+      const schema = schemas[currentSchema];
+      fieldsContainer.innerHTML = schema.fields.map((f, i) => {
+        const req = f.required ? '<span class="field-req required">required</span>' : f.recommended ? '<span class="field-req recommended">recommended</span>' : '';
+        const onClass = f.on ? 'on' : '';
+        const locked = f.locked ? 'style="opacity:0.5;pointer-events:none"' : '';
+        return `<div class="field-row" ${locked}>
+          <div class="field-toggle ${onClass}" data-idx="${i}"></div>
+          <span class="field-name">${f.name}</span>
+          ${req}
+        </div>`;
+      }).join('');
+      updateResult();
+    }
+
+    function updateResult() {
+      const schema = schemas[currentSchema];
+      const states = schema.fields.map(f => f.on);
+      const result = schema.check(states);
+      resultEl.textContent = result.msg;
+      resultEl.className = 'validator-result ' + result.status;
+    }
+
+    fieldsContainer.addEventListener('click', e => {
+      const toggle = e.target.closest('.field-toggle');
+      if (!toggle) return;
+      const idx = parseInt(toggle.dataset.idx);
+      const field = schemas[currentSchema].fields[idx];
+      if (field.locked) return;
+      field.on = !field.on;
+      toggle.classList.toggle('on');
+      updateResult();
+    });
+
+    document.getElementById('validatorTabs').addEventListener('click', e => {
+      const tab = e.target.closest('.validator-tab');
+      if (!tab) return;
+      document.querySelectorAll('.validator-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentSchema = tab.dataset.schema;
+      renderValidator();
+    });
+
+    renderValidator();
+  </script>
+
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" id="lightbox">
+    <button class="lightbox-close" aria-label="Close">&times;</button>
+    <img src="" alt="">
+  </div>
+  <script>
+  (function(){
+    var overlay = document.getElementById("lightbox");
+    var lbImg = overlay.querySelector("img");
+    var lbClose = overlay.querySelector(".lightbox-close");
+    document.querySelectorAll("img").forEach(function(img){
+      if (img.closest(".nav") || img.closest(".lightbox-overlay")) return;
+      img.setAttribute("data-lightbox","");
+    });
+    document.addEventListener("click", function(e){
+      var img = e.target.closest("img[data-lightbox]");
+      if (!img) return;
+      e.preventDefault(); e.stopPropagation();
+      lbImg.src = img.src; lbImg.alt = img.alt || "";
+      overlay.classList.add("active");
+      document.body.style.overflow = "hidden";
+    });
+    function closeLightbox(){
+      overlay.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+    lbClose.addEventListener("click", closeLightbox);
+    overlay.addEventListener("click", function(e){ if(e.target===overlay) closeLightbox(); });
+    document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeLightbox(); });
+  })();
+  </script>
+
+</body>
+</html>

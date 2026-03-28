@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Savoré - Traditional Restaurant</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #faf8f5; color: #333; }
+    .header { background: #2c1810; color: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
+    .header .logo { font-size: 24px; font-weight: 700; font-style: italic; }
+    .header .logo span { color: #d4a574; }
+    .header-nav { display: flex; gap: 24px; }
+    .header-nav a { color: #ccc; text-decoration: none; font-size: 14px; font-weight: 500; }
+    .header-nav a:hover { color: #d4a574; }
+    .banner { background: linear-gradient(135deg, #2c1810, #4a2c1a); color: white; text-align: center; padding: 48px 20px; }
+    .banner h1 { font-size: 32px; margin-bottom: 8px; font-style: italic; }
+    .banner p { opacity: 0.8; font-size: 16px; max-width: 500px; margin: 0 auto; }
+    .banner-badge { display: inline-block; background: #d4a574; color: #2c1810; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 12px; }
+    .section-title { text-align: center; font-size: 22px; margin: 32px 0 8px; color: #2c1810; }
+    .section-sub { text-align: center; font-size: 14px; color: #888; margin-bottom: 24px; }
+
+    /* Menu */
+    .menu-tabs { display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; }
+    .menu-tab { padding: 8px 20px; border-radius: 20px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 14px; font-weight: 500; color: #666; }
+    .menu-tab.active { background: #2c1810; color: white; border-color: #2c1810; }
+    .menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 0 32px 32px; max-width: 1100px; margin: 0 auto; }
+    .menu-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: transform 0.2s; }
+    .menu-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+    .menu-img { width: 100%; height: 180px; display: flex; align-items: center; justify-content: center; font-size: 56px; }
+    .menu-img.starters { background: linear-gradient(135deg, #fff5eb, #ffe8d0); }
+    .menu-img.mains { background: linear-gradient(135deg, #ffeaea, #ffd4d4); }
+    .menu-img.desserts { background: linear-gradient(135deg, #f0e6ff, #e0d0ff); }
+    .menu-info { padding: 16px; }
+    .menu-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .menu-desc { font-size: 13px; color: #777; margin-bottom: 12px; line-height: 1.4; }
+    .menu-footer { display: flex; justify-content: space-between; align-items: center; }
+    .menu-price { font-size: 18px; font-weight: 700; color: #d4a574; }
+    .menu-tags { display: flex; gap: 4px; }
+    .menu-tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: #f0ebe5; color: #8b6f47; }
+
+    /* Reservation Form */
+    .reserve-section { background: #2c1810; color: white; padding: 48px 20px; margin-top: 32px; }
+    .reserve-section h2 { text-align: center; font-size: 26px; margin-bottom: 8px; font-style: italic; }
+    .reserve-section .section-sub { color: #999; }
+    .reserve-form { max-width: 600px; margin: 24px auto 0; background: #3d241a; border-radius: 16px; padding: 32px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: #d4a574; margin-bottom: 6px; }
+    .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #5a3d2e; border-radius: 8px; font-size: 14px; background: #2c1810; color: white; }
+    .form-group input::placeholder { color: #777; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: #d4a574; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .btn-reserve { width: 100%; padding: 14px; background: #d4a574; color: #2c1810; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+    .btn-reserve:hover { background: #c4955a; }
+
+    /* Time Slots */
+    .time-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+    .time-slot { padding: 8px; border: 1px solid #5a3d2e; border-radius: 8px; text-align: center; cursor: pointer; font-size: 13px; color: #ccc; background: #2c1810; transition: all 0.2s; }
+    .time-slot:hover { border-color: #d4a574; color: white; }
+    .time-slot.selected { background: #d4a574; color: #2c1810; border-color: #d4a574; font-weight: 600; }
+    .time-slot.unavailable { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
+
+    /* Success overlay */
+    .success-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center; }
+    .success-overlay.open { display: flex; }
+    .success-modal { background: white; border-radius: 16px; padding: 48px; text-align: center; max-width: 420px; color: #333; }
+    .success-icon { font-size: 64px; margin-bottom: 16px; }
+    .success-modal h2 { font-size: 24px; margin-bottom: 8px; color: #2c1810; }
+    .success-modal p { color: #666; margin-bottom: 8px; line-height: 1.5; }
+    .success-modal .confirm-id { font-family: monospace; font-size: 14px; color: #d4a574; background: #f5efe8; padding: 8px 16px; border-radius: 8px; display: inline-block; margin: 12px 0 24px; }
+    .btn-back { padding: 12px 32px; background: #2c1810; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+    .back-link { display: inline-block; margin: 16px 32px; color: #888; text-decoration: none; font-size: 14px; }
+    .back-link:hover { color: #d4a574; }
+    .mode-banner { background: #fff3cd; border-bottom: 2px solid #ffc107; padding: 10px 32px; text-align: center; font-size: 14px; color: #856404; }
+    .mode-banner strong { color: #664d03; }
+
+    /* Agent demo */
+    .agent-demo-btn { position: fixed; bottom: 32px; left: 32px; z-index: 50; padding: 14px 24px; background: #e94560; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(233,69,96,0.3); }
+    .agent-demo-btn:hover { background: #d63551; }
+    .agent-demo-panel { position: fixed; top: 0; left: -450px; width: 420px; height: 100vh; background: #1a1a2e; color: white; z-index: 110; transition: left 0.3s; display: flex; flex-direction: column; box-shadow: 4px 0 20px rgba(0,0,0,0.3); }
+    .agent-demo-panel.open { left: 0; }
+    .agent-demo-header { padding: 20px; border-bottom: 2px solid #e94560; display: flex; justify-content: space-between; align-items: flex-start; }
+    .agent-demo-header h2 { font-size: 16px; font-weight: 700; color: #e94560; }
+    .agent-demo-close { background: none; border: none; color: #999; cursor: pointer; font-size: 24px; }
+    .agent-demo-log { flex: 1; overflow-y: auto; padding: 16px; font-family: 'Monaco','Courier New', monospace; font-size: 12px; line-height: 1.5; }
+    .agent-log-entry { margin-bottom: 12px; display: flex; gap: 8px; }
+    .agent-log-timestamp { color: #666; flex-shrink: 0; }
+    .agent-log-text { flex: 1; }
+    .agent-log-action { color: #e94560; font-weight: 600; }
+    .agent-log-scanning { color: #ccc; }
+    .agent-log-warning { color: #ffc107; }
+    .agent-log-thinking { color: #999; font-style: italic; }
+    .agent-log-success { color: #4caf50; }
+    .agent-demo-footer { padding: 12px; border-top: 1px solid #333; display: flex; gap: 8px; align-items: flex-end; }
+    .agent-input { flex: 1; padding: 10px 12px; background: #2a2a3e; color: white; border: 1px solid #444; border-radius: 8px; font-size: 12px; font-family: -apple-system, sans-serif; outline: none; resize: none; line-height: 1.5; }
+    .agent-input:focus { border-color: #e94560; }
+    .agent-demo-btn-small { padding: 10px 18px; background: #e94560; color: white; border: none; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 600; flex-shrink: 0; }
+    .agent-demo-timer { text-align: center; padding: 16px; color: #999; font-size: 13px; border-top: 1px solid #333; }
+    .agent-demo-timer .elapsed { color: #e94560; font-weight: 700; font-size: 18px; }
+
+    @media (max-width: 700px) { .menu { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } .time-slots { grid-template-columns: repeat(3, 1fr); } }
+  </style>
+</head>
+<body>
+  <div class="mode-banner">
+    <strong>TRADITIONAL MODE</strong> — Standard HTML. No WebMCP tools registered. AI agents must guess at page structure.
+  </div>
+  <a href="index.html" class="back-link">&larr; Back to Demo Hub</a>
+
+  <header class="header">
+    <div class="logo">Savor<span>é</span></div>
+    <div class="header-nav">
+      <a href="#menu">Menu</a>
+      <a href="#reserve">Reservations</a>
+      <a href="#">About</a>
+    </div>
+  </header>
+
+  <div class="banner">
+    <div class="banner-badge">FINE DINING</div>
+    <h1>A Taste of Perfection</h1>
+    <p>Modern European cuisine in the heart of the city. Farm-to-table ingredients, curated wine list.</p>
+  </div>
+
+  <h2 class="section-title" id="menu">Our Menu</h2>
+  <p class="section-sub">Seasonal dishes crafted by Chef Isabella Torres</p>
+
+  <div class="menu-tabs">
+    <button class="menu-tab active" onclick="filterMenu('all')">All</button>
+    <button class="menu-tab" onclick="filterMenu('starters')">Starters</button>
+    <button class="menu-tab" onclick="filterMenu('mains')">Mains</button>
+    <button class="menu-tab" onclick="filterMenu('desserts')">Desserts</button>
+  </div>
+
+  <div class="menu" id="menuGrid"></div>
+
+  <div class="reserve-section" id="reserve">
+    <h2>Reserve a Table</h2>
+    <p class="section-sub">Book your dining experience</p>
+    <div class="reserve-form">
+      <div class="form-row">
+        <div class="form-group"><label>Full Name</label><input type="text" id="guestName" placeholder="Jane Smith"></div>
+        <div class="form-group"><label>Email</label><input type="text" id="guestEmail" placeholder="jane@example.com"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Phone</label><input type="text" id="guestPhone" placeholder="+1 (555) 987-6543"></div>
+        <div class="form-group"><label>Party Size</label><select id="partySize"><option value="">Select...</option><option value="1">1 Guest</option><option value="2">2 Guests</option><option value="3">3 Guests</option><option value="4">4 Guests</option><option value="5">5 Guests</option><option value="6">6 Guests</option><option value="7">7-8 (Large Party)</option></select></div>
+      </div>
+      <div class="form-group"><label>Date</label><input type="date" id="reserveDate"></div>
+      <div class="form-group">
+        <label>Preferred Time</label>
+        <div class="time-slots" id="timeSlots"></div>
+      </div>
+      <div class="form-group"><label>Special Requests</label><input type="text" id="specialRequests" placeholder="Allergies, celebrations, seating preferences..."></div>
+      <button class="btn-reserve" onclick="makeReservation()">Confirm Reservation</button>
+    </div>
+  </div>
+
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-modal">
+      <div class="success-icon">&#127860;</div>
+      <h2>Reservation Confirmed!</h2>
+      <p id="confirmMsg">Your table is booked.</p>
+      <div class="confirm-id" id="confirmId">RES-000000</div>
+      <p style="font-size:13px;color:#999;">You'll receive a confirmation email shortly.</p>
+      <button class="btn-back" onclick="resetAll()">Back to Menu</button>
+    </div>
+  </div>
+
+  <button class="agent-demo-btn" onclick="openAgentDemo()">&#9654;&#65039; Run AI Agent</button>
+
+  <div class="agent-demo-panel" id="agentDemoPanel">
+    <div class="agent-demo-header">
+      <div><h2>&#129302; AI Agent</h2></div>
+      <button class="agent-demo-close" onclick="closeAgentDemo()">&times;</button>
+    </div>
+    <div class="agent-demo-log" id="agentDemoLog"></div>
+    <div class="agent-demo-timer" id="agentDemoTimer" style="display:none;">
+      <div>Total time: <span class="elapsed" id="agentElapsedTime">0.0s</span></div>
+      <div style="font-size:11px;margin-top:8px;color:#e94560;">&#9888; With WebMCP: ~8s</div>
+    </div>
+    <div class="agent-demo-footer" id="agentDemoFooter">
+      <textarea id="agentMessageInput" class="agent-input" rows="4" placeholder="Type a message...">Book a table for 2 on Friday at 7:30 PM under the name Jane Smith, email jane@example.com, phone 555-987-6543. We're celebrating an anniversary.</textarea>
+      <button class="agent-demo-btn-small" onclick="runAgentDemo()" id="agentSendBtn">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const menuItems = [
+      { id: 1, name: "Truffle Burrata", desc: "Creamy burrata, black truffle, heirloom tomato, basil oil, sourdough crisps", price: 18, category: "starters", emoji: "🧀", tags: ["Vegetarian"] },
+      { id: 2, name: "Tuna Tartare", desc: "Yellowfin tuna, avocado, sesame, ponzu, wonton chips", price: 22, category: "starters", emoji: "🐟", tags: ["Gluten-Free"] },
+      { id: 3, name: "French Onion Soup", desc: "Caramelized onion, gruyère crouton, sherry broth", price: 14, category: "starters", emoji: "🍲", tags: [] },
+      { id: 4, name: "Wagyu Ribeye", desc: "12oz A5 wagyu, roasted bone marrow, truffle jus, pommes purée", price: 68, category: "mains", emoji: "🥩", tags: ["Chef's Pick"] },
+      { id: 5, name: "Pan-Seared Salmon", desc: "Atlantic salmon, asparagus, lemon beurre blanc, wild rice", price: 38, category: "mains", emoji: "🍣", tags: ["Gluten-Free"] },
+      { id: 6, name: "Wild Mushroom Risotto", desc: "Arborio rice, porcini, chanterelle, parmesan, white truffle oil", price: 32, category: "mains", emoji: "🍄", tags: ["Vegetarian"] },
+      { id: 7, name: "Crème Brûlée", desc: "Madagascar vanilla custard, caramelized sugar, fresh berries", price: 14, category: "desserts", emoji: "🍮", tags: [] },
+      { id: 8, name: "Chocolate Fondant", desc: "Valrhona dark chocolate, molten center, salted caramel ice cream", price: 16, category: "desserts", emoji: "🍫", tags: ["Chef's Pick"] },
+      { id: 9, name: "Lemon Tart", desc: "Meyer lemon curd, Italian meringue, raspberry coulis", price: 13, category: "desserts", emoji: "🍋", tags: ["Vegetarian"] }
+    ];
+
+    const timeSlots = ["5:30 PM", "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM"];
+    const unavailableSlots = ["6:00 PM", "8:00 PM"]; // simulated unavailability
+    let selectedTime = null;
+    let activeCategory = 'all';
+
+    function renderMenu() {
+      const filtered = activeCategory === 'all' ? menuItems : menuItems.filter(m => m.category === activeCategory);
+      document.getElementById('menuGrid').innerHTML = filtered.map(m => `
+        <div class="menu-card" data-category="${m.category}">
+          <div class="menu-img ${m.category}">${m.emoji}</div>
+          <div class="menu-info">
+            <div class="menu-name">${m.name}</div>
+            <div class="menu-desc">${m.desc}</div>
+            <div class="menu-footer">
+              <span class="menu-price">$${m.price}</span>
+              <div class="menu-tags">${m.tags.map(t => `<span class="menu-tag">${t}</span>`).join('')}</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterMenu(cat) {
+      activeCategory = cat;
+      document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      renderMenu();
+    }
+
+    function renderTimeSlots() {
+      document.getElementById('timeSlots').innerHTML = timeSlots.map(t => {
+        const unavail = unavailableSlots.includes(t);
+        return `<div class="time-slot ${unavail ? 'unavailable' : ''}" onclick="${unavail ? '' : `selectTime('${t}')`}">${t}</div>`;
+      }).join('');
+    }
+
+    function selectTime(t) {
+      selectedTime = t;
+      document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
+      event.target.classList.add('selected');
+    }
+
+    function makeReservation() {
+      const name = document.getElementById('guestName').value;
+      const email = document.getElementById('guestEmail').value;
+      const date = document.getElementById('reserveDate').value;
+      if (!name || !email || !date || !selectedTime) { alert('Please fill in all required fields and select a time.'); return; }
+      const resId = 'RES-' + Date.now().toString().slice(-6);
+      const partySize = document.getElementById('partySize').value || '2';
+      document.getElementById('confirmMsg').textContent = `Table for ${partySize} on ${date} at ${selectedTime}`;
+      document.getElementById('confirmId').textContent = resId;
+      document.getElementById('successOverlay').classList.add('open');
+    }
+
+    function resetAll() {
+      document.getElementById('successOverlay').classList.remove('open');
+      document.getElementById('guestName').value = '';
+      document.getElementById('guestEmail').value = '';
+      document.getElementById('guestPhone').value = '';
+      document.getElementById('partySize').selectedIndex = 0;
+      document.getElementById('reserveDate').value = '';
+      document.getElementById('specialRequests').value = '';
+      selectedTime = null;
+      renderTimeSlots();
+    }
+
+    // Set default date to tomorrow
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('reserveDate').value = tomorrow.toISOString().split('T')[0];
+
+    renderMenu();
+    renderTimeSlots();
+
+    // Enter key to send
+    document.addEventListener('DOMContentLoaded', () => {
+      const inp = document.getElementById('agentMessageInput');
+      if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); runAgentDemo(); } });
+    });
+
+    // AI Agent Demo
+    let agentDemoRunning = false;
+    let agentStartTime = 0;
+
+    function openAgentDemo() {
+      document.getElementById('agentDemoPanel').classList.add('open');
+      document.querySelector('.agent-demo-btn').style.display = 'none';
+      document.getElementById('agentMessageInput').focus();
+    }
+    function closeAgentDemo() {
+      document.getElementById('agentDemoPanel').classList.remove('open');
+      document.querySelector('.agent-demo-btn').style.display = '';
+    }
+
+    function logAgentMessage(type, message, delay = 0) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const log = document.getElementById('agentDemoLog');
+          const elapsed = ((Date.now() - agentStartTime) / 1000).toFixed(1);
+          const entry = document.createElement('div');
+          entry.className = 'agent-log-entry';
+          let className = 'agent-log-text';
+          if (type === 'action') className += ' agent-log-action';
+          else if (type === 'scanning') className += ' agent-log-scanning';
+          else if (type === 'warning') className += ' agent-log-warning';
+          else if (type === 'thinking') className += ' agent-log-thinking';
+          else if (type === 'success') className += ' agent-log-success';
+          entry.innerHTML = `<span class="agent-log-timestamp">[${elapsed}s]</span><span class="${className}">${message}</span>`;
+          log.appendChild(entry);
+          log.scrollTop = log.scrollHeight;
+          resolve();
+        }, delay);
+      });
+    }
+
+    async function runAgentDemo() {
+      if (agentDemoRunning) return;
+      agentDemoRunning = true;
+      resetAll();
+
+      const log = document.getElementById('agentDemoLog');
+      const footer = document.getElementById('agentDemoFooter');
+      const timer = document.getElementById('agentDemoTimer');
+      const input = document.getElementById('agentMessageInput');
+      const sendBtn = document.getElementById('agentSendBtn');
+      const userMessage = input.value.trim();
+      if (!userMessage) { agentDemoRunning = false; return; }
+
+      input.disabled = true;
+      sendBtn.disabled = true;
+      log.innerHTML = '';
+      footer.querySelector('.agent-input').style.display = 'none';
+      footer.querySelector('.agent-demo-btn-small').style.display = 'none';
+      timer.style.display = 'none';
+      agentStartTime = Date.now();
+
+      // Show user message
+      const userEntry = document.createElement('div');
+      userEntry.className = 'agent-log-entry';
+      userEntry.innerHTML = `<span class="agent-log-text" style="color:#e94560;font-weight:600;">You:</span> <span class="agent-log-text agent-log-scanning">${userMessage}</span>`;
+      log.appendChild(userEntry);
+      log.scrollTop = log.scrollHeight;
+
+      await logAgentMessage('thinking', 'Initializing...', 800);
+      await logAgentMessage('scanning', '▶ Scanning page DOM for interactive elements...', 2000);
+      await logAgentMessage('thinking', 'Found 62 DOM nodes... analyzing structure...', 2000);
+      await logAgentMessage('thinking', '⚠ No semantic HTML found (no <nav>, <main>, <section>)', 800);
+      await logAgentMessage('thinking', '⚠ No ARIA labels or autocomplete attributes', 600);
+
+      // Browse menu
+      await logAgentMessage('scanning', '▶ Looking for menu/restaurant content... found div.menu container', 1500);
+      await logAgentMessage('thinking', '▶ Attempting to identify menu items from text content...', 2000);
+      await logAgentMessage('thinking', '✓ Found 9 menu items by class name. Parsing innerHTML...', 1500);
+
+      // Find reservation form
+      await logAgentMessage('scanning', '▶ Searching for reservation form... scanning all form elements...', 2500);
+      await logAgentMessage('thinking', '▶ Found form-like structure in .reserve-form. Scanning inputs...', 1800);
+      await logAgentMessage('thinking', '✓ Found 5 input fields + 1 select. No autocomplete hints.', 1200);
+      await logAgentMessage('warning', '⚠ No programmatic way to distinguish name vs email vs phone fields', 800);
+
+      // Fill fields one by one
+      const fields = [
+        { id: 'guestName', value: 'Jane Smith', label: 'Full Name' },
+        { id: 'guestEmail', value: 'jane@example.com', label: 'Email' },
+        { id: 'guestPhone', value: '555-987-6543', label: 'Phone' }
+      ];
+
+      for (let i = 0; i < fields.length; i++) {
+        const f = fields[i];
+        await logAgentMessage('action', `→ Filling field ${i+1}/${fields.length}: "${f.label}" → ${f.value}`, 1000);
+        document.getElementById(f.id).value = f.value;
+      }
+
+      await logAgentMessage('action', '→ Selecting Party Size = "2 Guests"', 1000);
+      document.getElementById('partySize').value = '2';
+
+      // Date
+      await logAgentMessage('scanning', '▶ Looking for date picker... found input[type=date]', 1500);
+      const fri = getNextFriday();
+      await logAgentMessage('action', `→ Setting date to ${fri}`, 1000);
+      document.getElementById('reserveDate').value = fri;
+
+      // Time slots
+      await logAgentMessage('scanning', '▶ Looking for time selection... found div.time-slots', 2000);
+      await logAgentMessage('thinking', '▶ Found 8 time slot elements. Scanning text for "7:30 PM"...', 1800);
+      await logAgentMessage('warning', '⚠ Some slots appear greyed out — no programmatic way to check availability', 1000);
+      await logAgentMessage('success', '✓ Found "7:30 PM" slot', 800);
+      await logAgentMessage('action', '→ Clicking time slot "7:30 PM"...', 1000);
+      selectedTime = '7:30 PM';
+      document.querySelectorAll('.time-slot').forEach(el => {
+        el.classList.remove('selected');
+        if (el.textContent === '7:30 PM') el.classList.add('selected');
+      });
+
+      // Special requests
+      await logAgentMessage('scanning', '▶ Looking for special requests field...', 1500);
+      await logAgentMessage('action', '→ Filling "Special Requests" → Anniversary celebration', 1000);
+      document.getElementById('specialRequests').value = 'Anniversary celebration';
+
+      // Submit
+      await logAgentMessage('scanning', '▶ Looking for submit button... scanning all buttons...', 2000);
+      await logAgentMessage('success', '✓ Found "Confirm Reservation" button', 800);
+      await logAgentMessage('action', '→ Clicking "Confirm Reservation"...', 1000);
+      makeReservation();
+      await logAgentMessage('success', '✓ Reservation confirmed!', 1500);
+
+      const totalTime = ((Date.now() - agentStartTime) / 1000).toFixed(1);
+      await logAgentMessage('thinking', `\n⏱ Total execution time: ${totalTime}s`, 1000);
+      await logAgentMessage('warning', '⚠ WebMCP version would complete in ~8s (80% faster)', 800);
+
+      timer.style.display = 'block';
+      document.getElementById('agentElapsedTime').textContent = totalTime + 's';
+      input.disabled = false;
+      sendBtn.disabled = false;
+      footer.querySelector('.agent-input').style.display = '';
+      footer.querySelector('.agent-demo-btn-small').style.display = '';
+      agentDemoRunning = false;
+    }
+
+    function getNextFriday() {
+      const d = new Date();
+      const day = d.getDay();
+      const daysUntilFri = (5 - day + 7) % 7 || 7;
+      d.setDate(d.getDate() + daysUntilFri);
+      return d.toISOString().split('T')[0];
+    }
+
+    // External orchestration
+    window.addEventListener('message', function(e) {
+      const d = e.data;
+      if (!d || !d.action) return;
+      switch (d.action) {
+        case 'fillField':
+          const el = document.getElementById(d.field);
+          if (el) el.value = d.value;
+          break;
+        case 'selectTime':
+          selectedTime = d.value;
+          document.querySelectorAll('.time-slot').forEach(s => { s.classList.remove('selected'); if (s.textContent === d.value) s.classList.add('selected'); });
+          break;
+        case 'makeReservation': makeReservation(); break;
+        case 'reset': resetAll(); break;
+        case 'hideUI':
+          document.querySelector('.agent-demo-btn').style.display = 'none';
+          document.querySelector('.back-link').style.display = 'none';
+          break;
+      }
+    });
+  </script>
+</body>
+</html>

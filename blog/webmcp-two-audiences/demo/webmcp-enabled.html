@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Savoré - WebMCP Enabled Restaurant</title>
+
+  <!-- WebMCP: Structured metadata for AI agents -->
+  <meta name="description" content="Fine dining restaurant with online menu browsing, table reservation, and special request handling.">
+  <meta name="mcp:page-type" content="restaurant-reservation">
+  <meta name="mcp:version" content="1.0">
+
+  <!-- WebMCP: Load the @mcp-b/global polyfill for navigator.modelContext support -->
+  <script src="https://unpkg.com/@mcp-b/global@latest/dist/index.iife.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #faf8f5; color: #333; }
+
+    .header { background: #0d7377; color: white; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
+    .header .logo { font-size: 24px; font-weight: 700; font-style: italic; }
+    .header .logo span { color: #14ffec; }
+    .header-nav { display: flex; gap: 24px; }
+    .header-nav a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 14px; font-weight: 500; }
+    .header-nav a:hover { color: #14ffec; }
+
+    .banner { background: linear-gradient(135deg, #0d7377, #323232); color: white; text-align: center; padding: 48px 20px; }
+    .banner h1 { font-size: 32px; margin-bottom: 8px; font-style: italic; }
+    .banner p { opacity: 0.8; font-size: 16px; max-width: 500px; margin: 0 auto; }
+    .banner-badge { display: inline-block; background: #14ffec; color: #0d7377; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 12px; }
+
+    .section-title { text-align: center; font-size: 22px; margin: 32px 0 8px; color: #0d7377; }
+    .section-sub { text-align: center; font-size: 14px; color: #888; margin-bottom: 24px; }
+
+    /* Menu */
+    .menu-tabs { display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; }
+    .menu-tab { padding: 8px 20px; border-radius: 20px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 14px; font-weight: 500; color: #666; }
+    .menu-tab.active { background: #0d7377; color: white; border-color: #0d7377; }
+    .menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 0 32px 32px; max-width: 1100px; margin: 0 auto; }
+    .menu-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: transform 0.2s; }
+    .menu-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+    .menu-img { width: 100%; height: 180px; display: flex; align-items: center; justify-content: center; font-size: 56px; }
+    .menu-img.starters { background: linear-gradient(135deg, #e0f7f7, #b2ebf2); }
+    .menu-img.mains { background: linear-gradient(135deg, #e0f2f1, #b2dfdb); }
+    .menu-img.desserts { background: linear-gradient(135deg, #e8f5e9, #c8e6c9); }
+    .menu-info { padding: 16px; }
+    .menu-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .menu-desc { font-size: 13px; color: #777; margin-bottom: 12px; line-height: 1.4; }
+    .menu-footer { display: flex; justify-content: space-between; align-items: center; }
+    .menu-price { font-size: 18px; font-weight: 700; color: #0d7377; }
+    .menu-tags { display: flex; gap: 4px; }
+    .menu-tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: #e0f2f1; color: #0d7377; }
+
+    /* Reservation Form */
+    .reserve-section { background: #0d7377; color: white; padding: 48px 20px; margin-top: 32px; }
+    .reserve-section h2 { text-align: center; font-size: 26px; margin-bottom: 8px; font-style: italic; }
+    .reserve-section .section-sub { color: rgba(255,255,255,0.6); }
+    .reserve-form { max-width: 600px; margin: 24px auto 0; background: rgba(0,0,0,0.2); border-radius: 16px; padding: 32px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: #14ffec; margin-bottom: 6px; }
+    .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-size: 14px; background: rgba(0,0,0,0.2); color: white; }
+    .form-group input::placeholder { color: rgba(255,255,255,0.4); }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: #14ffec; }
+    .form-group select option { background: #0d7377; color: white; }
+    .form-group input.error { border-color: #ff6b6b; }
+    .field-error { font-size: 11px; color: #ff6b6b; margin-top: 4px; display: none; }
+    .field-error.visible { display: block; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .btn-reserve { width: 100%; padding: 14px; background: #14ffec; color: #0d7377; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+    .btn-reserve:hover { background: #00e5d0; }
+
+    /* Time Slots */
+    .time-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+    .time-slot { padding: 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; text-align: center; cursor: pointer; font-size: 13px; color: rgba(255,255,255,0.7); background: rgba(0,0,0,0.2); transition: all 0.2s; }
+    .time-slot:hover { border-color: #14ffec; color: white; }
+    .time-slot.selected { background: #14ffec; color: #0d7377; border-color: #14ffec; font-weight: 600; }
+    .time-slot.unavailable { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
+
+    /* Success overlay */
+    .success-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center; }
+    .success-overlay.open { display: flex; }
+    .success-modal { background: white; border-radius: 16px; padding: 48px; text-align: center; max-width: 420px; color: #333; }
+    .success-icon { font-size: 64px; margin-bottom: 16px; }
+    .success-modal h2 { font-size: 24px; margin-bottom: 8px; color: #0d7377; }
+    .success-modal p { color: #666; margin-bottom: 8px; line-height: 1.5; }
+    .success-modal .confirm-id { font-family: monospace; font-size: 14px; color: #0d7377; background: #e0f2f1; padding: 8px 16px; border-radius: 8px; display: inline-block; margin: 12px 0 24px; }
+    .btn-back { padding: 12px 32px; background: #0d7377; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+    .back-link { display: inline-block; margin: 16px 32px; color: #888; text-decoration: none; font-size: 14px; }
+    .back-link:hover { color: #14ffec; }
+    .mode-banner { background: rgba(13,115,119,0.1); border-bottom: 2px solid #0d7377; padding: 10px 32px; text-align: center; font-size: 14px; color: #0d7377; }
+    .mode-banner strong { color: #0a5a5d; }
+    .mode-banner code { background: rgba(13,115,119,0.15); padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+
+    /* WebMCP tools panel */
+    .tools-toggle { position: fixed; bottom: 32px; right: 32px; z-index: 50; padding: 12px 20px; background: #0d7377; color: white; border: 1px solid #14ffec; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .tools-toggle:hover { background: #0a5a5d; }
+    .tools-panel { position: fixed; top: 0; right: -500px; width: 460px; height: 100vh; background: #0f1923; color: white; z-index: 120; transition: right 0.3s; display: flex; flex-direction: column; box-shadow: -4px 0 20px rgba(0,0,0,0.3); }
+    .tools-panel.open { right: 0; }
+    .tools-panel-header { padding: 20px; border-bottom: 2px solid #0d7377; display: flex; justify-content: space-between; align-items: center; }
+    .tools-panel-header h2 { font-size: 16px; color: #14ffec; }
+    .tools-panel-close { background: none; border: none; color: #999; cursor: pointer; font-size: 24px; }
+    .tools-panel-body { flex: 1; overflow-y: auto; padding: 16px; }
+    .tool-entry { background: rgba(13,115,119,0.15); border: 1px solid rgba(20,255,236,0.2); border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+    .tool-entry .tool-name { font-family: 'Monaco','Courier New',monospace; font-size: 13px; color: #14ffec; font-weight: 600; margin-bottom: 4px; }
+    .tool-entry .tool-desc { font-size: 12px; color: #aaa; line-height: 1.4; }
+
+    /* Agent demo */
+    .agent-demo-btn { position: fixed; bottom: 32px; left: 32px; z-index: 50; padding: 14px 24px; background: #0d7377; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(13,115,119,0.3); }
+    .agent-demo-btn:hover { background: #0a5a5d; }
+    .agent-demo-panel { position: fixed; top: 0; left: -450px; width: 420px; height: 100vh; background: #0f1923; color: white; z-index: 110; transition: left 0.3s; display: flex; flex-direction: column; box-shadow: 4px 0 20px rgba(0,0,0,0.3); }
+    .agent-demo-panel.open { left: 0; }
+    .agent-demo-header { padding: 20px; border-bottom: 2px solid #14ffec; display: flex; justify-content: space-between; align-items: flex-start; }
+    .agent-demo-header h2 { font-size: 16px; font-weight: 700; color: #14ffec; }
+    .agent-demo-close { background: none; border: none; color: #999; cursor: pointer; font-size: 24px; }
+    .agent-demo-log { flex: 1; overflow-y: auto; padding: 16px; font-family: 'Monaco','Courier New', monospace; font-size: 12px; line-height: 1.5; }
+    .agent-log-entry { margin-bottom: 12px; display: flex; gap: 8px; }
+    .agent-log-timestamp { color: #666; flex-shrink: 0; }
+    .agent-log-text { flex: 1; }
+    .agent-log-action { color: #14ffec; font-weight: 600; }
+    .agent-log-scanning { color: #ccc; }
+    .agent-log-warning { color: #ffc107; }
+    .agent-log-thinking { color: #999; font-style: italic; }
+    .agent-log-success { color: #4caf50; }
+    .agent-log-tool { color: #14ffec; }
+    .agent-demo-footer { padding: 12px; border-top: 1px solid #1a2a3a; display: flex; gap: 8px; align-items: flex-end; }
+    .agent-input { flex: 1; padding: 10px 12px; background: #1a2a3a; color: white; border: 1px solid #2a3a4a; border-radius: 8px; font-size: 12px; font-family: -apple-system, sans-serif; outline: none; resize: none; line-height: 1.5; }
+    .agent-input:focus { border-color: #14ffec; }
+    .agent-demo-btn-small { padding: 10px 18px; background: #0d7377; color: white; border: none; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 600; flex-shrink: 0; }
+    .agent-demo-timer { text-align: center; padding: 16px; color: #999; font-size: 13px; border-top: 1px solid #1a2a3a; }
+    .agent-demo-timer .elapsed { color: #14ffec; font-weight: 700; font-size: 18px; }
+
+    @media (max-width: 700px) { .menu { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } .time-slots { grid-template-columns: repeat(3, 1fr); } .tools-panel { width: 100%; } }
+  </style>
+</head>
+<body>
+  <div class="mode-banner">
+    <strong>WebMCP ENABLED</strong> — Tools registered via <code>navigator.modelContext.registerTool()</code> using the W3C WebMCP standard.
+  </div>
+  <a href="index.html" class="back-link">&larr; Back to Demo Hub</a>
+
+  <header class="header" role="banner">
+    <div class="logo">Savor<span>é</span></div>
+    <nav class="header-nav" role="navigation" aria-label="Main navigation">
+      <a href="#menu">Menu</a>
+      <a href="#reserve">Reservations</a>
+      <a href="#">About</a>
+    </nav>
+  </header>
+
+  <section class="banner" role="region" aria-label="Restaurant introduction">
+    <div class="banner-badge">FINE DINING · WebMCP</div>
+    <h1>A Taste of Perfection</h1>
+    <p>Modern European cuisine in the heart of the city. Farm-to-table ingredients, curated wine list.</p>
+  </section>
+
+  <h2 class="section-title" id="menu">Our Menu</h2>
+  <p class="section-sub">Seasonal dishes crafted by Chef Isabella Torres</p>
+
+  <div class="menu-tabs" role="tablist" aria-label="Menu categories">
+    <button class="menu-tab active" role="tab" aria-selected="true" onclick="filterMenu('all')">All</button>
+    <button class="menu-tab" role="tab" onclick="filterMenu('starters')">Starters</button>
+    <button class="menu-tab" role="tab" onclick="filterMenu('mains')">Mains</button>
+    <button class="menu-tab" role="tab" onclick="filterMenu('desserts')">Desserts</button>
+  </div>
+
+  <main class="menu" id="menuGrid" role="list" aria-label="Menu items"></main>
+
+  <section class="reserve-section" id="reserve" role="region" aria-label="Table reservation">
+    <h2>Reserve a Table</h2>
+    <p class="section-sub">Book your dining experience</p>
+    <form class="reserve-form" id="reserveForm" onsubmit="event.preventDefault(); makeReservation();">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="guestName">Full Name</label>
+          <input type="text" id="guestName" autocomplete="name" placeholder="Jane Smith" aria-required="true">
+          <div class="field-error" id="guestName-error">Name is required</div>
+        </div>
+        <div class="form-group">
+          <label for="guestEmail">Email</label>
+          <input type="email" id="guestEmail" autocomplete="email" inputmode="email" placeholder="jane@example.com" aria-required="true">
+          <div class="field-error" id="guestEmail-error">Email is required</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="guestPhone">Phone</label>
+          <input type="tel" id="guestPhone" autocomplete="tel" inputmode="tel" placeholder="+1 (555) 987-6543">
+          <div class="field-error" id="guestPhone-error">Phone is required</div>
+        </div>
+        <div class="form-group">
+          <label for="partySize">Party Size</label>
+          <select id="partySize" aria-required="true">
+            <option value="">Select...</option>
+            <option value="1">1 Guest</option>
+            <option value="2">2 Guests</option>
+            <option value="3">3 Guests</option>
+            <option value="4">4 Guests</option>
+            <option value="5">5 Guests</option>
+            <option value="6">6 Guests</option>
+            <option value="7">7-8 (Large Party)</option>
+          </select>
+          <div class="field-error" id="partySize-error">Party size is required</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="reserveDate">Date</label>
+        <input type="date" id="reserveDate" aria-required="true">
+        <div class="field-error" id="reserveDate-error">Date is required</div>
+      </div>
+      <div class="form-group">
+        <label>Preferred Time</label>
+        <div class="time-slots" id="timeSlots" role="radiogroup" aria-label="Available time slots"></div>
+      </div>
+      <div class="form-group">
+        <label for="specialRequests">Special Requests</label>
+        <input type="text" id="specialRequests" placeholder="Allergies, celebrations, seating preferences...">
+      </div>
+      <button type="submit" class="btn-reserve">Confirm Reservation</button>
+    </form>
+  </section>
+
+  <div class="success-overlay" id="successOverlay" role="dialog" aria-label="Reservation confirmed">
+    <div class="success-modal">
+      <div class="success-icon">&#127860;</div>
+      <h2>Reservation Confirmed!</h2>
+      <p id="confirmMsg">Your table is booked.</p>
+      <div class="confirm-id" id="confirmId">RES-000000</div>
+      <p style="font-size:13px;color:#999;">You'll receive a confirmation email shortly.</p>
+      <button class="btn-back" onclick="resetAll()">Back to Menu</button>
+    </div>
+  </div>
+
+  <button class="agent-demo-btn" onclick="openAgentDemo()">&#9654;&#65039; Run AI Agent</button>
+  <button class="tools-toggle" onclick="toggleToolsPanel()">&#128736; Show Registered Tools</button>
+
+  <!-- Tools inspection panel -->
+  <div class="tools-panel" id="toolsPanel">
+    <div class="tools-panel-header">
+      <h2>&#128736; Registered WebMCP Tools (10)</h2>
+      <button class="tools-panel-close" onclick="toggleToolsPanel()">&times;</button>
+    </div>
+    <div class="tools-panel-body" id="toolsPanelBody"></div>
+  </div>
+
+  <!-- Agent demo panel -->
+  <div class="agent-demo-panel" id="agentDemoPanel">
+    <div class="agent-demo-header">
+      <div><h2>&#9889; AI Agent (WebMCP)</h2></div>
+      <button class="agent-demo-close" onclick="closeAgentDemo()">&times;</button>
+    </div>
+    <div class="agent-demo-log" id="agentDemoLog"></div>
+    <div class="agent-demo-timer" id="agentDemoTimer" style="display:none;">
+      <div>Total time: <span class="elapsed" id="agentElapsedTime">0.0s</span></div>
+      <div style="font-size:11px;margin-top:8px;color:#14ffec;">&#9889; WebMCP tools enabled</div>
+    </div>
+    <div class="agent-demo-footer" id="agentDemoFooter">
+      <textarea id="agentMessageInput" class="agent-input" rows="4" placeholder="Type a message...">Book a table for 2 on Friday at 7:30 PM under the name Jane Smith, email jane@example.com, phone 555-987-6543. We're celebrating an anniversary.</textarea>
+      <button class="agent-demo-btn-small" onclick="runAgentDemo()" id="agentSendBtn">Send</button>
+    </div>
+  </div>
+
+  <script>
+    // =====================================================
+    // RESTAURANT DATA & CORE LOGIC
+    // =====================================================
+    const menuItems = [
+      { id: 1, name: "Truffle Burrata", desc: "Creamy burrata, black truffle, heirloom tomato, basil oil, sourdough crisps", price: 18, category: "starters", emoji: "🧀", tags: ["Vegetarian"], dietary: ["vegetarian", "contains-dairy"] },
+      { id: 2, name: "Tuna Tartare", desc: "Yellowfin tuna, avocado, sesame, ponzu, wonton chips", price: 22, category: "starters", emoji: "🐟", tags: ["Gluten-Free"], dietary: ["gluten-free", "contains-fish"] },
+      { id: 3, name: "French Onion Soup", desc: "Caramelized onion, gruyère crouton, sherry broth", price: 14, category: "starters", emoji: "🍲", tags: [], dietary: ["contains-dairy", "contains-gluten"] },
+      { id: 4, name: "Wagyu Ribeye", desc: "12oz A5 wagyu, roasted bone marrow, truffle jus, pommes purée", price: 68, category: "mains", emoji: "🥩", tags: ["Chef's Pick"], dietary: ["gluten-free", "contains-dairy"] },
+      { id: 5, name: "Pan-Seared Salmon", desc: "Atlantic salmon, asparagus, lemon beurre blanc, wild rice", price: 38, category: "mains", emoji: "🍣", tags: ["Gluten-Free"], dietary: ["gluten-free", "contains-fish", "contains-dairy"] },
+      { id: 6, name: "Wild Mushroom Risotto", desc: "Arborio rice, porcini, chanterelle, parmesan, white truffle oil", price: 32, category: "mains", emoji: "🍄", tags: ["Vegetarian"], dietary: ["vegetarian", "gluten-free", "contains-dairy"] },
+      { id: 7, name: "Crème Brûlée", desc: "Madagascar vanilla custard, caramelized sugar, fresh berries", price: 14, category: "desserts", emoji: "🍮", tags: [], dietary: ["vegetarian", "gluten-free", "contains-dairy", "contains-eggs"] },
+      { id: 8, name: "Chocolate Fondant", desc: "Valrhona dark chocolate, molten center, salted caramel ice cream", price: 16, category: "desserts", emoji: "🍫", tags: ["Chef's Pick"], dietary: ["vegetarian", "contains-dairy", "contains-eggs", "contains-gluten"] },
+      { id: 9, name: "Lemon Tart", desc: "Meyer lemon curd, Italian meringue, raspberry coulis", price: 13, category: "desserts", emoji: "🍋", tags: ["Vegetarian"], dietary: ["vegetarian", "contains-dairy", "contains-eggs", "contains-gluten"] }
+    ];
+
+    const allTimeSlots = ["5:30 PM", "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM"];
+    const unavailableSlots = ["6:00 PM", "8:00 PM"];
+    let selectedTime = null;
+    let activeCategory = 'all';
+
+    function renderMenu() {
+      const filtered = activeCategory === 'all' ? menuItems : menuItems.filter(m => m.category === activeCategory);
+      document.getElementById('menuGrid').innerHTML = filtered.map(m => `
+        <article class="menu-card" role="listitem" data-item-id="${m.id}" data-category="${m.category}" data-price="${m.price}" itemscope itemtype="https://schema.org/MenuItem">
+          <div class="menu-img ${m.category}">${m.emoji}</div>
+          <div class="menu-info">
+            <div class="menu-name" itemprop="name">${m.name}</div>
+            <div class="menu-desc" itemprop="description">${m.desc}</div>
+            <div class="menu-footer">
+              <span class="menu-price" itemprop="offers" itemscope itemtype="https://schema.org/Offer"><span itemprop="price">$${m.price}</span></span>
+              <div class="menu-tags">${m.tags.map(t => `<span class="menu-tag">${t}</span>`).join('')}</div>
+            </div>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function filterMenu(cat) {
+      activeCategory = cat;
+      document.querySelectorAll('.menu-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      event.target.classList.add('active');
+      event.target.setAttribute('aria-selected', 'true');
+      renderMenu();
+    }
+
+    function renderTimeSlots() {
+      document.getElementById('timeSlots').innerHTML = allTimeSlots.map(t => {
+        const unavail = unavailableSlots.includes(t);
+        return `<div class="time-slot ${unavail ? 'unavailable' : ''}" role="radio" aria-checked="false" aria-disabled="${unavail}" data-time="${t}" onclick="${unavail ? '' : `selectTime('${t}', this)`}">${t}</div>`;
+      }).join('');
+    }
+
+    function selectTime(t, el) {
+      selectedTime = t;
+      document.querySelectorAll('.time-slot').forEach(s => { s.classList.remove('selected'); s.setAttribute('aria-checked', 'false'); });
+      if (el) { el.classList.add('selected'); el.setAttribute('aria-checked', 'true'); }
+    }
+
+    function validateForm() {
+      const required = ['guestName', 'guestEmail', 'partySize', 'reserveDate'];
+      const errors = [];
+      let valid = true;
+      required.forEach(id => {
+        const el = document.getElementById(id);
+        const errEl = document.getElementById(id + '-error');
+        if (!el.value.trim()) {
+          valid = false;
+          el.classList.add('error');
+          if (errEl) errEl.classList.add('visible');
+          errors.push({ field: id, message: `${id} is required` });
+        } else {
+          el.classList.remove('error');
+          if (errEl) errEl.classList.remove('visible');
+        }
+      });
+      if (!selectedTime) {
+        valid = false;
+        errors.push({ field: 'time', message: 'Please select a time slot' });
+      }
+      return { valid, errors };
+    }
+
+    function makeReservation() {
+      const v = validateForm();
+      if (!v.valid) return v;
+      const resId = 'RES-' + Date.now().toString().slice(-6);
+      const partySize = document.getElementById('partySize').value || '2';
+      const date = document.getElementById('reserveDate').value;
+      document.getElementById('confirmMsg').textContent = `Table for ${partySize} on ${date} at ${selectedTime}`;
+      document.getElementById('confirmId').textContent = resId;
+      document.getElementById('successOverlay').classList.add('open');
+      return { success: true, reservationId: resId, partySize, date, time: selectedTime };
+    }
+
+    function resetAll() {
+      document.getElementById('successOverlay').classList.remove('open');
+      ['guestName', 'guestEmail', 'guestPhone', 'specialRequests'].forEach(id => {
+        const el = document.getElementById(id);
+        el.value = '';
+        el.classList.remove('error');
+        const errEl = document.getElementById(id + '-error');
+        if (errEl) errEl.classList.remove('visible');
+      });
+      document.getElementById('partySize').selectedIndex = 0;
+      document.getElementById('reserveDate').value = getTomorrow();
+      selectedTime = null;
+      renderTimeSlots();
+    }
+
+    function getTomorrow() {
+      const d = new Date(); d.setDate(d.getDate() + 1);
+      return d.toISOString().split('T')[0];
+    }
+
+    function getNextFriday() {
+      const d = new Date();
+      const day = d.getDay();
+      const daysUntilFri = (5 - day + 7) % 7 || 7;
+      d.setDate(d.getDate() + daysUntilFri);
+      return d.toISOString().split('T')[0];
+    }
+
+    document.getElementById('reserveDate').value = getTomorrow();
+    renderMenu();
+    renderTimeSlots();
+
+    // =====================================================
+    // WebMCP: REGISTER TOOLS via navigator.modelContext
+    // =====================================================
+    const registeredTools = [];
+    const toolDescriptions = [];
+
+    async function registerAllTools() {
+      // Wait for polyfill
+      let attempts = 0;
+      while (!navigator.modelContext && attempts < 20) {
+        attempts++;
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      if (!navigator.modelContext || !navigator.modelContext.registerTool) {
+        console.error('[WebMCP] navigator.modelContext.registerTool not available.');
+        return;
+      }
+
+      // ----- Tool 1: get_menu -----
+      registeredTools.push(
+        navigator.modelContext.registerTool({
+          name: "get_menu",
+          description: "Get the full restaurant menu with item IDs, names, descriptions, prices, categories, and dietary information",
+          inputSchema: {
+            type: "object",
+            properties: {
+              category: { type: "string", enum: ["all", "starters", "mains", "desserts"], description: "Filter by category (optional, defaults to all)" }
+            },
+            required: []
+          },
+          handler: ({ category }) => {
+            const cat = category || 'all';
+            const items = cat === 'all' ? menuItems : menuItems.filter(m => m.category === cat);
+            return JSON.stringify({ items: items.map(m => ({ id: m.id, name: m.name, description: m.desc, price: m.price, category: m.category, dietary: m.dietary, tags: m.tags })) });
+          }
+        })
+      );
+      toolDescriptions.push({ name: "get_menu", desc: "Get full restaurant menu with prices, categories, and dietary info. Optional category filter." });
+
+      // ----- Tool 2: get_availability -----
+      registeredTools.push(
+        navigator.modelContext.registerTool({
+          name: "get_availability",
+          description: "Check available time slots for a given date and party size. Returns available and unavailable slots.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              date: { type: "string", description: "Date in YYYY-MM-DD format" },
+              partySize: { type: "number", description: "Number of guests (1-8)" }
+            },
+            required: ["date"]
+          },
+          handler: ({ date, partySize }) => {
+            return JSON.stringify({
+              date,
+              partySize: partySize || 2,
+              slots: allTimeSlots.map(t => ({ time: t, available: !unavailableSlots.includes(t) }))
+            });
+          }
+        })
+      );
+      toolDescriptions.push({ name: "get_availability", desc: "Check available time slots for a date and party size." });
+
+      // ----- Tool 3: fill_reservation_form -----
+      registeredTools.push(
+        navigator.modelContext.registerTool({
+          name: "fill_reservation_form",
+          description: "Fill in the reservation form fields. Provide any combination of: guestName, guestEmail, guestPhone, partySize (1-7), date (YYYY-MM-DD), time, specialRequests",
+          inputSchema: {
+            type: "object",
+            properties: {
+              guestName: { type: "string", description: "Guest's full name" },
+              guestEmail: { type: "string", description: "Guest's email address" },
+              guestPhone: { type: "string", description: "Guest's phone number" },
+              partySize: { type: "string", description: "Number of guests: 1-7" },
+              date: { type: "string", description: "Reservation date in YYYY-MM-DD format" },
+              time: { type: "string", description: "Preferred time slot, e.g. '7:30 PM'" },
+              specialRequests: { type: "string", description: "Any special requests or notes" }
+            },
+            required: []
+          },
+          handler: (params) => {
+            const filled = [];
+            if (params.guestName) { document.getElementById('guestName').value = params.guestName; filled.push('guestName'); }
+            if (params.guestEmail) { document.getElementById('guestEmail').value = params.guestEmail; filled.push('guestEmail'); }
+            if (params.guestPhone) { document.getElementById('guestPhone').value = params.guestPhone; filled.push('guestPhone'); }
+            if (params.partySize) { document.getElementById('partySize').value = params.partySize; filled.push('partySize'); }
+            if (params.date) { document.getElementById('reserveDate').value = params.date; filled.push('date'); }
+            if (params.time) {
+              selectedTime = params.time;
+              document.querySelectorAll('.time-slot').forEach(s => {
+                s.classList.remove('selected');
+                if (s.textContent === params.time) s.classList.add('selected');
+              });
+              filled.push('time');
+            }
+            if (params.specialRequests) { document.getElementById('specialRequests').value = params.specialRequests; filled.push('specialRequests'); }
+            return JSON.stringify({ success: true, filled });
+          }
+        })
+      );
+      toolDescriptions.push({ name: "fill_reservation_form", desc: "Fill in reservation form fields in one call: name, email, phone, party size, date, time, special requests." });
+
+      // ----- Tool 4: validate_reservation -----
+      registeredTools.push(
+        navigator.modelContext.registerTool({
+          name: "validate_reservation",
+          description: "Validate the reservation form and return any validation errors before confirming",
+          inputSchema: { type: "object", properties: {}, required: [] },
+          handler: () => {
+            return JSON.stringify(validateForm());
+          }
+        })
+      );
+      toolDescriptions.push({ name: "validate_reservation", desc: "Validate reservation form and return any errors before confirming." });
+
+      // ----- Tool 5: confirm_reservation -----
+      registeredTools.push(
+        navigator.modelContext.registerTool({
+          name: "confirm_reservation",
+          description: "Submit and confirm the reservation. Validates first. Returns reservation ID on success or errors on failure.",
+          inputSchema: { type: "object", properties: {}, required: [] },
+          handler: () => {
+            return JSON.stringify(makeReservation());
+          }
+        })
+      );
+      toolDescriptions.push({ name: "confirm_reservation", desc: "Submit and confirm the reservation. Returns reservation ID on success." });
+
+      // ----- Tool 6: get_page_state -----
+      registeredTools.push(
+        navigator.modelContext.registerTool({
+          name: "get_page_state",
+          description: "Get current page state: which section is visible, reservation form data, selected time, etc.",
+          inputSchema: { type: "object", properties: {}, required: [] },
+          handler: () => {
+            return JSON.stringify({
+              page: "restaurant-reservation",
+              restaurant: "Savoré",
+              menuCategory: activeCategory,
+              menuItemCount: (activeCategory === 'all' ? menuItems : menuItems.filter(m => m.category === activeCategory)).length,
+              reservationForm: {
+                guestName: document.getElementById('guestName').value,
+                guestEmail: document.getElementById('guestEmail').value,
+                guestPhone: document.getElementById('guestPhone').value,
+                partySize: document.getElementById('partySize').value,
+                date: document.getElementById('reserveDate').value,
+                selectedTime,
+                specialRequests: document.getElementById('specialRequests').value
+              },
+              successVisible: document.getElementById('successOverlay').classList.contains('open')
+            });
+          }
+        })
+      );
+      toolDescriptions.push({ name: "get_page_state", desc: "Get current page state, form data, selected time, and visibility of overlays." });
+
+      // ----- Tool 7: search_menu -----
+      registeredTools.push(
+        navigator.modelContext.registerTool({
+          name: "search_menu",
+          description: "Search menu items by keyword, dietary requirement, or price range",
+          inputSchema: {
+            type: "object",
+            properties: {
+              query: { type: "string", description: "Search keyword (matches name or description)" },
+              dietary: { type: "string", description: "Dietary filter: vegetarian, gluten-free, contains-dairy, contains-fish, etc." },
+              maxPrice: { type: "number", description: "Maximum price filter" }
+            },
+            required: []
+          },
+          handler: ({ query, dietary, maxPrice }) => {
+            let results = [...menuItems];
+            if (query) results = results.filter(m => (m.name + ' ' + m.desc).toLowerCase().includes(query.toLowerCase()));
+            if (dietary) results = results.filter(m => m.dietary.includes(dietary));
+            if (maxPrice) results = results.filter(m => m.price <= maxPrice);
+            return JSON.stringify({ results: results.map(m => ({ id: m.id, name: m.name, price: m.price, category: m.category, dietary: m.dietary })), count: results.length });
+          }
+        })
+      );
+      toolDescriptions.push({ name: "search_menu", desc: "Search menu by keyword, dietary requirement, or price range." });
+
+      // ----- Tool 8: get_restaurant_info -----
+      registeredTools.push(
+        navigator.modelContext.registerTool({
+          name: "get_restaurant_info",
+          description: "Get restaurant details: name, cuisine, hours, address, contact, and policies",
+          inputSchema: { type: "object", properties: {}, required: [] },
+          handler: () => {
+            return JSON.stringify({
+              name: "Savoré",
+              cuisine: "Modern European",
+              chef: "Isabella Torres",
+              address: "42 Vine Street, Downtown",
+              phone: "+1 (555) 234-5678",
+              hours: { weekdays: "5:30 PM – 10:00 PM", weekends: "5:00 PM – 11:00 PM", closed: "Monday" },
+              dressCode: "Smart casual",
+              cancellationPolicy: "Free cancellation up to 4 hours before reservation",
+              largePartyPolicy: "Parties of 7+ may require a prix fixe menu"
+            });
+          }
+        })
+      );
+      toolDescriptions.push({ name: "get_restaurant_info", desc: "Get restaurant details: name, hours, address, contact, dress code, and policies." });
+
+      // ----- Tool 9: select_time_slot -----
+      registeredTools.push(
+        navigator.modelContext.registerTool({
+          name: "select_time_slot",
+          description: "Select a specific time slot for the reservation. Checks availability before selecting.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              time: { type: "string", description: "Time slot to select, e.g. '7:30 PM'" }
+            },
+            required: ["time"]
+          },
+          handler: ({ time }) => {
+            if (unavailableSlots.includes(time)) {
+              return JSON.stringify({ success: false, error: `${time} is unavailable`, availableSlots: allTimeSlots.filter(t => !unavailableSlots.includes(t)) });
+            }
+            selectedTime = time;
+            document.querySelectorAll('.time-slot').forEach(s => {
+              s.classList.remove('selected');
+              if (s.textContent === time) s.classList.add('selected');
+            });
+            return JSON.stringify({ success: true, selected: time });
+          }
+        })
+      );
+      toolDescriptions.push({ name: "select_time_slot", desc: "Select a time slot. Checks availability first and returns alternatives if unavailable." });
+
+      // ----- Tool 10: reset_reservation -----
+      registeredTools.push(
+        navigator.modelContext.registerTool({
+          name: "reset_reservation",
+          description: "Clear the reservation form and reset to default state",
+          inputSchema: { type: "object", properties: {}, required: [] },
+          handler: () => {
+            resetAll();
+            return JSON.stringify({ success: true, message: "Form reset to default state" });
+          }
+        })
+      );
+      toolDescriptions.push({ name: "reset_reservation", desc: "Clear the reservation form and reset to default state." });
+
+      console.log('%c[WebMCP] Registered ' + registeredTools.length + ' tools via navigator.modelContext.registerTool()', 'color: #0d7377; font-weight: bold; font-size: 14px;');
+      console.log('%c[WebMCP] Tools:', 'color: #0d7377;', toolDescriptions.map(t => t.name).join(', '));
+
+      // Populate tools panel
+      document.getElementById('toolsPanelBody').innerHTML = toolDescriptions.map(t => `
+        <div class="tool-entry">
+          <div class="tool-name">${t.name}()</div>
+          <div class="tool-desc">${t.desc}</div>
+        </div>
+      `).join('');
+    }
+
+    registerAllTools();
+
+    // =====================================================
+    // TOOLS PANEL
+    // =====================================================
+    function toggleToolsPanel() {
+      document.getElementById('toolsPanel').classList.toggle('open');
+    }
+
+    // =====================================================
+    // AI AGENT DEMO (WebMCP — fast path)
+    // =====================================================
+    let agentDemoRunning = false;
+    let agentStartTime = 0;
+
+    function openAgentDemo() {
+      document.getElementById('agentDemoPanel').classList.add('open');
+      document.querySelector('.agent-demo-btn').style.display = 'none';
+      document.getElementById('agentMessageInput').focus();
+    }
+    function closeAgentDemo() {
+      document.getElementById('agentDemoPanel').classList.remove('open');
+      document.querySelector('.agent-demo-btn').style.display = '';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const inp = document.getElementById('agentMessageInput');
+      if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); runAgentDemo(); } });
+    });
+
+    function logAgentMessage(type, message, delay = 0) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const log = document.getElementById('agentDemoLog');
+          const elapsed = ((Date.now() - agentStartTime) / 1000).toFixed(1);
+          const entry = document.createElement('div');
+          entry.className = 'agent-log-entry';
+          let className = 'agent-log-text';
+          if (type === 'action') className += ' agent-log-action';
+          else if (type === 'scanning') className += ' agent-log-scanning';
+          else if (type === 'warning') className += ' agent-log-warning';
+          else if (type === 'thinking') className += ' agent-log-thinking';
+          else if (type === 'success') className += ' agent-log-success';
+          else if (type === 'tool') className += ' agent-log-tool';
+          entry.innerHTML = `<span class="agent-log-timestamp">[${elapsed}s]</span><span class="${className}">${message}</span>`;
+          log.appendChild(entry);
+          log.scrollTop = log.scrollHeight;
+          resolve();
+        }, delay);
+      });
+    }
+
+    async function runAgentDemo() {
+      if (agentDemoRunning) return;
+      agentDemoRunning = true;
+      resetAll();
+
+      const log = document.getElementById('agentDemoLog');
+      const footer = document.getElementById('agentDemoFooter');
+      const timer = document.getElementById('agentDemoTimer');
+      const input = document.getElementById('agentMessageInput');
+      const sendBtn = document.getElementById('agentSendBtn');
+      const userMessage = input.value.trim();
+      if (!userMessage) { agentDemoRunning = false; return; }
+
+      input.disabled = true;
+      sendBtn.disabled = true;
+      log.innerHTML = '';
+      footer.querySelector('.agent-input').style.display = 'none';
+      footer.querySelector('.agent-demo-btn-small').style.display = 'none';
+      timer.style.display = 'none';
+      agentStartTime = Date.now();
+
+      // Show user message
+      const userEntry = document.createElement('div');
+      userEntry.className = 'agent-log-entry';
+      userEntry.innerHTML = `<span class="agent-log-text" style="color:#14ffec;font-weight:600;">You:</span> <span class="agent-log-text agent-log-scanning">${userMessage}</span>`;
+      log.appendChild(userEntry);
+      log.scrollTop = log.scrollHeight;
+
+      await logAgentMessage('thinking', 'Initializing...', 600);
+      await logAgentMessage('tool', '▶ Discovered 10 registered WebMCP tools', 400);
+      await logAgentMessage('thinking', 'Parsing user intent: reservation request', 400);
+
+      // Step 1: Check availability
+      const fri = getNextFriday();
+      await logAgentMessage('tool', `→ Calling get_availability({ date: "${fri}", partySize: 2 })`, 600);
+      await logAgentMessage('success', '✓ 6 available slots returned. 7:30 PM is available.', 500);
+
+      // Step 2: Fill form in one call
+      await logAgentMessage('tool', '→ Calling fill_reservation_form({ guestName: "Jane Smith", guestEmail: "jane@example.com", guestPhone: "555-987-6543", partySize: "2", date: "' + fri + '", time: "7:30 PM", specialRequests: "Anniversary celebration" })', 800);
+
+      // Actually fill the form
+      document.getElementById('guestName').value = 'Jane Smith';
+      document.getElementById('guestEmail').value = 'jane@example.com';
+      document.getElementById('guestPhone').value = '555-987-6543';
+      document.getElementById('partySize').value = '2';
+      document.getElementById('reserveDate').value = fri;
+      document.getElementById('specialRequests').value = 'Anniversary celebration';
+      selectedTime = '7:30 PM';
+      document.querySelectorAll('.time-slot').forEach(s => {
+        s.classList.remove('selected');
+        if (s.textContent === '7:30 PM') s.classList.add('selected');
+      });
+
+      await logAgentMessage('success', '✓ All 7 fields filled in single tool call', 500);
+
+      // Step 3: Validate
+      await logAgentMessage('tool', '→ Calling validate_reservation()', 600);
+      await logAgentMessage('success', '✓ Validation passed — no errors', 400);
+
+      // Step 4: Confirm
+      await logAgentMessage('tool', '→ Calling confirm_reservation()', 600);
+      makeReservation();
+      await logAgentMessage('success', '✓ Reservation confirmed! ID: ' + document.getElementById('confirmId').textContent, 500);
+
+      const totalTime = ((Date.now() - agentStartTime) / 1000).toFixed(1);
+      await logAgentMessage('thinking', `\n⏱ Total execution time: ${totalTime}s`, 600);
+      await logAgentMessage('success', '⚡ 4 tool calls vs ~15 DOM interactions in traditional mode', 500);
+
+      timer.style.display = 'block';
+      document.getElementById('agentElapsedTime').textContent = totalTime + 's';
+      input.disabled = false;
+      sendBtn.disabled = false;
+      footer.querySelector('.agent-input').style.display = '';
+      footer.querySelector('.agent-demo-btn-small').style.display = '';
+      agentDemoRunning = false;
+    }
+
+    // External orchestration
+    window.addEventListener('message', function(e) {
+      const d = e.data;
+      if (!d || !d.action) return;
+      switch (d.action) {
+        case 'fillField':
+          const el = document.getElementById(d.field);
+          if (el) el.value = d.value;
+          break;
+        case 'selectTime':
+          selectedTime = d.value;
+          document.querySelectorAll('.time-slot').forEach(s => { s.classList.remove('selected'); if (s.textContent === d.value) s.classList.add('selected'); });
+          break;
+        case 'makeReservation': makeReservation(); break;
+        case 'reset': resetAll(); break;
+        case 'hideUI':
+          document.querySelector('.agent-demo-btn').style.display = 'none';
+          document.querySelector('.back-link').style.display = 'none';
+          document.querySelector('.tools-toggle').style.display = 'none';
+          break;
+      }
+    });
+  </script>
+</body>
+</html>

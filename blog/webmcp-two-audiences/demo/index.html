@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebMCP Demo Hub — Savoré Restaurant</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f1a; color: white; min-height: 100vh; }
+    .hero { text-align: center; padding: 60px 20px 40px; }
+    .hero-badge { display: inline-block; background: rgba(20,255,236,0.15); color: #14ffec; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 20px; border: 1px solid rgba(20,255,236,0.3); }
+    .hero h1 { font-size: 42px; font-weight: 800; margin-bottom: 12px; }
+    .hero h1 span { background: linear-gradient(135deg, #14ffec, #0d7377); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 18px; color: #888; max-width: 600px; margin: 0 auto; line-height: 1.6; }
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 900px; margin: 40px auto; padding: 0 20px; }
+    .card { background: #1a1a2e; border-radius: 16px; padding: 32px; border: 2px solid #2a2a3e; transition: all 0.3s; cursor: pointer; text-decoration: none; color: white; display: block; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+    .card-traditional:hover { border-color: #e94560; }
+    .card-webmcp { border-color: #0d7377; }
+    .card-webmcp:hover { border-color: #14ffec; box-shadow: 0 12px 40px rgba(20,255,236,0.15); }
+    .card-icon { font-size: 40px; margin-bottom: 16px; }
+    .card h2 { font-size: 22px; margin-bottom: 8px; }
+    .card p { color: #888; font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+    .card-tag { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+    .tag-traditional { background: rgba(233,69,96,0.15); color: #e94560; }
+    .tag-webmcp { background: rgba(20,255,236,0.15); color: #14ffec; }
+    .card-features { list-style: none; margin-bottom: 20px; }
+    .card-features li { padding: 6px 0; font-size: 14px; color: #aaa; display: flex; align-items: center; gap: 8px; }
+    .card-features li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .card-traditional .card-features li::before { background: #e94560; }
+    .card-webmcp .card-features li::before { background: #14ffec; }
+    .card-cta { display: inline-block; padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; }
+    .cta-traditional { background: #e94560; color: white; }
+    .cta-webmcp { background: #0d7377; color: white; }
+
+    .comparison { max-width: 900px; margin: 40px auto; padding: 0 20px 60px; }
+    .comparison h2 { text-align: center; font-size: 24px; margin-bottom: 24px; }
+    .comparison h2 span { color: #14ffec; }
+    .comparison-table { width: 100%; border-collapse: collapse; background: #1a1a2e; border-radius: 12px; overflow: hidden; }
+    .comparison-table th { padding: 14px 20px; text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #666; border-bottom: 1px solid #2a2a3e; }
+    .comparison-table td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid #2a2a3e; }
+    .comparison-table tr:last-child td { border-bottom: none; }
+    .feature-name { color: #ccc; font-weight: 500; }
+    .check { color: #14ffec; font-weight: bold; }
+    .cross { color: #e94560; }
+    .partial { color: #ffc107; }
+
+    .demo-script { max-width: 900px; margin: 0 auto 60px; padding: 0 20px; }
+    .demo-script h2 { text-align: center; font-size: 24px; margin-bottom: 24px; }
+    .script-steps { background: #1a1a2e; border-radius: 12px; padding: 24px; counter-reset: step; }
+    .script-step { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid #2a2a3e; }
+    .script-step:last-child { border-bottom: none; }
+    .step-num { counter-increment: step; width: 32px; height: 32px; background: #0d7377; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+    .step-num::before { content: counter(step); }
+    .step-content h3 { font-size: 15px; margin-bottom: 4px; }
+    .step-content p { font-size: 13px; color: #888; line-height: 1.5; }
+    .step-content code { background: #2a2a3e; padding: 2px 6px; border-radius: 4px; font-size: 12px; color: #14ffec; }
+    .step-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-top: 6px; }
+    .step-tag.trad { background: rgba(233,69,96,0.15); color: #e94560; }
+    .step-tag.mcp { background: rgba(20,255,236,0.15); color: #14ffec; }
+
+    .prereq { max-width: 900px; margin: 0 auto 40px; padding: 0 20px; }
+    .prereq-box { background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 12px; padding: 24px; }
+    .prereq-box h2 { font-size: 20px; margin-bottom: 16px; }
+    .prereq-box h2 span { color: #14ffec; }
+    .prereq-item { padding: 8px 0; font-size: 14px; color: #aaa; line-height: 1.6; }
+    .prereq-item strong { color: white; }
+    .prereq-item code { background: #2a2a3e; padding: 2px 6px; border-radius: 4px; font-size: 12px; color: #14ffec; }
+
+    @media (max-width: 700px) { .cards { grid-template-columns: 1fr; } .hero h1 { font-size: 28px; } }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <div class="hero-badge">INTERACTIVE DEMO</div>
+    <h1>Traditional vs <span>WebMCP</span></h1>
+    <p>See the difference between a standard restaurant page and one with registered WebMCP tools. Same restaurant, same menu, completely different agent experience.</p>
+  </div>
+
+  <div class="prereq">
+    <div class="prereq-box">
+      <h2>How to <span>Run This Demo</span></h2>
+      <div class="prereq-item"><strong>1.</strong> Open either restaurant page in <strong>any browser</strong> — no extensions or special Chrome flags needed</div>
+      <div class="prereq-item"><strong>2.</strong> Click the <strong>"Run AI Agent"</strong> button (bottom-left corner) on each page</div>
+      <div class="prereq-item"><strong>3.</strong> Send the same message on both pages and watch the AI Agent make a reservation — the page updates in real time</div>
+      <div class="prereq-item"><strong>4.</strong> Compare the experience: <span style="color:#e94560;font-weight:600;">~38s with DOM scanning</span> vs <span style="color:#14ffec;font-weight:600;">~8s with WebMCP tools</span></div>
+      <div class="prereq-item" style="padding-top:12px;border-top:1px solid #2a2a3e;margin-top:8px;color:#666;font-size:13px;"><strong>Note:</strong> The WebMCP page also registers real tools via <code>navigator.modelContext.registerTool()</code> using the <code>@mcp-b/global</code> polyfill. When browser-native WebMCP support ships (Chrome 146+), real AI agents will be able to consume these tools directly.</div>
+    </div>
+  </div>
+
+  <div class="cards">
+    <a href="traditional.html" class="card card-traditional">
+      <div class="card-icon">&#127860;</div>
+      <span class="card-tag tag-traditional">BEFORE</span>
+      <h2>Traditional Restaurant</h2>
+      <p>Standard HTML. No registered tools. AI agents must visually scan and guess at page structure to book a table.</p>
+      <ul class="card-features">
+        <li>Generic div-based markup</li>
+        <li>No autocomplete on form fields</li>
+        <li>No tool registration for agents</li>
+        <li>No structured data or ARIA labels</li>
+        <li>Agent fills fields one at a time</li>
+        <li>Built-in AI Agent (~38s)</li>
+      </ul>
+      <div class="card-cta cta-traditional">Open Traditional Restaurant &rarr;</div>
+    </a>
+
+    <a href="webmcp-enabled.html" class="card card-webmcp">
+      <div class="card-icon">&#9889;</div>
+      <span class="card-tag tag-webmcp">AFTER</span>
+      <h2>WebMCP Restaurant</h2>
+      <p>Same restaurant with 10 registered tools via <code>navigator.modelContext.registerTool()</code>. Agents call functions directly.</p>
+      <ul class="card-features">
+        <li>10 tools registered via W3C WebMCP API</li>
+        <li>Semantic HTML with ARIA labels</li>
+        <li>autocomplete + inputmode on all fields</li>
+        <li>Agents call fill_reservation_form, confirm_reservation</li>
+        <li>"Show Registered Tools" panel for demo</li>
+        <li>Built-in AI Agent (~8s)</li>
+      </ul>
+      <div class="card-cta cta-webmcp">Open WebMCP Restaurant &rarr;</div>
+    </a>
+  </div>
+
+  <div class="comparison">
+    <h2>Feature <span>Comparison</span></h2>
+    <table class="comparison-table">
+      <thead><tr><th>Capability</th><th>Traditional</th><th>WebMCP</th></tr></thead>
+      <tbody>
+        <tr><td class="feature-name">Agent discovers available actions</td><td class="cross">&#10006; Scan DOM manually</td><td class="check">&#10004; registerTool() exposes them</td></tr>
+        <tr><td class="feature-name">Agent reads the menu</td><td class="partial">&#9888; Parse visible text</td><td class="check">&#10004; Calls get_menu tool</td></tr>
+        <tr><td class="feature-name">Agent checks table availability</td><td class="cross">&#10006; No way to check</td><td class="check">&#10004; Calls get_availability tool</td></tr>
+        <tr><td class="feature-name">Agent fills reservation form</td><td class="partial">&#9888; Guess which field is which</td><td class="check">&#10004; Calls fill_reservation_form</td></tr>
+        <tr><td class="feature-name">Agent validates before submitting</td><td class="cross">&#10006; Submit and hope</td><td class="check">&#10004; Calls validate_reservation</td></tr>
+        <tr><td class="feature-name">Agent searches by dietary needs</td><td class="cross">&#10006; No metadata</td><td class="check">&#10004; Calls search_menu tool</td></tr>
+        <tr><td class="feature-name">Standard W3C API</td><td class="cross">&#10006; N/A</td><td class="check">&#10004; navigator.modelContext</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="demo-script">
+    <h2>Suggested Demo Script</h2>
+    <div class="script-steps">
+      <div class="script-step">
+        <div class="step-num"></div>
+        <div class="step-content">
+          <h3>Open the Traditional Restaurant</h3>
+          <p>Click <strong>"Run AI Agent"</strong> (bottom-left). Watch the agent struggle: scanning 62 DOM nodes, guessing field purposes, filling forms one field at a time, and clicking time slots by text match. Takes ~38 seconds.</p>
+          <span class="step-tag trad">Traditional page — ~38s</span>
+        </div>
+      </div>
+      <div class="script-step">
+        <div class="step-num"></div>
+        <div class="step-content">
+          <h3>Open the WebMCP Restaurant — same task</h3>
+          <p>Click <strong>"Run AI Agent"</strong>. The agent discovers 10 registered tools, then fires crisp calls: <code>get_availability</code>, <code>fill_reservation_form</code>, <code>confirm_reservation</code>. Same result in ~8 seconds.</p>
+          <span class="step-tag mcp">WebMCP page — ~8s</span>
+        </div>
+      </div>
+      <div class="script-step">
+        <div class="step-num"></div>
+        <div class="step-content">
+          <h3>Inspect the registered tools</h3>
+          <p>On the WebMCP page, click <strong>"Show Registered Tools"</strong> (bottom-right) to see all 10 tools the page exposes via <code>navigator.modelContext.registerTool()</code>. This is what any WebMCP-compatible agent would discover automatically.</p>
+          <span class="step-tag mcp">WebMCP page</span>
+        </div>
+      </div>
+      <div class="script-step">
+        <div class="step-num"></div>
+        <div class="step-content">
+          <h3>Talk about the "Why"</h3>
+          <p>The implementation cost is minimal — <code>registerTool()</code> calls wrapping existing JS functions. The payoff: any WebMCP-compatible AI agent can interact with your app reliably. It's the difference between "AI can kinda use our site" and "our site is AI-native".</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why I Use CDK Over Terraform (And When I Don't) — Pardeep Dhingra</title>
+    <meta name="description" content="A production-informed comparison of AWS CDK and Terraform. When CDK's TypeScript-native abstractions win, when Terraform's maturity wins, and the real tradeoffs nobody talks about.">
+    <link rel="canonical" href="https://pardeepbuilds.com/blog/why-cdk-over-terraform">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .back-link {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            color: var(--text-dim); text-decoration: none; font-size: 0.85rem;
+            margin-bottom: 1.5rem; transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+        .blog-meta {
+            display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .blog-item-author {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.8rem; color: var(--text-dim); margin-bottom: 2.5rem;
+        }
+        .blog-item-author img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+        .blog-item-author strong { color: var(--text-body); font-weight: 550; }
+
+        /* Prose */
+        .prose { font-size: 0.95rem; line-height: 1.8; color: var(--text-body); }
+        .prose p { margin-bottom: 1.25rem; }
+        .prose h2 {
+            font-size: 1.35rem; font-weight: 700; color: var(--text);
+            margin: 2.5rem 0 1rem; letter-spacing: -0.02em;
+        }
+        .prose h3 {
+            font-size: 1.1rem; font-weight: 600; color: var(--accent);
+            margin: 2rem 0 0.75rem;
+        }
+        .prose strong { color: var(--text); font-weight: 600; }
+        .prose code {
+            font-family: var(--font-mono); background: rgba(95,202,201,0.08);
+            padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.85em;
+            color: var(--accent);
+        }
+        .callout {
+            padding: 1.25rem 1.5rem; background: rgba(95,202,201,0.06);
+            border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0; font-size: 0.9rem; color: var(--text-body); line-height: 1.7;
+        }
+        .callout-warn {
+            background: rgba(234,179,8,0.06); border-left-color: #eab308;
+        }
+        .callout-red {
+            background: rgba(239,68,68,0.06); border-left-color: #ef4444;
+        }
+
+        /* Code Comparison Cards */
+        .code-compare {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+            margin: 2rem 0;
+        }
+        .code-card {
+            border: 1px solid var(--border); border-radius: 12px;
+            overflow: hidden; background: #0a0a0c;
+        }
+        .code-card-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.75rem 1rem; border-bottom: 1px solid var(--border);
+            font-size: 0.75rem; font-family: var(--font-mono);
+        }
+        .code-card-header .label { color: var(--text-dim); }
+        .code-card-header .dots { display: flex; gap: 6px; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.r { background: #ef4444; }
+        .code-dot.y { background: #eab308; }
+        .code-dot.g { background: #22c55e; }
+        .code-card-body {
+            padding: 1rem 1.25rem; font-family: var(--font-mono);
+            font-size: 0.78rem; line-height: 1.7; color: var(--text-body);
+            overflow-x: auto; min-height: 180px;
+        }
+        .code-card-body .kw { color: var(--accent); }
+        .code-card-body .str { color: #ae9a64; }
+        .code-card-body .cmt { color: var(--text-dim); font-style: italic; }
+        .code-card-body .fn { color: #c084fc; }
+        .code-card-body .prop { color: #f472b6; }
+        .code-card-body .num { color: #c084fc; }
+        .code-card-badge {
+            display: inline-block; font-size: 0.68rem; font-family: var(--font-mono);
+            padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 600;
+        }
+        .badge-cdk { background: rgba(95,202,201,0.15); color: var(--accent); }
+        .badge-tf { background: rgba(174,154,100,0.15); color: #ae9a64; }
+
+        /* Tabbed Panels */
+        .tabs {
+            margin: 2rem 0; border: 1px solid var(--border); border-radius: 12px;
+            overflow: hidden;
+        }
+        .tab-bar {
+            display: flex; border-bottom: 1px solid var(--border); background: var(--bg-chat);
+        }
+        .tab-btn {
+            flex: 1; padding: 0.8rem 1rem; background: none; border: none;
+            color: var(--text-dim); font-family: var(--font-body);
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            border-bottom: 2px solid transparent; transition: all 0.2s;
+        }
+        .tab-btn:hover { color: var(--text-body); }
+        .tab-btn.active {
+            color: var(--accent); border-bottom-color: var(--accent);
+            background: rgba(95,202,201,0.04);
+        }
+        .tab-panel {
+            display: none; padding: 1.25rem 1.5rem;
+            font-size: 0.9rem; color: var(--text-body); line-height: 1.7;
+        }
+        .tab-panel.active { display: block; }
+
+        /* Verdict Bar Chart */
+        .verdict-chart {
+            margin: 2rem 0;
+        }
+        .verdict-row {
+            display: grid; grid-template-columns: 160px 1fr 1fr; gap: 0.75rem;
+            align-items: center; padding: 0.6rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .verdict-row:last-child { border-bottom: none; }
+        .verdict-label {
+            font-size: 0.82rem; color: var(--text-body); font-weight: 500;
+        }
+        .verdict-bar-wrap {
+            height: 24px; background: rgba(255,255,255,0.04);
+            border-radius: 4px; overflow: hidden; position: relative;
+        }
+        .verdict-bar {
+            height: 100%; border-radius: 4px; transition: width 1s ease;
+            width: 0%; display: flex; align-items: center; justify-content: flex-end;
+            padding-right: 6px;
+        }
+        .verdict-bar span {
+            font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600;
+            color: #0f0f10;
+        }
+        .bar-cdk { background: var(--accent); }
+        .bar-tf { background: #ae9a64; }
+        .verdict-header {
+            display: grid; grid-template-columns: 160px 1fr 1fr; gap: 0.75rem;
+            padding: 0.5rem 0; margin-bottom: 0.5rem;
+        }
+        .verdict-header span {
+            font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim);
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+
+        /* Expandable Sections */
+        .expand-section {
+            margin: 1.5rem 0; border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden;
+        }
+        .expand-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 1.25rem; cursor: pointer;
+            background: var(--bg-chat); transition: background 0.2s;
+        }
+        .expand-header:hover { background: rgba(95,202,201,0.05); }
+        .expand-header h3 {
+            font-size: 1rem; font-weight: 600; color: var(--text);
+            display: flex; align-items: center; gap: 0.6rem; margin: 0;
+        }
+        .expand-arrow {
+            color: var(--text-dim); transition: transform 0.3s; font-size: 0.9rem;
+        }
+        .expand-section.open .expand-arrow { transform: rotate(180deg); }
+        .expand-body {
+            max-height: 0; overflow: hidden; transition: max-height 0.4s ease;
+        }
+        .expand-section.open .expand-body { max-height: 3000px; }
+        .expand-content {
+            padding: 0 1.25rem 1.25rem; color: var(--text-body);
+            font-size: 0.9rem; line-height: 1.7;
+        }
+
+        /* Decision Flowchart */
+        .flowchart {
+            margin: 2rem 0; display: flex; flex-direction: column; align-items: center; gap: 0;
+        }
+        .flow-node {
+            padding: 1rem 1.5rem; border: 2px solid var(--border);
+            border-radius: 12px; text-align: center; max-width: 420px;
+            width: 100%; background: var(--bg-chat); position: relative;
+            transition: all 0.3s; cursor: pointer;
+        }
+        .flow-node:hover { border-color: rgba(95,202,201,0.3); }
+        .flow-node.active { border-color: var(--accent); background: rgba(95,202,201,0.06); }
+        .flow-question {
+            font-size: 0.92rem; font-weight: 600; color: var(--text);
+        }
+        .flow-answer {
+            display: none; margin-top: 0.75rem; padding-top: 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            font-size: 0.85rem; color: var(--text-body); line-height: 1.6;
+        }
+        .flow-node.active .flow-answer { display: block; }
+        .flow-arrow {
+            display: flex; gap: 3rem; padding: 0.4rem 0;
+        }
+        .flow-arrow span {
+            font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-dim);
+        }
+        .flow-connector {
+            width: 2px; height: 20px; background: var(--border); margin: 0 auto;
+        }
+        .flow-split {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+            width: 100%; max-width: 420px;
+        }
+        .flow-leaf {
+            padding: 0.9rem 1rem; border-radius: 10px; text-align: center;
+            font-size: 0.85rem; font-weight: 600;
+        }
+        .flow-leaf.cdk { background: rgba(95,202,201,0.1); color: var(--accent); border: 1px solid rgba(95,202,201,0.25); }
+        .flow-leaf.tf { background: rgba(174,154,100,0.1); color: #ae9a64; border: 1px solid rgba(174,154,100,0.25); }
+        .flow-leaf.either { background: rgba(255,255,255,0.04); color: var(--text-body); border: 1px solid var(--border); }
+
+        @media (max-width: 600px) {
+            .code-compare { grid-template-columns: 1fr; }
+            .verdict-row { grid-template-columns: 100px 1fr 1fr; }
+            .verdict-header { grid-template-columns: 100px 1fr 1fr; }
+            .flow-split { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+  <nav class="nav scrolled">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">pardeep<span>builds</span></a>
+      <div class="nav-links" id="navLinks">
+        <a href="/">Home</a>
+        <a href="/portfolio">Portfolio</a>
+        <a href="/resume">Resume</a>
+        <a href="/blog" class="active">Blog</a>
+        <a href="/#contact">Contact</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <main>
+    <article class="section section-narrow" style="padding-top:9rem">
+      <div class="section-label">Blog</div>
+      <a href="/blog" class="back-link">&larr; Back to Blog</a>
+
+      <div class="blog-meta">
+        <span class="blog-item-date">28 Mar 2026</span>
+        <span class="blog-item-tag">Architecture</span>
+        <span class="blog-item-readtime">8 min read</span>
+      </div>
+
+      <h1 class="section-title">Why I Use CDK Over Terraform<br>(And When I Don't)</h1>
+
+      <div class="blog-item-author">
+        <img src="/profile.png" alt="Pardeep" onerror="this.style.display='none'">
+        By <strong>Pardeep Dhingra</strong>
+      </div>
+
+      <div class="prose">
+        <p>I've shipped infrastructure with both AWS CDK and Terraform in production. Not demo apps, not side projects&mdash;real systems handling real traffic with real on-call rotations. And after years of living with both, I have a clear preference: <strong>CDK wins for my teams, most of the time</strong>. But "most of the time" is doing heavy lifting in that sentence, and the exceptions matter.</p>
+
+        <p>This isn't a "CDK good, Terraform bad" post. Both tools solve the same problem&mdash;declarative infrastructure as code&mdash;but they make fundamentally different bets about how developers should interact with cloud resources. Those bets have real consequences for velocity, debugging, and team cognitive load.</p>
+
+        <h2>The Core Difference</h2>
+
+        <p>Terraform uses HCL, a purpose-built configuration language. CDK uses general-purpose programming languages (TypeScript, Python, Go, etc.) that synthesize down to CloudFormation. This isn't a superficial distinction&mdash;it shapes everything from how you handle conditionals to how you compose reusable abstractions.</p>
+
+        <p>HCL was designed to be readable by anyone. CDK was designed to be powerful for developers. That tension is the entire debate.</p>
+      </div>
+
+      <!-- Interactive: Side-by-Side Code Comparison -->
+      <div class="prose"><h2>Side-by-Side: The Same Infrastructure</h2>
+        <p>Here's an API Gateway backed by a Lambda function with a DynamoDB table. Click the tabs above each block to see different resource definitions.</p>
+      </div>
+
+      <div class="tabs" id="compareTabs">
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="lambda">Lambda + API GW</button>
+          <button class="tab-btn" data-tab="dynamo">DynamoDB Table</button>
+          <button class="tab-btn" data-tab="iam">IAM Permissions</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="lambda">
+          <div class="code-compare">
+            <div class="code-card">
+              <div class="code-card-header">
+                <div class="dots"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span></div>
+                <span class="code-card-badge badge-cdk">CDK &middot; TypeScript</span>
+              </div>
+              <div class="code-card-body">
+<span class="kw">const</span> fn = <span class="kw">new</span> <span class="fn">NodejsFunction</span>(<span class="kw">this</span>, <span class="str">'Handler'</span>, {
+  <span class="prop">entry</span>: <span class="str">'src/handler.ts'</span>,
+  <span class="prop">runtime</span>: Runtime.<span class="fn">NODEJS_20_X</span>,
+  <span class="prop">environment</span>: {
+    <span class="prop">TABLE_NAME</span>: table.<span class="fn">tableName</span>,
+  },
+});
+
+<span class="kw">const</span> api = <span class="kw">new</span> <span class="fn">RestApi</span>(<span class="kw">this</span>, <span class="str">'Api'</span>);
+api.root
+  .<span class="fn">addResource</span>(<span class="str">'items'</span>)
+  .<span class="fn">addMethod</span>(<span class="str">'GET'</span>, <span class="kw">new</span> <span class="fn">LambdaIntegration</span>(fn));
+
+<span class="cmt">// 12 lines. Bundling, IAM, API GW</span>
+<span class="cmt">// integration — all handled.</span>
+              </div>
+            </div>
+            <div class="code-card">
+              <div class="code-card-header">
+                <div class="dots"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span></div>
+                <span class="code-card-badge badge-tf">Terraform &middot; HCL</span>
+              </div>
+              <div class="code-card-body">
+<span class="kw">resource</span> <span class="str">"aws_lambda_function"</span> <span class="str">"handler"</span> {
+  <span class="prop">filename</span>      = <span class="str">"handler.zip"</span>
+  <span class="prop">function_name</span> = <span class="str">"items-handler"</span>
+  <span class="prop">role</span>          = aws_iam_role.lambda.arn
+  <span class="prop">handler</span>       = <span class="str">"index.handler"</span>
+  <span class="prop">runtime</span>       = <span class="str">"nodejs20.x"</span>
+  <span class="prop">environment</span> {
+    <span class="prop">variables</span> = {
+      <span class="prop">TABLE_NAME</span> = aws_dynamodb_table.tbl.name
+    }
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_api_gateway_rest_api"</span> <span class="str">"api"</span> {
+  <span class="prop">name</span> = <span class="str">"items-api"</span>
+}
+<span class="cmt"># + resource, method, integration,</span>
+<span class="cmt"># deployment, stage... ~50 more lines</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-panel="dynamo">
+          <div class="code-compare">
+            <div class="code-card">
+              <div class="code-card-header">
+                <div class="dots"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span></div>
+                <span class="code-card-badge badge-cdk">CDK &middot; TypeScript</span>
+              </div>
+              <div class="code-card-body">
+<span class="kw">const</span> table = <span class="kw">new</span> <span class="fn">Table</span>(<span class="kw">this</span>, <span class="str">'Items'</span>, {
+  <span class="prop">partitionKey</span>: {
+    <span class="prop">name</span>: <span class="str">'pk'</span>,
+    <span class="prop">type</span>: AttributeType.<span class="fn">STRING</span>,
+  },
+  <span class="prop">billingMode</span>: BillingMode.<span class="fn">PAY_PER_REQUEST</span>,
+  <span class="prop">removalPolicy</span>: RemovalPolicy.<span class="fn">DESTROY</span>,
+});
+
+<span class="cmt">// Type-safe. Enum values. IDE autocomplete</span>
+<span class="cmt">// catches typos at write-time, not deploy.</span>
+              </div>
+            </div>
+            <div class="code-card">
+              <div class="code-card-header">
+                <div class="dots"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span></div>
+                <span class="code-card-badge badge-tf">Terraform &middot; HCL</span>
+              </div>
+              <div class="code-card-body">
+<span class="kw">resource</span> <span class="str">"aws_dynamodb_table"</span> <span class="str">"tbl"</span> {
+  <span class="prop">name</span>         = <span class="str">"items"</span>
+  <span class="prop">billing_mode</span> = <span class="str">"PAY_PER_REQUEST"</span>
+  <span class="prop">hash_key</span>     = <span class="str">"pk"</span>
+
+  <span class="kw">attribute</span> {
+    <span class="prop">name</span> = <span class="str">"pk"</span>
+    <span class="prop">type</span> = <span class="str">"S"</span>
+  }
+}
+
+<span class="cmt"># String values. Typo in "PAY_PER_REQEUST"?</span>
+<span class="cmt"># You'll find out at `terraform apply`.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-panel="iam">
+          <div class="code-compare">
+            <div class="code-card">
+              <div class="code-card-header">
+                <div class="dots"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span></div>
+                <span class="code-card-badge badge-cdk">CDK &middot; TypeScript</span>
+              </div>
+              <div class="code-card-body">
+<span class="cmt">// One line. CDK generates the IAM policy</span>
+<span class="cmt">// with least-privilege scoping.</span>
+
+table.<span class="fn">grantReadWriteData</span>(fn);
+
+<span class="cmt">// That's it. The L2 construct knows</span>
+<span class="cmt">// exactly which actions DynamoDB needs</span>
+<span class="cmt">// and scopes to the table ARN.</span>
+              </div>
+            </div>
+            <div class="code-card">
+              <div class="code-card-header">
+                <div class="dots"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span></div>
+                <span class="code-card-badge badge-tf">Terraform &middot; HCL</span>
+              </div>
+              <div class="code-card-body">
+<span class="kw">resource</span> <span class="str">"aws_iam_role"</span> <span class="str">"lambda"</span> {
+  <span class="prop">name</span>               = <span class="str">"lambda-role"</span>
+  <span class="prop">assume_role_policy</span> = <span class="fn">jsonencode</span>({...})
+}
+
+<span class="kw">resource</span> <span class="str">"aws_iam_role_policy"</span> <span class="str">"db"</span> {
+  <span class="prop">role</span>   = aws_iam_role.lambda.id
+  <span class="prop">policy</span> = <span class="fn">jsonencode</span>({
+    Statement = [{
+      Effect   = <span class="str">"Allow"</span>
+      Action   = [<span class="str">"dynamodb:GetItem"</span>,
+                  <span class="str">"dynamodb:PutItem"</span>, ...]
+      Resource = aws_dynamodb_table.tbl.arn
+    }]
+  })
+}
+<span class="cmt"># Manual policy. Easy to over-permission.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>The pattern is consistent: CDK's L2 constructs collapse 40-60 lines of HCL into 8-15 lines of TypeScript. But the line count isn't the point. The point is that CDK encodes <strong>AWS best practices into the abstraction itself</strong>&mdash;least-privilege IAM, encryption defaults, proper integration wiring. With Terraform, you're responsible for every detail.</p>
+
+        <h2>When CDK Wins</h2>
+        <p>After running CDK in production across multiple teams, these are the conditions where it consistently outperforms Terraform:</p>
+      </div>
+
+      <!-- Interactive: Expandable Win Conditions -->
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>Your team already writes TypeScript</h3>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p>This is the biggest factor. If your backend engineers write TypeScript daily, CDK isn't a new tool&mdash;it's the same language with a different import path. No HCL syntax to learn, no separate toolchain to maintain. Your team's existing knowledge of interfaces, generics, and async patterns directly transfers to infrastructure code.</p>
+            <p>The developer experience gap is real: autocomplete, go-to-definition, inline type errors, and refactoring support all work out of the box. When a junior engineer misspells <code>billingMode</code>, TypeScript catches it at compile time. In HCL, you find out during <code>terraform apply</code>&mdash;or worse, in production.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>You need complex, reusable abstractions</h3>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p>CDK's L3 constructs let you compose infrastructure like you compose software. Need a standard "microservice" pattern that bundles a Lambda, API Gateway, DynamoDB table, CloudWatch alarms, and X-Ray tracing? Write it once as a construct, publish it to your internal registry, and every team gets a production-ready stack in five lines.</p>
+            <p>Terraform modules can do this too, but HCL's limited expressiveness makes complex conditional logic painful. Try writing a module that conditionally creates different resource configurations based on environment, feature flags, and team ownership. In CDK, it's just <code>if</code> statements. In HCL, it's <code>count</code>, <code>for_each</code>, and <code>dynamic</code> blocks fighting each other.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>You're all-in on AWS</h3>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p>CDK is a first-party AWS tool. New services and features land in CDK constructs within days of GA. The L2 constructs encode AWS-specific patterns&mdash;VPC CIDR allocation, ECS task definition nuances, Lambda layer versioning&mdash;that Terraform providers take weeks or months to support properly.</p>
+            <p>If you're running multi-cloud (and actually using it, not just planning to), this advantage disappears. But if your infrastructure is AWS-only&mdash;and for most startups and scale-ups, it is&mdash;CDK's depth of AWS integration is a real productivity multiplier.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>You want infrastructure tests that feel like unit tests</h3>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p>CDK lets you write assertions against synthesized CloudFormation templates using standard test frameworks. Want to verify that every Lambda function has a timeout under 30 seconds, or that no S3 bucket allows public access? Write a Jest test. It runs in milliseconds with no cloud API calls.</p>
+            <p><code>Template.fromStack(stack).hasResourceProperties('AWS::Lambda::Function', { Timeout: Match.numberLessThan(30) })</code></p>
+            <p>Terraform's testing story has improved with <code>terraform test</code>, but it still requires actual infrastructure provisioning for meaningful validation. CDK's synthesis model means you can test infrastructure logic the same way you test application logic.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>When Terraform Wins</h2>
+        <p>Now the uncomfortable part. There are real scenarios where I reach for Terraform instead, and pretending otherwise would be dishonest.</p>
+      </div>
+
+      <!-- Interactive: Verdict Comparison Chart -->
+      <div class="prose"><h3>The Honest Comparison</h3>
+        <p>These bars reflect my experience across production systems. Scroll to animate.</p>
+      </div>
+
+      <div class="verdict-chart" id="verdictChart">
+        <div class="verdict-header">
+          <span></span>
+          <span style="text-align:center">CDK</span>
+          <span style="text-align:center">Terraform</span>
+        </div>
+        <div class="verdict-row">
+          <div class="verdict-label">Developer DX</div>
+          <div class="verdict-bar-wrap"><div class="verdict-bar bar-cdk" data-width="92"><span>92</span></div></div>
+          <div class="verdict-bar-wrap"><div class="verdict-bar bar-tf" data-width="60"><span>60</span></div></div>
+        </div>
+        <div class="verdict-row">
+          <div class="verdict-label">Multi-cloud</div>
+          <div class="verdict-bar-wrap"><div class="verdict-bar bar-cdk" data-width="15"><span>15</span></div></div>
+          <div class="verdict-bar-wrap"><div class="verdict-bar bar-tf" data-width="95"><span>95</span></div></div>
+        </div>
+        <div class="verdict-row">
+          <div class="verdict-label">State Mgmt</div>
+          <div class="verdict-bar-wrap"><div class="verdict-bar bar-cdk" data-width="45"><span>45</span></div></div>
+          <div class="verdict-bar-wrap"><div class="verdict-bar bar-tf" data-width="88"><span>88</span></div></div>
+        </div>
+        <div class="verdict-row">
+          <div class="verdict-label">Ecosystem</div>
+          <div class="verdict-bar-wrap"><div class="verdict-bar bar-cdk" data-width="55"><span>55</span></div></div>
+          <div class="verdict-bar-wrap"><div class="verdict-bar bar-tf" data-width="90"><span>90</span></div></div>
+        </div>
+        <div class="verdict-row">
+          <div class="verdict-label">Abstraction</div>
+          <div class="verdict-bar-wrap"><div class="verdict-bar bar-cdk" data-width="90"><span>90</span></div></div>
+          <div class="verdict-bar-wrap"><div class="verdict-bar bar-tf" data-width="55"><span>55</span></div></div>
+        </div>
+        <div class="verdict-row">
+          <div class="verdict-label">Debugging</div>
+          <div class="verdict-bar-wrap"><div class="verdict-bar bar-cdk" data-width="40"><span>40</span></div></div>
+          <div class="verdict-bar-wrap"><div class="verdict-bar bar-tf" data-width="82"><span>82</span></div></div>
+        </div>
+        <div class="verdict-row">
+          <div class="verdict-label">Hiring</div>
+          <div class="verdict-bar-wrap"><div class="verdict-bar bar-cdk" data-width="35"><span>35</span></div></div>
+          <div class="verdict-bar-wrap"><div class="verdict-bar bar-tf" data-width="85"><span>85</span></div></div>
+        </div>
+        <div class="verdict-row">
+          <div class="verdict-label">Testing</div>
+          <div class="verdict-bar-wrap"><div class="verdict-bar bar-cdk" data-width="85"><span>85</span></div></div>
+          <div class="verdict-bar-wrap"><div class="verdict-bar bar-tf" data-width="50"><span>50</span></div></div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>Three areas where Terraform's lead is insurmountable:</p>
+
+        <p><strong>State management.</strong> Terraform's state file is explicit, inspectable, and portable. You can <code>terraform state list</code>, <code>terraform state mv</code>, and <code>terraform import</code> resources with surgical precision. CDK delegates state to CloudFormation, which means you're at the mercy of CloudFormation's rollback behavior. When a CDK deploy fails mid-stack, the debugging experience is noticeably worse. You're reading CloudFormation events, not CDK code.</p>
+
+        <p><strong>Multi-cloud.</strong> If you genuinely manage infrastructure across AWS, GCP, and Azure&mdash;or you manage non-cloud resources like Datadog dashboards, PagerDuty rotations, or GitHub repos&mdash;Terraform's provider ecosystem is unmatched. CDK is AWS-only. CDKTF exists but it's an adapter layer, not a first-class experience.</p>
+
+        <p><strong>Hiring.</strong> Terraform has an order of magnitude more practitioners. If you're building a platform team that needs to hire DevOps engineers quickly, the Terraform talent pool is significantly larger. CDK is growing but still niche.</p>
+
+        <h2>The Debugging Problem Nobody Talks About</h2>
+
+        <p>This is my biggest honest critique of CDK. When things go wrong&mdash;and in infrastructure, things always go wrong&mdash;CDK adds an abstraction layer between you and the actual error.</p>
+      </div>
+
+      <div class="callout-red callout">
+        <strong>The CDK debugging chain:</strong> Your TypeScript &rarr; CDK constructs &rarr; synthesized CloudFormation &rarr; CloudFormation execution &rarr; AWS API calls. When a deploy fails, the error message comes from CloudFormation, not CDK. You need to mentally map backwards through two abstraction layers to find the root cause. Terraform's chain is shorter: your HCL &rarr; Terraform provider &rarr; AWS API calls.
+      </div>
+
+      <div class="prose">
+        <p>I've lost hours to CDK errors that boiled down to "CloudFormation says this resource already exists" with no indication of which CDK construct caused it. The <code>cdk diff</code> command helps, but it's not enough when you're debugging a failed deployment at 2am.</p>
+
+        <h2>The Decision Framework</h2>
+        <p>Click each question to see the reasoning. Follow the path that matches your situation.</p>
+      </div>
+
+      <!-- Interactive: Decision Flowchart -->
+      <div class="flowchart" id="flowchart">
+        <div class="flow-node" data-flow="0">
+          <div class="flow-question">Is your team primarily TypeScript/Python developers?</div>
+          <div class="flow-answer">If your team writes application code in TypeScript or Python daily, CDK's same-language advantage is significant. They won't need to context-switch to a different DSL for infrastructure.</div>
+        </div>
+        <div class="flow-connector"></div>
+        <div class="flow-arrow"><span>YES &darr;</span><span>NO &darr;</span></div>
+        <div class="flow-split">
+          <div class="flow-node" data-flow="1">
+            <div class="flow-question">Do you need multi-cloud?</div>
+            <div class="flow-answer">Real multi-cloud, not "we might someday." If you're managing GCP, Azure, or third-party SaaS resources alongside AWS, Terraform's provider ecosystem is the only mature option.</div>
+          </div>
+          <div class="flow-leaf tf">Use Terraform</div>
+        </div>
+        <div class="flow-connector"></div>
+        <div class="flow-arrow"><span>NO &darr;</span><span>YES &darr;</span></div>
+        <div class="flow-split">
+          <div class="flow-node" data-flow="2">
+            <div class="flow-question">Do you build reusable infra constructs?</div>
+            <div class="flow-answer">If you have 3+ teams sharing infrastructure patterns (standard Lambda microservice, standard ECS service, standard data pipeline), CDK constructs are dramatically easier to compose and maintain than Terraform modules with complex variable passing.</div>
+          </div>
+          <div class="flow-leaf tf">Use Terraform</div>
+        </div>
+        <div class="flow-connector"></div>
+        <div class="flow-split">
+          <div class="flow-leaf cdk">Use CDK</div>
+          <div class="flow-leaf either">Either works</div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>What I'd Choose Today</h2>
+
+        <p>If I'm starting a new AWS-only project with a TypeScript team, I pick CDK every time. The developer experience, type safety, and construct library make our team faster. The code reads like application code because it <em>is</em> application code, and that consistency across the stack reduces cognitive load.</p>
+
+        <p>If I'm joining a team with existing Terraform infrastructure, I don't rewrite it. Terraform's ecosystem maturity, state management, and the existing team knowledge are real assets. The migration cost almost never justifies the benefit.</p>
+
+        <p>If I'm building a platform team that manages infrastructure for non-AWS services&mdash;monitoring, CI/CD, DNS, CDN&mdash;I use Terraform for the multi-provider support.</p>
+      </div>
+
+      <div class="callout">
+        <strong>The uncomfortable truth:</strong> The best IaC tool is the one your team can debug at 3am without calling the person who wrote it. Type safety and abstractions matter during development. Debuggability and state transparency matter during incidents. Weigh accordingly.
+      </div>
+
+      <div class="prose">
+        <h2>The Tradeoffs I've Accepted</h2>
+
+        <p>Every CDK project I run, I accept these tradeoffs consciously:</p>
+
+        <p><strong>CloudFormation limits are CDK limits.</strong> 500 resources per stack is a hard ceiling. You work around it with nested stacks or stack splitting, but it adds complexity. Terraform has no equivalent limit.</p>
+
+        <p><strong>The abstraction can leak.</strong> When an L2 construct doesn't expose a property you need, you drop down to L1 (raw CloudFormation) or use escape hatches. This is jarring and creates inconsistency in your codebase.</p>
+
+        <p><strong>Deploy times are slower.</strong> CDK synthesizes to CloudFormation, then CloudFormation orchestrates the deployment. Terraform talks directly to AWS APIs. For large stacks, CDK deploys can take 2-3x longer.</p>
+
+        <p><strong>The community is smaller.</strong> Stack Overflow answers, blog posts, and third-party modules are less abundant. When you hit an edge case, you're more likely to be reading CDK source code on GitHub than finding a solved answer.</p>
+
+        <p>I accept all of these because the development velocity and type safety outweigh them for my use cases. Your calculus might be different, and that's fine. The worst thing you can do is pick a tool based on someone else's blog post instead of your own team's constraints.</p>
+
+        <p>Including this one.</p>
+      </div>
+
+    </article>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 Pardeep Dhingra. Built with curiosity.</p>
+  </footer>
+
+  <script>
+    // Nav toggle
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => links.classList.toggle('open'));
+    links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
+
+    // Tabbed code comparison
+    document.querySelectorAll('.tabs').forEach(tabs => {
+      const btns = tabs.querySelectorAll('.tab-btn');
+      const panels = tabs.querySelectorAll('.tab-panel');
+      btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          btns.forEach(b => b.classList.remove('active'));
+          panels.forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          tabs.querySelector('[data-panel="' + btn.dataset.tab + '"]').classList.add('active');
+        });
+      });
+    });
+
+    // Expandable sections
+    document.querySelectorAll('[data-expand]').forEach(section => {
+      section.querySelector('.expand-header').addEventListener('click', () => {
+        section.classList.toggle('open');
+      });
+    });
+
+    // Verdict chart — animate on scroll
+    const chart = document.getElementById('verdictChart');
+    let chartAnimated = false;
+    const chartObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !chartAnimated) {
+          chartAnimated = true;
+          chart.querySelectorAll('.verdict-bar').forEach(bar => {
+            bar.style.width = bar.dataset.width + '%';
+          });
+        }
+      });
+    }, { threshold: 0.3 });
+    chartObserver.observe(chart);
+
+    // Decision flowchart
+    document.querySelectorAll('.flow-node[data-flow]').forEach(node => {
+      node.addEventListener('click', () => {
+        node.classList.toggle('active');
+      });
+    });
+  </script>
+
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" id="lightbox">
+    <button class="lightbox-close" aria-label="Close">&times;</button>
+    <img src="" alt="">
+  </div>
+  <script>
+  (function(){
+    var overlay = document.getElementById("lightbox");
+    var lbImg = overlay.querySelector("img");
+    var lbClose = overlay.querySelector(".lightbox-close");
+    document.querySelectorAll("img").forEach(function(img){
+      if (img.closest(".nav") || img.closest(".lightbox-overlay")) return;
+      img.setAttribute("data-lightbox","");
+    });
+    document.addEventListener("click", function(e){
+      var img = e.target.closest("img[data-lightbox]");
+      if (!img) return;
+      e.preventDefault(); e.stopPropagation();
+      lbImg.src = img.src; lbImg.alt = img.alt || "";
+      overlay.classList.add("active");
+      document.body.style.overflow = "hidden";
+    });
+    function closeLightbox(){
+      overlay.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+    lbClose.addEventListener("click", closeLightbox);
+    overlay.addEventListener("click", function(e){ if(e.target===overlay) closeLightbox(); });
+    document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeLightbox(); });
+  })();
+  </script>
+
+</body>
+</html>

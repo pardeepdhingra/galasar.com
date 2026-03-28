@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Landing Pages Have Two Audiences Now — Pardeep Dhingra</title>
+    <meta name="description" content="WebMCP lets websites register JavaScript functions as tools AI agents can call directly. Here's the three-layer model every landing page needs in 2026.">
+    <link rel="canonical" href="https://pardeepbuilds.com/blog/webmcp-two-audiences">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .back-link {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            color: var(--text-dim); text-decoration: none; font-size: 0.85rem;
+            margin-bottom: 1.5rem; transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+        .blog-meta {
+            display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem;
+        }
+        .blog-item-author {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.8rem; color: var(--text-dim); margin-bottom: 2.5rem;
+        }
+        .blog-item-author img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+        .blog-item-author strong { color: var(--text-body); font-weight: 550; }
+
+        .prose { font-size: 0.95rem; line-height: 1.8; color: var(--text-body); }
+        .prose p { margin-bottom: 1.25rem; }
+        .prose h2 { font-size: 1.35rem; font-weight: 700; color: var(--text); margin: 2.5rem 0 1rem; letter-spacing: -0.02em; }
+        .prose h3 { font-size: 1.1rem; font-weight: 600; color: var(--accent); margin: 2rem 0 0.75rem; }
+        .prose strong { color: var(--text); font-weight: 600; }
+        .prose code { font-family: var(--font-mono); background: rgba(95,202,201,0.08); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.85em; color: var(--accent); }
+
+        .callout { padding: 1.25rem 1.5rem; background: rgba(95,202,201,0.06); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; margin: 1.5rem 0; font-size: 0.9rem; color: var(--text-body); line-height: 1.7; }
+        .callout-warn { background: rgba(234,179,8,0.06); border-left-color: #eab308; }
+
+        /* Three Layer Diagram */
+        .layers {
+            display: flex; flex-direction: column; gap: 0; margin: 2rem 0;
+        }
+        .layer {
+            padding: 1.25rem 1.5rem; border: 1px solid var(--border);
+            cursor: pointer; transition: all 0.3s; position: relative;
+        }
+        .layer:first-child { border-radius: 12px 12px 0 0; }
+        .layer:last-child { border-radius: 0 0 12px 12px; }
+        .layer-header {
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .layer-label {
+            font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim);
+            margin-bottom: 0.3rem;
+        }
+        .layer-name { font-size: 1rem; font-weight: 650; color: var(--text); }
+        .layer-what { font-size: 0.82rem; color: var(--text-dim); margin-top: 0.2rem; }
+        .layer-badge {
+            font-size: 0.7rem; font-family: var(--font-mono); padding: 0.2rem 0.6rem;
+            border-radius: 4px; white-space: nowrap;
+        }
+        .layer.l1 { background: rgba(34,197,94,0.04); }
+        .layer.l1 .layer-badge { background: rgba(34,197,94,0.12); color: #22c55e; }
+        .layer.l1.active { border-color: #22c55e; background: rgba(34,197,94,0.08); }
+        .layer.l2 { background: rgba(234,179,8,0.04); }
+        .layer.l2 .layer-badge { background: rgba(234,179,8,0.12); color: #eab308; }
+        .layer.l2.active { border-color: #eab308; background: rgba(234,179,8,0.08); }
+        .layer.l3 { background: rgba(95,202,201,0.04); }
+        .layer.l3 .layer-badge { background: rgba(95,202,201,0.12); color: var(--accent); }
+        .layer.l3.active { border-color: var(--accent); background: rgba(95,202,201,0.08); }
+        .layer-detail {
+            max-height: 0; overflow: hidden; transition: max-height 0.4s ease, margin 0.3s;
+        }
+        .layer.active .layer-detail {
+            max-height: 500px; margin-top: 1rem;
+        }
+        .layer-detail-inner {
+            font-size: 0.88rem; color: var(--text-body); line-height: 1.7;
+            padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06);
+        }
+
+        /* Speed Comparison */
+        .speed-compare {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .speed-card {
+            padding: 1.5rem; background: var(--bg-chat);
+            border: 1px solid var(--border); border-radius: 12px;
+            text-align: center;
+        }
+        .speed-card h4 { font-size: 0.9rem; color: var(--text); margin-bottom: 0.75rem; }
+        .speed-bar-track {
+            height: 12px; background: rgba(255,255,255,0.06);
+            border-radius: 6px; overflow: hidden; margin-bottom: 0.5rem;
+        }
+        .speed-bar-fill {
+            height: 100%; border-radius: 6px; transition: width 1.5s ease;
+            width: 0%;
+        }
+        .speed-card.slow .speed-bar-fill { background: #ef4444; }
+        .speed-card.fast .speed-bar-fill { background: #22c55e; }
+        .speed-time {
+            font-family: var(--font-mono); font-size: 1.5rem; font-weight: 700;
+            margin: 0.5rem 0 0.25rem;
+        }
+        .speed-card.slow .speed-time { color: #ef4444; }
+        .speed-card.fast .speed-time { color: #22c55e; }
+        .speed-label { font-size: 0.78rem; color: var(--text-dim); }
+        .speed-result {
+            text-align: center; font-family: var(--font-mono);
+            font-size: 1.1rem; font-weight: 700; color: var(--accent);
+            margin: -0.5rem 0 1.5rem;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: #0a0a0c; border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden; margin: 1.5rem 0;
+        }
+        .code-header {
+            display: flex; align-items: center; gap: 8px; padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border); font-size: 0.75rem;
+            color: var(--text-dim); font-family: var(--font-mono);
+        }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.r { background: #ef4444; }
+        .code-dot.y { background: #eab308; }
+        .code-dot.g { background: #22c55e; }
+        .code-body {
+            padding: 1rem 1.25rem; font-family: var(--font-mono);
+            font-size: 0.8rem; line-height: 1.7; color: var(--text-body);
+            overflow-x: auto; white-space: pre;
+        }
+        .code-body .kw { color: #c084fc; }
+        .code-body .fn { color: var(--accent); }
+        .code-body .str { color: #ae9a64; }
+        .code-body .cmt { color: var(--text-dim); font-style: italic; }
+        .code-body .prop { color: #60a5fa; }
+
+        /* Funnel */
+        .funnel {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+            margin: 2rem 0; border: 1px solid var(--border); border-radius: 12px;
+            overflow: hidden;
+        }
+        .funnel-col-header {
+            padding: 0.75rem 1rem; font-size: 0.78rem; font-weight: 650;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+        }
+        .funnel-col-header.human { background: rgba(239,68,68,0.06); color: #ef4444; }
+        .funnel-col-header.agent { background: rgba(34,197,94,0.06); color: #22c55e; }
+        .funnel-row {
+            display: contents;
+        }
+        .funnel-cell {
+            padding: 0.75rem 1rem; font-size: 0.85rem; color: var(--text-body);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            line-height: 1.5;
+        }
+        .funnel-cell:nth-child(odd) { border-right: 1px solid var(--border); }
+        .funnel-stage {
+            font-family: var(--font-mono); font-size: 0.7rem;
+            color: var(--text-dim); display: block; margin-bottom: 0.2rem;
+        }
+
+        /* Comparison Table */
+        .compare-table {
+            width: 100%; border-collapse: collapse; margin: 1.5rem 0;
+            font-size: 0.85rem;
+        }
+        .compare-table th {
+            text-align: left; padding: 0.75rem 1rem; font-size: 0.72rem;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            color: var(--text-dim); border-bottom: 1px solid var(--border);
+        }
+        .compare-table td {
+            padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: var(--text-body);
+        }
+        .compare-table td:first-child { color: var(--text); font-weight: 550; }
+
+        /* Download Button */
+        .download-btn {
+            display: inline-flex; align-items: center; gap: 0.6rem;
+            padding: 0.9rem 1.5rem; background: var(--accent);
+            color: #0f0f10; border-radius: 10px; font-weight: 650;
+            font-size: 0.9rem; text-decoration: none; transition: all 0.2s;
+            margin: 1rem 0;
+        }
+        .download-btn:hover { opacity: 0.85; transform: translateY(-2px); }
+
+        /* Audit Checklist */
+        .audit { margin: 2rem 0; padding: 1.5rem; background: var(--bg-chat); border: 1px solid var(--border); border-radius: 12px; }
+        .audit-title { font-size: 1.1rem; font-weight: 600; color: var(--text); margin-bottom: 1rem; }
+        .audit-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.6rem 0; }
+        .audit-check { width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.75rem; color: transparent; cursor: pointer; transition: all 0.2s; }
+        .audit-item.checked .audit-check { background: var(--accent); border-color: var(--accent); color: #0f0f10; }
+        .audit-item span { font-size: 0.9rem; color: var(--text-body); line-height: 1.5; }
+
+        @media (max-width: 600px) {
+            .speed-compare { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+  <nav class="nav scrolled">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">pardeep<span>builds</span></a>
+      <div class="nav-links" id="navLinks">
+        <a href="/">Home</a>
+        <a href="/portfolio">Portfolio</a>
+        <a href="/resume">Resume</a>
+        <a href="/blog" class="active">Blog</a>
+        <a href="/#contact">Contact</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <main>
+    <article class="section section-narrow" style="padding-top:9rem">
+      <div class="section-label">Blog</div>
+      <a href="/blog" class="back-link">← Back to Blog</a>
+
+      <div class="blog-meta">
+        <span class="blog-item-date">28 Mar 2026</span>
+        <span class="blog-item-tag">WebMCP</span>
+        <span class="blog-item-readtime">12 min read</span>
+      </div>
+
+      <h1 class="section-title">Your Landing Pages Have Two Audiences Now — And One Just Learned to Act</h1>
+
+      <div class="blog-item-author">
+        <img src="/profile.png" alt="Pardeep" onerror="this.style.display='none'">
+        By <strong>Pardeep Dhingra</strong>
+      </div>
+
+      <div class="prose">
+        <p>Your landing pages have always served two audiences: humans and machines. Search engine crawlers have been reading your pages for decades. But something fundamental changed in early 2026 — the machine audience upgraded from <strong>reading to doing</strong>.</p>
+
+        <p>WebMCP (Web Model Context Protocol), a W3C draft co-authored by Google and Microsoft, lets websites register JavaScript functions as structured tools that AI agents can discover and call directly. No DOM scraping, no guessing, no fragile heuristics. The agent asks the page what it can do, and the page tells it.</p>
+
+        <p>This isn't a theoretical future. Chrome Canary 146 shipped an early preview in February 2026. The MCP ecosystem has exploded to 97 million+ SDK downloads and 17,000+ servers. And we built a demo that shows the difference: the same restaurant reservation task completes in <strong>8 seconds with WebMCP</strong> versus 38 seconds without it.</p>
+
+        <h2>The Three-Layer Model</h2>
+        <p>Most landing pages stop at Layer 1. Some do Layer 2. Almost nobody does Layer 3 — yet. Click each layer to explore:</p>
+      </div>
+
+      <!-- Three Layer Diagram -->
+      <div class="layers" id="layers">
+        <div class="layer l1" data-layer="0">
+          <div class="layer-header">
+            <div>
+              <div class="layer-label">LAYER 1</div>
+              <div class="layer-name">Semantic HTML</div>
+              <div class="layer-what">Tells agents the page <strong>structure</strong></div>
+            </div>
+            <span class="layer-badge">Most pages stop here</span>
+          </div>
+          <div class="layer-detail">
+            <div class="layer-detail-inner">
+              Headings, nav, main, article, section, forms — the structural bones of your page. This is the foundation for both accessibility and AI readability. Without semantic HTML, agents are navigating a pile of divs with no map. This layer is table stakes — but it's only the beginning.
+            </div>
+          </div>
+        </div>
+        <div class="layer l2" data-layer="1">
+          <div class="layer-header">
+            <div>
+              <div class="layer-label">LAYER 2</div>
+              <div class="layer-name">Schema.org / JSON-LD</div>
+              <div class="layer-what">Tells agents what the page <strong>contains</strong></div>
+            </div>
+            <span class="layer-badge">Product, price, reviews, FAQs</span>
+          </div>
+          <div class="layer-detail">
+            <div class="layer-detail-inner">
+              Structured data adds a metadata layer: product types, prices, reviews, FAQs, business info. This is what Schema.org and JSON-LD provide. AI search engines (ChatGPT Search, Perplexity, Google AI Overviews) actively consume this data to decide which brands to cite. Even after Google restricted FAQ rich results in August 2023, AI systems picked up that exact structured data — pages with well-structured FAQ content see 20-40% higher citation rates in AI-generated answers.
+            </div>
+          </div>
+        </div>
+        <div class="layer l3" data-layer="2">
+          <div class="layer-header">
+            <div>
+              <div class="layer-label">LAYER 3</div>
+              <div class="layer-name">WebMCP — registerTool()</div>
+              <div class="layer-what">Tells agents what the page <strong>can do</strong></div>
+            </div>
+            <span class="layer-badge">The action layer — NEW</span>
+          </div>
+          <div class="layer-detail">
+            <div class="layer-detail-inner">
+              This is the breakthrough. Schema.org tells agents "this is a restaurant with a prix fixe menu." WebMCP tells agents "here's the <code>fill_reservation_form()</code> function to book a table." Together they enable full agentic interaction. The <code>navigator.modelContext.registerTool()</code> API lets you expose any JavaScript function as a structured, discoverable tool with typed inputs and descriptions.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>The Speed Difference: 4.7x Faster</h2>
+        <p>We built a side-by-side demo — same restaurant page, same reservation task. The difference is whether the AI agent has to guess at page structure or can call registered tools directly:</p>
+      </div>
+
+      <!-- Speed Comparison -->
+      <div class="speed-compare" id="speedCompare">
+        <div class="speed-card slow">
+          <h4>Traditional (DOM Scraping)</h4>
+          <div class="speed-bar-track"><div class="speed-bar-fill" id="barSlow"></div></div>
+          <div class="speed-time">~38s</div>
+          <div class="speed-label">Scan 62 DOM nodes, guess field purposes, fill forms one-by-one</div>
+        </div>
+        <div class="speed-card fast">
+          <h4>WebMCP (Tool Calls)</h4>
+          <div class="speed-bar-track"><div class="speed-bar-fill" id="barFast"></div></div>
+          <div class="speed-time">~8s</div>
+          <div class="speed-label">Discover tools, call fill_reservation_form(), confirm_reservation()</div>
+        </div>
+      </div>
+      <div class="speed-result">4.7x faster with WebMCP</div>
+
+      <div class="prose">
+        <h2>How It Works: registerTool()</h2>
+        <p>The implementation cost is minimal — you're wrapping existing JavaScript functions with a registration call:</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span>
+          webmcp-register.js
+        </div>
+        <div class="code-body"><span class="cmt">// Load the WebMCP polyfill (until native browser support ships)</span>
+<span class="cmt">// &lt;script src="https://unpkg.com/@mcp-b/global@latest/dist/index.iife.js"&gt;</span>
+
+<span class="cmt">// Register a "fill reservation" tool for AI agents</span>
+<span class="prop">navigator</span>.<span class="prop">modelContext</span>.<span class="fn">registerTool</span>({
+  <span class="prop">name</span>: <span class="str">"fill_reservation_form"</span>,
+  <span class="prop">description</span>: <span class="str">"Fill in reservation form fields in one call"</span>,
+  <span class="prop">inputSchema</span>: {
+    <span class="prop">type</span>: <span class="str">"object"</span>,
+    <span class="prop">properties</span>: {
+      <span class="prop">guestName</span>: {
+        <span class="prop">type</span>: <span class="str">"string"</span>,
+        <span class="prop">description</span>: <span class="str">"Guest's full name"</span>
+      },
+      <span class="prop">date</span>: {
+        <span class="prop">type</span>: <span class="str">"string"</span>,
+        <span class="prop">description</span>: <span class="str">"Reservation date (YYYY-MM-DD)"</span>
+      }
+    },
+    <span class="prop">required</span>: [<span class="str">"guestName"</span>]
+  },
+  <span class="kw">handler</span>: <span class="kw">async</span> ({ guestName, date, ...rest }) => {
+    <span class="cmt">// Your existing business logic — nothing changes</span>
+    fillFormFields({ guestName, date, ...rest });
+    <span class="kw">return</span> { success: <span class="kw">true</span>, filled: Object.keys(rest) };
+  }
+});</div>
+      </div>
+
+      <div class="prose">
+        <p>That's it. You're exposing your existing reservation logic as a structured tool that any WebMCP-compatible agent can discover and call. No new UI, no new API — just a registration wrapper around functions you already have.</p>
+
+        <h2>Funnel Compression</h2>
+        <p>The traditional conversion funnel collapses when AI agents can act on behalf of users:</p>
+      </div>
+
+      <div class="funnel">
+        <div class="funnel-col-header human">Human Journey</div>
+        <div class="funnel-col-header agent">Agent Journey</div>
+
+        <div class="funnel-cell"><span class="funnel-stage">AWARENESS</span>Google search → ad click → landing page</div>
+        <div class="funnel-cell"><span class="funnel-stage">AWARENESS</span>User asks: "book me a table for Friday"</div>
+
+        <div class="funnel-cell"><span class="funnel-stage">CONSIDERATION</span>Browse menu, check reviews, compare restaurants</div>
+        <div class="funnel-cell"><span class="funnel-stage">CONSIDERATION</span>Agent calls <code>get_menu()</code>, parses structured data</div>
+
+        <div class="funnel-cell"><span class="funnel-stage">DECISION</span>Pick a time, fill form fields, hesitate, come back later</div>
+        <div class="funnel-cell"><span class="funnel-stage">DECISION</span>Agent calls <code>get_availability()</code> immediately</div>
+
+        <div class="funnel-cell"><span class="funnel-stage">PURCHASE</span>Fill reservation form, enter details, submit</div>
+        <div class="funnel-cell"><span class="funnel-stage">PURCHASE</span>Agent calls <code>fill_reservation_form()</code> + <code>confirm_reservation()</code></div>
+
+        <div class="funnel-cell" style="color:#ef4444;font-weight:600;font-family:var(--font-mono)">5–30 minutes</div>
+        <div class="funnel-cell" style="color:#22c55e;font-weight:600;font-family:var(--font-mono)">8–30 seconds</div>
+      </div>
+
+      <div class="prose">
+        <h2>SEO vs. AEO</h2>
+        <p>A new discipline is forming alongside traditional SEO — Agent Engine Optimization:</p>
+      </div>
+
+      <table class="compare-table">
+        <thead><tr><th>Dimension</th><th>Traditional SEO</th><th>Agent Engine Optimization</th></tr></thead>
+        <tbody>
+          <tr><td>Discovery</td><td>Googlebot crawls and indexes</td><td>AI agents fetch, understand, and act</td></tr>
+          <tr><td>Optimization</td><td>Keywords, backlinks, page speed</td><td>Semantic HTML, structured data, tool registration</td></tr>
+          <tr><td>User journey</td><td>Search → click → browse → convert</td><td>Ask agent → agent executes → done</td></tr>
+          <tr><td>Conversion</td><td>Human clicks "Confirm Reservation"</td><td>Agent calls <code>confirm_reservation()</code></td></tr>
+          <tr><td>Attribution</td><td>Well-established (GA4, UTM)</td><td>Fragmented — no standard yet</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout-warn">
+        <strong>The attribution problem is real.</strong> AI agents that complete bookings on behalf of users may not carry UTM parameters, referrer headers, or session cookies. There's currently no standard way to attribute conversions from AI agents vs. direct human traffic. This is an unsolved analytics blind spot in 2026.
+      </div>
+
+      <div class="prose">
+        <h2>Security: The Elephant in the Room</h2>
+        <p>A February 2026 scan found 8,000+ MCP servers exposed on the public internet, with 492 having zero authentication and zero encryption. And 88% of organizations reported confirmed or suspected AI agent security incidents.</p>
+        <p>The key threats are real: prompt injection via page content, unauthorized agent actions, abuse of registered tools, and data exfiltration via tool responses. If you're implementing WebMCP, authentication and input validation on your tool handlers aren't optional — they're the first thing you build.</p>
+
+        <h2>Try It Yourself</h2>
+        <p>We built a complete side-by-side demo — a traditional restaurant page vs. the same page with 10 registered WebMCP tools. Each has a built-in AI agent simulation so you can see the difference in real time.</p>
+      </div>
+
+      <a href="/blog/webmcp-two-audiences/demo/" class="download-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Open Demo →
+      </a>
+
+      <div class="prose">
+        <h2>Is Your Page Ready?</h2>
+        <p>A quick audit for your landing pages — check off what you already have:</p>
+      </div>
+
+      <div class="audit" id="audit">
+        <div class="audit-title">Page Readiness Checklist</div>
+        <div class="audit-item" onclick="this.classList.toggle('checked')">
+          <span class="audit-check">✓</span>
+          <span><strong>Layer 1:</strong> Semantic HTML — proper headings, nav, main, article, section elements</span>
+        </div>
+        <div class="audit-item" onclick="this.classList.toggle('checked')">
+          <span class="audit-check">✓</span>
+          <span><strong>Layer 1:</strong> ARIA labels on interactive elements (buttons, forms, inputs)</span>
+        </div>
+        <div class="audit-item" onclick="this.classList.toggle('checked')">
+          <span class="audit-check">✓</span>
+          <span><strong>Layer 2:</strong> JSON-LD structured data (Product, FAQ, Organization)</span>
+        </div>
+        <div class="audit-item" onclick="this.classList.toggle('checked')">
+          <span class="audit-check">✓</span>
+          <span><strong>Layer 2:</strong> FAQ content visible on page AND in schema (not just hidden JSON-LD)</span>
+        </div>
+        <div class="audit-item" onclick="this.classList.toggle('checked')">
+          <span class="audit-check">✓</span>
+          <span><strong>Layer 2:</strong> All Google-required fields present for your schema types</span>
+        </div>
+        <div class="audit-item" onclick="this.classList.toggle('checked')">
+          <span class="audit-check">✓</span>
+          <span><strong>Layer 3:</strong> Core actions registered via <code>navigator.modelContext.registerTool()</code></span>
+        </div>
+        <div class="audit-item" onclick="this.classList.toggle('checked')">
+          <span class="audit-check">✓</span>
+          <span><strong>Layer 3:</strong> Tool handlers include input validation and auth checks</span>
+        </div>
+        <div class="audit-item" onclick="this.classList.toggle('checked')">
+          <span class="audit-check">✓</span>
+          <span><strong>Layer 3:</strong> Autocomplete and inputmode attributes on all form fields</span>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>The Honest Take</h2>
+        <p>WebMCP is early. It's Chrome Canary flag-gated only, the standards landscape is fragmented (WebMCP, MCP, A2A, agents.json all serve different layers), and browser support beyond Chrome is uncertain. Firefox is evaluating, Safari has no timeline.</p>
+        <p>But the direction is unmistakable. The MCP ecosystem grew from 714 servers to 17,000+ in a single year. Google and Microsoft co-authored the W3C draft. OpenAI adopted MCP across ChatGPT. Shopify shipped Storefront MCP for Hydrogen. Cloudflare is hosting edge MCP servers.</p>
+        <p>The question isn't whether AI agents will interact with your pages. It's whether your pages are ready when they do. The companies that optimize for both audiences — human and AI — will capture a compounding advantage as agent traffic scales.</p>
+        <p>Start with Layer 1 and 2 today. Experiment with Layer 3. The window to be early is still open.</p>
+      </div>
+
+    </article>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 Pardeep Dhingra. Built with curiosity.</p>
+  </footer>
+
+  <script>
+    // Nav toggle
+    const toggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+    navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+    // Layer accordion
+    document.querySelectorAll('.layer').forEach(layer => {
+      layer.addEventListener('click', () => {
+        const wasActive = layer.classList.contains('active');
+        document.querySelectorAll('.layer').forEach(l => l.classList.remove('active'));
+        if (!wasActive) layer.classList.add('active');
+      });
+    });
+
+    // Speed bar animation on scroll
+    const speedObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          document.getElementById('barSlow').style.width = '100%';
+          document.getElementById('barFast').style.width = '21%';
+          speedObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+    speedObserver.observe(document.getElementById('speedCompare'));
+  </script>
+
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" id="lightbox">
+    <button class="lightbox-close" aria-label="Close">&times;</button>
+    <img src="" alt="">
+  </div>
+  <script>
+  (function(){
+    var overlay = document.getElementById("lightbox");
+    var lbImg = overlay.querySelector("img");
+    var lbClose = overlay.querySelector(".lightbox-close");
+    document.querySelectorAll("img").forEach(function(img){
+      if (img.closest(".nav") || img.closest(".lightbox-overlay")) return;
+      img.setAttribute("data-lightbox","");
+    });
+    document.addEventListener("click", function(e){
+      var img = e.target.closest("img[data-lightbox]");
+      if (!img) return;
+      e.preventDefault(); e.stopPropagation();
+      lbImg.src = img.src; lbImg.alt = img.alt || "";
+      overlay.classList.add("active");
+      document.body.style.overflow = "hidden";
+    });
+    function closeLightbox(){
+      overlay.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+    lbClose.addEventListener("click", closeLightbox);
+    overlay.addEventListener("click", function(e){ if(e.target===overlay) closeLightbox(); });
+    document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeLightbox(); });
+  })();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why Most URLs Fail Web Scraping — Pardeep Dhingra</title>
+    <meta name="description" content="Web scraping doesn't fail because of bad code — it fails because the URL itself isn't scrapable. Learn how to audit URLs before writing a single line of scraper code.">
+    <link rel="canonical" href="https://pardeepbuilds.com/blog/why-urls-fail-web-scraping">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .back-link {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            color: var(--text-dim); text-decoration: none; font-size: 0.85rem;
+            margin-bottom: 1.5rem; transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+
+        .blog-meta {
+            display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .blog-item-author {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.8rem; color: var(--text-dim); margin-bottom: 2.5rem;
+        }
+        .blog-item-author img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+        .blog-item-author strong { color: var(--text-body); font-weight: 550; }
+
+        /* Lifecycle Diagram */
+        .lifecycle {
+            display: flex; flex-wrap: wrap; gap: 0; margin: 2rem 0;
+            position: relative;
+        }
+        .lifecycle-step {
+            flex: 1; min-width: 120px; text-align: center; padding: 1.25rem 0.75rem;
+            background: var(--bg-chat); border: 1px solid var(--border);
+            position: relative; cursor: pointer; transition: all 0.3s;
+        }
+        .lifecycle-step:first-child { border-radius: 12px 0 0 12px; }
+        .lifecycle-step:last-child { border-radius: 0 12px 12px 0; }
+        .lifecycle-step .step-num {
+            font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim);
+            margin-bottom: 0.4rem;
+        }
+        .lifecycle-step .step-name {
+            font-size: 0.82rem; font-weight: 600; color: var(--text);
+        }
+        .lifecycle-step .step-icon {
+            font-size: 1.4rem; margin-bottom: 0.5rem;
+        }
+        .lifecycle-step.active {
+            background: rgba(95,202,201,0.08); border-color: var(--accent);
+            z-index: 1;
+        }
+        .lifecycle-step.active .step-name { color: var(--accent); }
+        .lifecycle-step.fail {
+            background: rgba(239,68,68,0.08); border-color: #ef4444;
+        }
+        .lifecycle-step.fail .step-name { color: #ef4444; }
+        .lifecycle-detail {
+            display: none; margin: 0 0 2rem; padding: 1.25rem 1.5rem;
+            background: var(--bg-chat); border: 1px solid var(--border);
+            border-radius: 12px; font-size: 0.9rem; color: var(--text-body);
+            line-height: 1.7; animation: fadeSlide 0.3s ease;
+        }
+        .lifecycle-detail.visible { display: block; }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Status Code Table */
+        .status-table {
+            width: 100%; border-collapse: collapse; margin: 1.5rem 0;
+            font-size: 0.88rem;
+        }
+        .status-table th {
+            text-align: left; padding: 0.75rem 1rem; font-size: 0.75rem;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            color: var(--text-dim); border-bottom: 1px solid var(--border);
+        }
+        .status-table td {
+            padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: var(--text-body);
+        }
+        .status-code {
+            font-family: var(--font-mono); font-weight: 600; font-size: 0.9rem;
+        }
+        .status-ok { color: #22c55e; }
+        .status-warn { color: #eab308; }
+        .status-fail { color: #ef4444; }
+        .status-verdict {
+            font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600;
+            padding: 0.2rem 0.6rem; border-radius: 4px;
+        }
+        .verdict-yes { background: rgba(34,197,94,0.12); color: #22c55e; }
+        .verdict-risky { background: rgba(234,179,8,0.12); color: #eab308; }
+        .verdict-no { background: rgba(239,68,68,0.12); color: #ef4444; }
+
+        /* Expandable Sections */
+        .expand-section {
+            margin: 1.5rem 0; border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden;
+        }
+        .expand-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 1.25rem; cursor: pointer;
+            background: var(--bg-chat); transition: background 0.2s;
+        }
+        .expand-header:hover { background: rgba(95,202,201,0.05); }
+        .expand-header h3 {
+            font-size: 1rem; font-weight: 600; color: var(--text);
+            display: flex; align-items: center; gap: 0.6rem;
+        }
+        .expand-arrow {
+            color: var(--text-dim); transition: transform 0.3s;
+            font-size: 0.9rem;
+        }
+        .expand-section.open .expand-arrow { transform: rotate(180deg); }
+        .expand-body {
+            max-height: 0; overflow: hidden; transition: max-height 0.4s ease;
+        }
+        .expand-section.open .expand-body { max-height: 2000px; }
+        .expand-content {
+            padding: 0 1.25rem 1.25rem; color: var(--text-body);
+            font-size: 0.9rem; line-height: 1.7;
+        }
+
+        /* Scrapability Checklist */
+        .checklist {
+            margin: 2rem 0; padding: 1.5rem; background: var(--bg-chat);
+            border: 1px solid var(--border); border-radius: 12px;
+        }
+        .checklist-title {
+            font-size: 1.1rem; font-weight: 600; color: var(--text);
+            margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;
+        }
+        .checklist-item {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.6rem 0; cursor: pointer; user-select: none;
+        }
+        .checklist-item input[type="checkbox"] { display: none; }
+        .check-box {
+            width: 22px; height: 22px; border: 2px solid var(--border);
+            border-radius: 6px; display: flex; align-items: center;
+            justify-content: center; transition: all 0.2s; flex-shrink: 0;
+            font-size: 0.75rem; color: transparent;
+        }
+        .checklist-item input:checked + .check-box {
+            background: var(--accent); border-color: var(--accent); color: #0f0f10;
+        }
+        .checklist-item span { font-size: 0.9rem; color: var(--text-body); }
+        .score-bar {
+            margin-top: 1.25rem; padding-top: 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+        .score-label {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .score-label span { font-size: 0.85rem; color: var(--text-dim); }
+        .score-value {
+            font-family: var(--font-mono); font-weight: 700; font-size: 1.2rem;
+        }
+        .score-track {
+            width: 100%; height: 8px; background: rgba(255,255,255,0.06);
+            border-radius: 4px; overflow: hidden;
+        }
+        .score-fill {
+            height: 100%; border-radius: 4px; transition: width 0.4s ease, background 0.4s;
+            width: 0%;
+        }
+
+        /* Terminal Code */
+        .code-block {
+            background: #0a0a0c; border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden; margin: 1.5rem 0;
+        }
+        .code-header {
+            display: flex; align-items: center; gap: 8px; padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border); font-size: 0.75rem;
+            color: var(--text-dim); font-family: var(--font-mono);
+        }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.r { background: #ef4444; }
+        .code-dot.y { background: #eab308; }
+        .code-dot.g { background: #22c55e; }
+        .code-body {
+            padding: 1rem 1.25rem; font-family: var(--font-mono);
+            font-size: 0.82rem; line-height: 1.7; color: var(--text-body);
+            overflow-x: auto;
+        }
+        .code-body .kw { color: var(--accent); }
+        .code-body .str { color: #ae9a64; }
+        .code-body .cmt { color: var(--text-dim); font-style: italic; }
+        .code-body .num { color: #c084fc; }
+
+        /* Prose */
+        .prose { font-size: 0.95rem; line-height: 1.8; color: var(--text-body); }
+        .prose p { margin-bottom: 1.25rem; }
+        .prose h2 {
+            font-size: 1.35rem; font-weight: 700; color: var(--text);
+            margin: 2.5rem 0 1rem; letter-spacing: -0.02em;
+        }
+        .prose h3 {
+            font-size: 1.1rem; font-weight: 600; color: var(--accent);
+            margin: 2rem 0 0.75rem;
+        }
+        .prose strong { color: var(--text); font-weight: 600; }
+        .prose code {
+            font-family: var(--font-mono); background: rgba(95,202,201,0.08);
+            padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.85em;
+            color: var(--accent);
+        }
+        .callout {
+            padding: 1.25rem 1.5rem; background: rgba(95,202,201,0.06);
+            border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0; font-size: 0.9rem; color: var(--text-body); line-height: 1.7;
+        }
+        .callout-warn {
+            background: rgba(239,68,68,0.06); border-left-color: #ef4444;
+        }
+
+        /* Path comparison */
+        .path-compare {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .path-card {
+            padding: 1.25rem; background: var(--bg-chat);
+            border: 1px solid var(--border); border-radius: 12px;
+        }
+        .path-card.fail { border-color: rgba(239,68,68,0.3); }
+        .path-card.pass { border-color: rgba(34,197,94,0.3); }
+        .path-url {
+            font-family: var(--font-mono); font-size: 0.82rem;
+            margin-bottom: 0.5rem; font-weight: 600;
+        }
+        .path-card.fail .path-url { color: #ef4444; }
+        .path-card.pass .path-url { color: #22c55e; }
+        .path-status { font-size: 0.82rem; color: var(--text-dim); }
+
+        @media (max-width: 600px) {
+            .lifecycle { flex-direction: column; }
+            .lifecycle-step:first-child { border-radius: 12px 12px 0 0; }
+            .lifecycle-step:last-child { border-radius: 0 0 12px 12px; }
+            .path-compare { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+  <nav class="nav scrolled">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">pardeep<span>builds</span></a>
+      <div class="nav-links" id="navLinks">
+        <a href="/">Home</a>
+        <a href="/portfolio">Portfolio</a>
+        <a href="/resume">Resume</a>
+        <a href="/blog" class="active">Blog</a>
+        <a href="/#contact">Contact</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <main>
+    <article class="section section-narrow" style="padding-top:9rem">
+      <div class="section-label">Blog</div>
+      <a href="/blog" class="back-link">← Back to Blog</a>
+
+      <div class="blog-meta">
+        <span class="blog-item-date">28 Jan 2026</span>
+        <span class="blog-item-tag">Engineering</span>
+        <span class="blog-item-readtime">8 min read</span>
+      </div>
+
+      <h1 class="section-title">Why Most URLs Fail Web Scraping<br>(Before You Write Any Code)</h1>
+
+      <div class="blog-item-author">
+        <img src="/profile.png" alt="Pardeep" onerror="this.style.display='none'">
+        By <strong>Pardeep Dhingra</strong>
+      </div>
+
+      <div class="prose">
+        <p>Here's a truth that took me too long to learn: web scraping doesn't fail because of bad code. It fails because the URL itself was never scrapable to begin with. Engineers lose hours debugging Playwright scripts, tuning Puppeteer waits, and rotating proxies — only to hit the exact same wall. The problem was upstream all along.</p>
+
+        <p>Before you write a single line of scraper code, you need to <strong>audit the URL</strong>. This post walks through exactly what happens when a request hits a URL, where things break, and how to check scrapability before wasting engineering time.</p>
+
+        <h2>The Request Lifecycle</h2>
+        <p>Click each stage below to see where scraping can fail at that step:</p>
+      </div>
+
+      <!-- Interactive Lifecycle Diagram -->
+      <div class="lifecycle" id="lifecycle">
+        <div class="lifecycle-step" data-step="0">
+          <div class="step-icon">🌐</div>
+          <div class="step-num">01</div>
+          <div class="step-name">DNS</div>
+        </div>
+        <div class="lifecycle-step" data-step="1">
+          <div class="step-icon">↪️</div>
+          <div class="step-num">02</div>
+          <div class="step-name">Redirects</div>
+        </div>
+        <div class="lifecycle-step" data-step="2">
+          <div class="step-icon">🔒</div>
+          <div class="step-num">03</div>
+          <div class="step-name">TLS</div>
+        </div>
+        <div class="lifecycle-step" data-step="3">
+          <div class="step-icon">📡</div>
+          <div class="step-num">04</div>
+          <div class="step-name">Response</div>
+        </div>
+        <div class="lifecycle-step" data-step="4">
+          <div class="step-icon">⚙️</div>
+          <div class="step-num">05</div>
+          <div class="step-name">JS Exec</div>
+        </div>
+        <div class="lifecycle-step" data-step="5">
+          <div class="step-icon">🛡️</div>
+          <div class="step-num">06</div>
+          <div class="step-name">Bot Shield</div>
+        </div>
+      </div>
+
+      <div class="lifecycle-detail" id="lifecycleDetail"></div>
+
+      <div class="prose">
+        <h2>Status Codes That Kill Your Scraper</h2>
+        <p>The HTTP status code is your first signal. If you're not getting a clean <code>200</code>, everything downstream is suspect.</p>
+      </div>
+
+      <table class="status-table">
+        <thead>
+          <tr><th>Code</th><th>Meaning</th><th>Scrapable?</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="status-code status-ok">200</span></td>
+            <td>Page loaded successfully</td>
+            <td><span class="status-verdict verdict-yes">✓ Yes</span></td>
+          </tr>
+          <tr>
+            <td><span class="status-code status-warn">301/302</span></td>
+            <td>Redirect — may chain multiple hops</td>
+            <td><span class="status-verdict verdict-risky">⚠ Risky</span></td>
+          </tr>
+          <tr>
+            <td><span class="status-code status-fail">401</span></td>
+            <td>Authentication required</td>
+            <td><span class="status-verdict verdict-no">✗ No</span></td>
+          </tr>
+          <tr>
+            <td><span class="status-code status-fail">403</span></td>
+            <td>Forbidden — bot blocked</td>
+            <td><span class="status-verdict verdict-no">✗ No</span></td>
+          </tr>
+          <tr>
+            <td><span class="status-code status-fail">429</span></td>
+            <td>Rate limited</td>
+            <td><span class="status-verdict verdict-no">✗ No</span></td>
+          </tr>
+          <tr>
+            <td><span class="status-code status-fail">503</span></td>
+            <td>Cloudflare challenge / service unavailable</td>
+            <td><span class="status-verdict verdict-no">✗ No</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="prose">
+        <p>Most scraping bugs start right here. If the first response isn't <code>200</code>, your scraper is already fighting a losing battle.</p>
+
+        <h2>The Root Domain Trap</h2>
+        <p>One of the most common surprises: the homepage returns <code>403</code> while inner pages load fine. Engineers see the <code>403</code> and assume the entire site blocks scraping. That's usually wrong — it's only specific paths that are protected.</p>
+      </div>
+
+      <div class="path-compare">
+        <div class="path-card fail">
+          <div class="path-url">example.com → 403</div>
+          <div class="path-status">🛡️ Cloudflare active · Bot protection on root<br>Homepages attract the most bot traffic — so they get the heaviest protection.</div>
+        </div>
+        <div class="path-card pass">
+          <div class="path-url">example.com/about-us → 200</div>
+          <div class="path-status">✓ Public CMS page · No challenge<br>Blog posts, about pages, and careers pages are typically left open.</div>
+        </div>
+      </div>
+
+      <!-- Expandable Deep Dives -->
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>🔍 Why does this happen?</h3>
+          <span class="expand-arrow">▼</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p>Homepages are high-value targets — they attract bots, scrapers, and credential-stuffing attacks at scale. Security teams configure WAFs (Cloudflare, Akamai, PerimeterX) to aggressively challenge traffic on root paths.</p>
+            <p>Meanwhile, CMS-generated pages like blog posts, careers pages, and marketing landing pages are usually served as public content with minimal protection. SaaS products also commonly apply auth logic only to their root domain, not to sub-paths.</p>
+            <p><strong>The takeaway:</strong> If the root fails, try inner paths before assuming the site is locked down.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>🤖 Why headless browsers aren't a silver bullet</h3>
+          <span class="expand-arrow">▼</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p>Many engineers reach for Puppeteer or Playwright thinking a headless browser will bypass everything. It won't — for three reasons:</p>
+            <p><strong>1. Fingerprinting:</strong> Cloudflare and similar services inspect mouse movement patterns, WebGL rendering, canvas hashing, font enumeration, and timing signals. Headless browsers have detectable signatures.</p>
+            <p><strong>2. IP reputation:</strong> Data center IPs are flagged differently than residential IPs. Running a headless browser from AWS won't help if the IP range is already blocklisted.</p>
+            <p><strong>3. JS rendering ≠ authorization:</strong> Rendering a page's JavaScript doesn't mean you're authorized to access it. Challenge cookies, auth tokens, and session gates still apply.</p>
+            <p>A headless browser only helps <strong>after</strong> the URL itself is confirmed scrapable.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>📊 The real cost of skipping URL audits</h3>
+          <span class="expand-arrow">▼</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p>I've watched teams burn entire sprints debugging scrapers that never had a chance. The pattern is always the same: someone writes a scraper, it works on their test URL, then fails on 60% of production URLs. The fix is always the same — audit URLs first, scrape second.</p>
+            <p>A five-second URL pre-flight check prevents five hours of debugging. Check the status code, count the redirects, detect the bot protection layer, and assess JS rendering requirements. If even two of those fail, the URL isn't worth scraping — find an alternative path.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>The Pre-Flight Checklist</h2>
+        <p>Before writing any scraper code, every target URL should pass this audit. Toggle each check below to build your scrapability score:</p>
+      </div>
+
+      <!-- Interactive Scrapability Checklist -->
+      <div class="checklist" id="checklist">
+        <div class="checklist-title">🎯 URL Scrapability Audit</div>
+
+        <label class="checklist-item">
+          <input type="checkbox" data-weight="25">
+          <span class="check-box">✓</span>
+          <span>Returns HTTP <strong>200</strong> on first request</span>
+        </label>
+        <label class="checklist-item">
+          <input type="checkbox" data-weight="15">
+          <span class="check-box">✓</span>
+          <span>Limited redirect chain (≤ 2 hops)</span>
+        </label>
+        <label class="checklist-item">
+          <input type="checkbox" data-weight="20">
+          <span class="check-box">✓</span>
+          <span>No Cloudflare / bot protection challenge</span>
+        </label>
+        <label class="checklist-item">
+          <input type="checkbox" data-weight="15">
+          <span class="check-box">✓</span>
+          <span>Content available in initial HTML (minimal JS rendering)</span>
+        </label>
+        <label class="checklist-item">
+          <input type="checkbox" data-weight="15">
+          <span class="check-box">✓</span>
+          <span>No auth-gated or session-gated content</span>
+        </label>
+        <label class="checklist-item">
+          <input type="checkbox" data-weight="10">
+          <span class="check-box">✓</span>
+          <span>Stable DOM structure (not randomized class names)</span>
+        </label>
+
+        <div class="score-bar">
+          <div class="score-label">
+            <span>Scrapability Score</span>
+            <span class="score-value" id="scoreValue" style="color: var(--text-dim)">0 / 100</span>
+          </div>
+          <div class="score-track">
+            <div class="score-fill" id="scoreFill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>A Smarter Workflow</h2>
+        <p>The engineering workflow for web scraping should look like this:</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-dot r"></span>
+          <span class="code-dot y"></span>
+          <span class="code-dot g"></span>
+          scraping-workflow.md
+        </div>
+        <div class="code-body">
+<span class="cmt"># Step 1 — Audit the URL (before ANY code)</span>
+<span class="kw">$</span> curl -sI "https://target.com" | head -5
+<span class="str">HTTP/2 403</span>    <span class="cmt">← Stop here. Don't write a scraper.</span>
+
+<span class="cmt"># Step 2 — Try alternative paths</span>
+<span class="kw">$</span> curl -sI "https://target.com/about" | head -5
+<span class="str">HTTP/2 200</span>    <span class="cmt">← This path is open. Use this.</span>
+
+<span class="cmt"># Step 3 — Check for JS rendering requirement</span>
+<span class="kw">$</span> curl -s "https://target.com/about" | grep -c "<span class="str">&lt;div id=\"root\"&gt;&lt;/div&gt;</span>"
+<span class="num">0</span>              <span class="cmt">← Content is server-rendered. Simple fetch works.</span>
+
+<span class="cmt"># Step 4 — Only NOW write the scraper</span>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>The principle is simple:</strong> Don't debug scrapers. Debug URLs first. A five-second URL audit prevents five hours of scraping frustration. If the URL fails, the scraper will fail — no matter how advanced the code.
+      </div>
+
+      <div class="prose">
+        <h2>What I Wish I Knew Earlier</h2>
+        <p>I used to jump straight to Playwright, spend hours configuring stealth plugins, and wonder why my scrapers broke on every third target. The moment I started auditing URLs first — checking status codes, redirect chains, and bot protection layers before writing any code — my success rate went from around 40% to over 85%.</p>
+        <p>The URL is the contract. If the contract says <code>403</code>, no amount of clever code will change the terms. Audit first, code second, and save yourself the frustration.</p>
+      </div>
+
+    </article>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 Pardeep Dhingra. Built with curiosity.</p>
+  </footer>
+
+  <script>
+    // Nav toggle
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => links.classList.toggle('open'));
+    links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
+
+    // Lifecycle diagram
+    const lifecycleData = [
+      { title: 'DNS Resolution', desc: 'The domain is resolved to an IP address. This rarely fails, but misconfigured DNS, expired domains, or geographic DNS restrictions can kill your request before it even starts. If the domain doesn\'t resolve, there\'s nothing to scrape.' },
+      { title: 'Redirect Chains', desc: 'HTTP → HTTPS, www → non-www, geo-redirects, consent redirects. Each hop is a potential failure point. Long redirect chains (3+ hops) often end at a different page than expected, or drop your cookies and headers along the way. Some sites redirect bots to honeypot pages.' },
+      { title: 'TLS Handshake', desc: 'SSL/TLS certificates are verified. Many bot tools and older HTTP libraries fail silently here — especially with certificate pinning, custom CAs, or mutual TLS. If the handshake fails, you get a connection error, not an HTTP status code.' },
+      { title: 'HTTP Response', desc: 'The server returns a status code. This is your first real signal: 200 means you\'re in, 403 means you\'re blocked, 301/302 means more hops. Everything downstream depends on getting a clean 200 here.' },
+      { title: 'JavaScript Execution', desc: 'Modern sites render content client-side. If the HTML is just an empty <div id="root"></div> and a JS bundle, you need a browser engine to see the actual content. This adds latency, complexity, and makes your scraper detectable.' },
+      { title: 'Bot Protection', desc: 'Cloudflare, Akamai, PerimeterX, and DataDome inspect behavioral signals — mouse movement, timing, fingerprints, IP reputation. This is the hardest layer to bypass and the most common reason scrapers fail. If this layer challenges you, the URL is not practically scrapable.' }
+    ];
+    const steps = document.querySelectorAll('.lifecycle-step');
+    const detail = document.getElementById('lifecycleDetail');
+    let activeStep = -1;
+
+    steps.forEach(step => {
+      step.addEventListener('click', () => {
+        const idx = parseInt(step.dataset.step);
+        if (activeStep === idx) {
+          activeStep = -1;
+          steps.forEach(s => s.classList.remove('active'));
+          detail.classList.remove('visible');
+          return;
+        }
+        activeStep = idx;
+        steps.forEach(s => s.classList.remove('active'));
+        step.classList.add('active');
+        detail.innerHTML = '<strong>' + lifecycleData[idx].title + '</strong><br><br>' + lifecycleData[idx].desc;
+        detail.classList.add('visible');
+      });
+    });
+
+    // Expandable sections
+    document.querySelectorAll('[data-expand]').forEach(section => {
+      section.querySelector('.expand-header').addEventListener('click', () => {
+        section.classList.toggle('open');
+      });
+    });
+
+    // Scrapability checklist
+    const checklist = document.getElementById('checklist');
+    const scoreValue = document.getElementById('scoreValue');
+    const scoreFill = document.getElementById('scoreFill');
+
+    checklist.addEventListener('change', () => {
+      let score = 0;
+      checklist.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        if (cb.checked) score += parseInt(cb.dataset.weight);
+      });
+      scoreValue.textContent = score + ' / 100';
+      scoreFill.style.width = score + '%';
+      if (score >= 80) {
+        scoreFill.style.background = '#22c55e';
+        scoreValue.style.color = '#22c55e';
+      } else if (score >= 50) {
+        scoreFill.style.background = '#eab308';
+        scoreValue.style.color = '#eab308';
+      } else if (score > 0) {
+        scoreFill.style.background = '#ef4444';
+        scoreValue.style.color = '#ef4444';
+      } else {
+        scoreValue.style.color = 'var(--text-dim)';
+      }
+    });
+  </script>
+
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" id="lightbox">
+    <button class="lightbox-close" aria-label="Close">&times;</button>
+    <img src="" alt="">
+  </div>
+  <script>
+  (function(){
+    var overlay = document.getElementById("lightbox");
+    var lbImg = overlay.querySelector("img");
+    var lbClose = overlay.querySelector(".lightbox-close");
+    document.querySelectorAll("img").forEach(function(img){
+      if (img.closest(".nav") || img.closest(".lightbox-overlay")) return;
+      img.setAttribute("data-lightbox","");
+    });
+    document.addEventListener("click", function(e){
+      var img = e.target.closest("img[data-lightbox]");
+      if (!img) return;
+      e.preventDefault(); e.stopPropagation();
+      lbImg.src = img.src; lbImg.alt = img.alt || "";
+      overlay.classList.add("active");
+      document.body.style.overflow = "hidden";
+    });
+    function closeLightbox(){
+      overlay.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+    lbClose.addEventListener("click", closeLightbox);
+    overlay.addEventListener("click", function(e){ if(e.target===overlay) closeLightbox(); });
+    document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeLightbox(); });
+  })();
+  </script>
+
+</body>
+</html>
