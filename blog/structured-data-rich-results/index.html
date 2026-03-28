@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/blog/components/engagement.css">
     <style>
         .back-link {
             display: inline-flex; align-items: center; gap: 0.4rem;
@@ -473,6 +474,9 @@
         <p>So even if Google's traditional search results don't display your FAQ schema as a rich result, that same schema is being read by AI systems. The lesson: <strong>don't strip out structured data just because one consumer stopped using it.</strong> The audience for your markup is growing, not shrinking.</p>
       </div>
 
+                <!-- Engagement Bar -->
+            <div id="blog-engagement" data-slug="structured-data-rich-results"></div>
+
     </article>
   </main>
 
@@ -619,7 +623,13 @@
     renderValidator();
   </script>
 
-  <!-- Lightbox -->
+  <!-- Firebase + Engagement -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/blog/components/firebase-config.js"></script>
+    <script src="/blog/components/engagement.js"></script>
+
+    <!-- Lightbox -->
   <div class="lightbox-overlay" id="lightbox">
     <button class="lightbox-close" aria-label="Close">&times;</button>
     <img src="" alt="">

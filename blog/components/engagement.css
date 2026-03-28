@@ -1,0 +1,125 @@
+/* Blog Engagement Bar — Clap, Like & Share */
+
+.engage-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0;
+    margin: 2.5rem 0 1rem;
+    border-top: 1px solid var(--border, rgba(255,255,255,0.08));
+    border-bottom: 1px solid var(--border, rgba(255,255,255,0.08));
+}
+
+.engage-left,
+.engage-right {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.engage-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    background: transparent;
+    color: var(--text-dim, #888);
+    cursor: pointer;
+    border-radius: 100px;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 0.8rem;
+    transition: all 0.25s ease;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.engage-btn:hover {
+    background: rgba(95, 202, 201, 0.06);
+    color: var(--text-body, #ccc);
+}
+
+/* Clap button */
+.clap-btn.active {
+    color: var(--accent, #5FCAC9);
+}
+.clap-btn.active .clap-icon svg {
+    fill: var(--accent, #5FCAC9);
+    stroke: var(--accent, #5FCAC9);
+}
+.clap-btn.burst {
+    animation: clap-pop 0.4s ease;
+}
+@keyframes clap-pop {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.25); }
+    60%  { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+/* Like button */
+.like-btn.active {
+    color: #ae9a64;
+}
+.like-btn.active .like-icon svg {
+    stroke: #ae9a64;
+    fill: #ae9a64;
+}
+
+/* Share buttons */
+.share-btn {
+    padding: 0.5rem;
+    border-radius: 8px;
+}
+.share-btn:hover {
+    background: rgba(95, 202, 201, 0.08);
+    color: var(--accent, #5FCAC9);
+}
+
+.engage-count {
+    font-weight: 600;
+    min-width: 1.2em;
+}
+
+.engage-icon {
+    display: flex;
+    align-items: center;
+    line-height: 0;
+}
+
+/* Toast notification */
+.engage-toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--accent, #5FCAC9);
+    color: #0f0f10;
+    padding: 0.6rem 1.25rem;
+    border-radius: 100px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 9999;
+}
+.engage-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    .engage-bar {
+        gap: 0.5rem;
+    }
+    .engage-btn {
+        padding: 0.4rem 0.55rem;
+        font-size: 0.75rem;
+    }
+    .share-btn {
+        padding: 0.4rem;
+    }
+}

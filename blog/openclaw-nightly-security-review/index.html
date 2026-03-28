@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/blog/components/engagement.css">
     <style>
         .back-link {
             display: inline-flex; align-items: center; gap: 0.4rem;
@@ -587,6 +588,9 @@
                     <strong>The bottom line:</strong> I found tokens leaking into permanent transcripts during a routine nightly scan. Instead of waiting for a security audit, I built and deployed an encrypted token vault — with time-limited submission links, per-workspace isolation, and memory-only loading. Four hours from detection to fix. Every agent migrated. Every legacy token rotated. The system watches itself, fixes what it finds, and reports what it did.
                 </div>
 
+                <!-- Engagement Bar -->
+                <div id="blog-engagement" data-slug="openclaw-nightly-security-review"></div>
+
             </div>
         </section>
     </main>
@@ -651,6 +655,12 @@
         });
         updateProgress();
     </script>
+
+    <!-- Firebase + Engagement -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/blog/components/firebase-config.js"></script>
+    <script src="/blog/components/engagement.js"></script>
 
     <!-- Lightbox -->
     <div class="lightbox-overlay" id="lightbox">

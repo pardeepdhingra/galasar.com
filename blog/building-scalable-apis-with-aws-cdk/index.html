@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/blog/components/engagement.css">
     <style>
         /* Terminal-specific styles */
         .terminal-container {
@@ -340,6 +341,9 @@
 
         <!-- Content Sections (Hidden by default) -->
         <div id="contentSections"></div>
+
+        <!-- Engagement Bar -->
+        <div id="blog-engagement" data-slug="building-scalable-apis-with-aws-cdk" style="max-width:720px;margin:0 auto;padding:0 1.5rem;"></div>
     </main>
 
     <div style="display:flex;gap:1rem;align-items:flex-start;padding:1.5rem;margin:3rem auto 2rem;max-width:720px;background:var(--bg-chat,#151517);border:1px solid rgba(255,255,255,0.07);border-radius:12px;">
@@ -676,7 +680,13 @@ cdk deploy --require-approval never
         }, 700);
     </script>
 
-  <!-- Lightbox -->
+  <!-- Firebase + Engagement -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/blog/components/firebase-config.js"></script>
+    <script src="/blog/components/engagement.js"></script>
+
+    <!-- Lightbox -->
   <div class="lightbox-overlay" id="lightbox">
     <button class="lightbox-close" aria-label="Close">&times;</button>
     <img src="" alt="">

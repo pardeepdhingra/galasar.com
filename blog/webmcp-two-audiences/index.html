@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/blog/components/engagement.css">
     <style>
         .back-link {
             display: inline-flex; align-items: center; gap: 0.4rem;
@@ -470,6 +471,9 @@
         <p>Start with Layer 1 and 2 today. Experiment with Layer 3. The window to be early is still open.</p>
       </div>
 
+                <!-- Engagement Bar -->
+            <div id="blog-engagement" data-slug="webmcp-two-audiences"></div>
+
     </article>
   </main>
 
@@ -506,7 +510,13 @@
     speedObserver.observe(document.getElementById('speedCompare'));
   </script>
 
-  <!-- Lightbox -->
+  <!-- Firebase + Engagement -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/blog/components/firebase-config.js"></script>
+    <script src="/blog/components/engagement.js"></script>
+
+    <!-- Lightbox -->
   <div class="lightbox-overlay" id="lightbox">
     <button class="lightbox-close" aria-label="Close">&times;</button>
     <img src="" alt="">
