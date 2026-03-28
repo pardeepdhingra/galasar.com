@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume — Pardeep Dhingra</title>
+  <meta name="description" content="Pardeep Dhingra — Full Stack Engineer & Solution Architect. 15+ years building scalable systems.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@350;400;450;500;550;600;650;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .resume-wrapper {
+      max-width: 1080px; margin: 0 auto; padding: 8rem 2rem 4rem;
+    }
+    .resume {
+      display: grid; grid-template-columns: 280px 1fr; gap: 3rem; min-height: 70vh;
+    }
+    .resume-left { position: sticky; top: 6rem; align-self: start; }
+    .resume-photo {
+      width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
+      margin-bottom: 1.25rem; border: 2px solid var(--accent);
+    }
+    .resume-name { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 0.3rem; }
+    .resume-title { font-size: 0.85rem; color: var(--accent); font-weight: 550; margin-bottom: 1.5rem; }
+    .resume-contact { margin-bottom: 2rem; }
+    .resume-contact a, .resume-contact-item {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.8rem; color: var(--text-dim); margin-bottom: 0.6rem; transition: color 0.2s;
+    }
+    .resume-contact a:hover { color: var(--accent); }
+    .resume-contact svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .resume-section-label {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 0.75rem; margin-top: 1.75rem;
+    }
+    .skill-group { margin-bottom: 1rem; }
+    .skill-group-title { font-size: 0.7rem; color: var(--text-dim); font-weight: 550; margin-bottom: 0.4rem; }
+    .skill-pills { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+    .skill-pill {
+      font-size: 0.68rem; font-weight: 500; padding: 0.2rem 0.6rem; border-radius: 100px;
+      background: var(--accent-soft); color: var(--accent); font-family: var(--font-mono);
+    }
+    .resume-edu-item { font-size: 0.82rem; color: var(--text-body); line-height: 1.5; }
+    .resume-edu-item strong { color: var(--text); font-weight: 600; }
+    .resume-edu-item span { font-size: 0.72rem; color: var(--text-dim); display: block; }
+    .resume-summary {
+      font-size: 1rem; color: var(--text-body); line-height: 1.7; margin-bottom: 2.5rem; max-width: 600px;
+    }
+    .resume-summary strong { color: var(--text); }
+    .resume-h2 {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 1.5rem;
+    }
+    .timeline { position: relative; padding-left: 1.5rem; }
+    .timeline::before {
+      content: ''; position: absolute; left: 3px; top: 8px; bottom: 8px; width: 1px; background: var(--border);
+    }
+    .timeline-item {
+      position: relative; margin-bottom: 2.25rem;
+      opacity: 0; transform: translateY(12px); transition: all 0.5s var(--ease);
+    }
+    .timeline-item.visible { opacity: 1; transform: translateY(0); }
+    .timeline-item::before {
+      content: ''; position: absolute; left: -1.5rem; top: 8px;
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent); border: 2px solid var(--bg); transform: translateX(-0.5px);
+    }
+    .timeline-item:first-child::before { box-shadow: 0 0 0 3px var(--accent-soft); }
+    .timeline-dates { font-size: 0.72rem; font-family: var(--font-mono); color: var(--text-dim); margin-bottom: 0.25rem; }
+    .timeline-role { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text); margin-bottom: 0.15rem; }
+    .timeline-company { font-size: 0.85rem; color: var(--accent); font-weight: 550; margin-bottom: 0.6rem; }
+    .timeline-bullets { list-style: none; padding: 0; }
+    .timeline-bullets li {
+      font-size: 0.85rem; color: var(--text-body); line-height: 1.6;
+      margin-bottom: 0.35rem; padding-left: 1rem; position: relative;
+    }
+    .timeline-bullets li::before {
+      content: ''; position: absolute; left: 0; top: 0.55em;
+      width: 4px; height: 4px; border-radius: 50%; background: var(--text-dim);
+    }
+    .projects-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2.5rem; }
+    .project-card {
+      padding: 1.25rem; border-radius: 10px; background: var(--bg-chat);
+      border: 1px solid var(--border); transition: border-color 0.3s;
+    }
+    .project-card:hover { border-color: var(--accent); }
+    .project-card h4 { font-size: 0.9rem; font-weight: 650; color: var(--text); margin-bottom: 0.35rem; }
+    .project-card p { font-size: 0.8rem; color: var(--text-dim); line-height: 1.5; }
+    .project-card .project-tech { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.6rem; }
+    .project-card .project-tech span {
+      font-size: 0.62rem; padding: 0.15rem 0.5rem; border-radius: 100px;
+      background: var(--accent-soft); color: var(--accent); font-family: var(--font-mono);
+    }
+    .interests-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .interest-tag {
+      font-size: 0.8rem; padding: 0.4rem 1rem; border-radius: 100px;
+      border: 1px solid var(--border); color: var(--text-body); transition: all 0.3s;
+    }
+    .interest-tag:hover { border-color: var(--accent); color: var(--accent); }
+    @media print {
+      .nav, .footer, .nav-toggle { display: none !important; }
+      .resume-wrapper { padding: 0; }
+      .resume-left { position: static; }
+      :root { --bg: #fff; --text: #111; --text-body: #333; --text-dim: #666; --accent: #b8942a; --bg-chat: #f5f5f5; --border: #ddd; }
+      html { background: #fff; color: #111; font-size: 13px; }
+    }
+    @media (max-width: 768px) {
+      .resume-wrapper { padding: 7rem 1.5rem 3rem; }
+      .resume { grid-template-columns: 1fr; gap: 2rem; }
+      .resume-left { position: static; }
+      .resume-photo { width: 90px; height: 90px; }
+      .projects-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav scrolled">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">pardeep<span>builds</span></a>
+      <div class="nav-links" id="navLinks">
+        <a href="/">Home</a>
+        <a href="/resume" class="active">Resume</a>
+        <a href="/blog">Blog</a>
+        <a href="/#contact">Contact</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+  <main>
+    <div class="resume-wrapper">
+      <div class="resume">
+        <aside class="resume-left">
+          <img src="/profile.png" alt="Pardeep Dhingra" class="resume-photo" onerror="this.style.display='none'">
+          <h1 class="resume-name">Pardeep Dhingra</h1>
+          <div class="resume-title">Full Stack Engineer & Solution Architect</div>
+          <div class="resume-contact">
+            <a href="mailto:pardeepdhingra.au@gmail.com"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>pardeepdhingra.au@gmail.com</a>
+            <div class="resume-contact-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Australia</div>
+            <a href="https://linkedin.com/in/pardeep-dhingra" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>linkedin.com/in/pardeep-dhingra</a>
+            <a href="https://github.com/pdhingra-mux" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>github.com/pdhingra-mux</a>
+            <a href="https://medium.com/@pardeepdhingra.01" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zm7.42 0c0 3.54-1.51 6.42-3.38 6.42S14.2 15.54 14.2 12s1.52-6.42 3.38-6.42 3.38 2.88 3.38 6.42zm2.94 0c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75c.66 0 1.19 2.58 1.19 5.75z"/></svg>medium.com/@pardeepdhingra.01</a>
+          </div>
+          <div class="resume-section-label">Skills</div>
+          <div class="skill-group"><div class="skill-group-title">Languages</div><div class="skill-pills"><span class="skill-pill">TypeScript</span><span class="skill-pill">JavaScript</span><span class="skill-pill">Python</span><span class="skill-pill">SQL</span></div></div>
+          <div class="skill-group"><div class="skill-group-title">Frontend</div><div class="skill-pills"><span class="skill-pill">React</span><span class="skill-pill">Next.js</span><span class="skill-pill">HTML/CSS</span></div></div>
+          <div class="skill-group"><div class="skill-group-title">Backend</div><div class="skill-pills"><span class="skill-pill">Node.js</span><span class="skill-pill">Express</span><span class="skill-pill">GraphQL</span></div></div>
+          <div class="skill-group"><div class="skill-group-title">Cloud & Infra</div><div class="skill-pills"><span class="skill-pill">AWS CDK</span><span class="skill-pill">Lambda</span><span class="skill-pill">DynamoDB</span><span class="skill-pill">S3</span><span class="skill-pill">CloudWatch</span><span class="skill-pill">API Gateway</span></div></div>
+          <div class="skill-group"><div class="skill-group-title">DevOps</div><div class="skill-pills"><span class="skill-pill">Docker</span><span class="skill-pill">Terraform</span><span class="skill-pill">CI/CD</span><span class="skill-pill">GitHub Actions</span></div></div>
+          <div class="skill-group"><div class="skill-group-title">Database</div><div class="skill-pills"><span class="skill-pill">PostgreSQL</span><span class="skill-pill">DynamoDB</span><span class="skill-pill">Redis</span></div></div>
+          <div class="resume-section-label">Education</div>
+          <div class="resume-edu-item"><strong>Bachelor's in Computer Science</strong><span>Computer Science &amp; Engineering</span></div>
+        </aside>
+        <div class="resume-right">
+          <p class="resume-summary"><strong>15+ years</strong> building scalable distributed systems and leading architecture decisions. I think in systems — data flows, failure modes, scaling bottlenecks — before writing a single line of code. Architecture-first, code second. Currently shaping the product and infrastructure at <strong>Upflowy</strong>.</p>
+          <div class="resume-h2">Experience</div>
+          <div class="timeline">
+            <div class="timeline-item"><div class="timeline-dates">2022 — Present</div><div class="timeline-role">Full Stack Engineer / Solution Architect</div><div class="timeline-company">Upflowy</div><ul class="timeline-bullets"><li>Architect and build serverless microservices using AWS CDK, Lambda, and DynamoDB</li><li>Design scalable API patterns handling millions of requests with sub-100ms latency</li><li>Lead architecture decisions, technical roadmap, and engineering standards</li><li>Implement CI/CD pipelines and infrastructure as code across multiple environments</li><li>Mentor engineering team on clean architecture and system design principles</li></ul></div>
+            <div class="timeline-item"><div class="timeline-dates">2019 — 2022</div><div class="timeline-role">Senior Software Engineer</div><ul class="timeline-bullets"><li>Built full-stack applications with React, Node.js, and AWS services</li><li>Led migration from monolith to microservices architecture</li><li>Designed event-driven systems with SQS, SNS, and EventBridge</li><li>Mentored junior developers and established code review culture</li></ul></div>
+            <div class="timeline-item"><div class="timeline-dates">2015 — 2019</div><div class="timeline-role">Software Engineer</div><ul class="timeline-bullets"><li>Developed web applications using JavaScript and modern frameworks</li><li>Implemented RESTful APIs and designed database schemas</li><li>Contributed to agile development and continuous delivery practices</li></ul></div>
+            <div class="timeline-item"><div class="timeline-dates">2011 — 2015</div><div class="timeline-role">Junior Developer</div><ul class="timeline-bullets"><li>Built and maintained web applications from the ground up</li><li>Learned software engineering fundamentals, testing, and deployment</li></ul></div>
+          </div>
+          <div class="resume-h2">Key Projects</div>
+          <div class="projects-grid">
+            <div class="project-card"><h4>Serverless API Platform</h4><p>Production-grade API infrastructure serving millions of requests with auto-scaling and zero cold-start optimization.</p><div class="project-tech"><span>CDK</span><span>Lambda</span><span>DynamoDB</span><span>API Gateway</span></div></div>
+            <div class="project-card"><h4>Real-time Analytics Pipeline</h4><p>Event-driven data pipeline processing clickstream data in real-time with sub-second aggregation.</p><div class="project-tech"><span>Kinesis</span><span>Lambda</span><span>S3</span><span>Athena</span></div></div>
+            <div class="project-card"><h4>Multi-tenant SaaS Architecture</h4><p>Tenant isolation, resource pooling, and per-tenant configuration at scale.</p><div class="project-tech"><span>TypeScript</span><span>PostgreSQL</span><span>Redis</span><span>Docker</span></div></div>
+            <div class="project-card"><h4>OpenClaw Agent System</h4><p>Multi-agent orchestration platform with Shifu as the main architect agent managing sub-agent fleet.</p><div class="project-tech"><span>AI Agents</span><span>LLM</span><span>TypeScript</span><span>MCP</span></div></div>
+          </div>
+          <div class="resume-h2">Interests</div>
+          <div class="interests-list">
+            <span class="interest-tag">DynamoDB Single-Table Design</span>
+            <span class="interest-tag">Architecture-First Thinking</span>
+            <span class="interest-tag">AI Agent Systems</span>
+            <span class="interest-tag">Daily Learning & Blogging</span>
+            <span class="interest-tag">Serverless Patterns</span>
+            <span class="interest-tag">System Design</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="footer"><p>&copy; 2026 Pardeep Dhingra. Built with curiosity.</p></footer>
+  <script>
+    const toggle=document.getElementById('navToggle'),links=document.getElementById('navLinks');
+    toggle.addEventListener('click',()=>links.classList.toggle('open'));
+    links.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>links.classList.remove('open')));
+    const items=document.querySelectorAll('.timeline-item');
+    const obs=new IntersectionObserver(e=>{e.forEach(el=>{if(el.isIntersecting){el.target.classList.add('visible');obs.unobserve(el.target)}})},{threshold:0.1,rootMargin:'0px 0px -30px 0px'});
+    items.forEach(el=>obs.observe(el));
+  </script>
+</body>
+</html>

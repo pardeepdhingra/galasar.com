@@ -276,17 +276,17 @@
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="nav">
-        <div class="nav-content">
-            <a href="/" class="nav-logo">PD</a>
-            <div class="nav-links">
-                <a href="/" class="nav-link">Home</a>
-                <a href="/blog" class="nav-link">Blog</a>
-                <a href="#" class="nav-link">Work</a>
-                <a href="#" class="nav-link">Contact</a>
-            </div>
+    <nav class="nav scrolled">
+      <div class="nav-inner">
+        <a href="/" class="nav-logo">pardeep<span>builds</span></a>
+        <div class="nav-links" id="navLinks">
+          <a href="/">Home</a>
+          <a href="/resume">Resume</a>
+          <a href="/blog" class="active">Blog</a>
+          <a href="/#contact">Contact</a>
         </div>
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+      </div>
     </nav>
 
     <!-- Main Content -->
@@ -341,17 +341,14 @@
         <div id="contentSections"></div>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <p>&copy; 2026 Pardeep Dhingra. All rights reserved.</p>
-            <div class="footer-links">
-                <a href="https://linkedin.com/in/pa" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-                <a href="https://medium.com/@pardeepdhingra.01" target="_blank" rel="noopener noreferrer">Medium</a>
-                <a href="#" target="_blank" rel="noopener noreferrer">GitHub</a>
-            </div>
-        </div>
-    </footer>
+    <div style="display:flex;gap:1rem;align-items:flex-start;padding:1.5rem;margin:3rem auto 2rem;max-width:720px;background:var(--bg-chat,#1d1d22);border:1px solid rgba(255,255,255,0.09);border-radius:12px;">
+      <img src="/profile.png" alt="Pardeep" style="width:48px;height:48px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">
+      <div>
+        <h4 style="font-size:0.95rem;font-weight:650;color:#f4f3ef;margin-bottom:0.3rem">Written by <span style="color:#e8c872">Pardeep Dhingra</span></h4>
+        <p style="font-size:0.85rem;color:#c4c1b8;line-height:1.6;margin:0">Full Stack Engineer & Solution Architect at Upflowy. 15+ years building scalable systems. Architecture-first, code second.</p>
+      </div>
+    </div>
+    <footer class="footer"><p>&copy; 2026 Pardeep Dhingra. Built with curiosity.</p></footer>
 
     <script>
         const commands = {
