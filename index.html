@@ -19,13 +19,17 @@
 
     .chat-row {
       display: flex; gap: 0.75rem; align-items: flex-end;
-      opacity: 0; transform: translateY(16px);
       max-width: 88%;
-      margin-bottom: 0.75rem;
+      /* Collapsed until revealed — takes no layout space */
+      max-height: 0; overflow: hidden;
+      opacity: 0; transform: translateY(16px);
+      margin-bottom: 0;
     }
     .chat-row.visible {
+      max-height: 600px; overflow: visible;
       opacity: 1; transform: translateY(0);
-      transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+      margin-bottom: 0.75rem;
+      transition: max-height 0.5s ease, opacity 0.5s cubic-bezier(0.25, 0.1, 0.25, 1), transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1), margin 0.3s ease;
     }
 
     /* Bot = left aligned */
@@ -78,10 +82,11 @@
     .chat-bubble strong { color: var(--text); font-weight: 600; }
     .chat-bubble .accent { color: var(--accent); font-weight: 550; }
 
-    /* Typing dots */
-    .typing { display: none; align-self: flex-start; gap: 0.75rem; align-items: flex-end; margin-bottom: 0.75rem; }
+    /* Typing dots — right-aligned as Pardeep's reply */
+    .typing { display: none; align-self: flex-end; flex-direction: row-reverse; gap: 0.75rem; align-items: flex-end; margin-bottom: 0.75rem; max-width: 88%; }
     .typing.active { display: flex; }
-    .typing-dots { display: flex; gap: 4px; padding: 0.9rem 1.1rem; background: #161618; border-radius: 4px 18px 18px 18px; }
+    .typing .chat-avatar { background: var(--accent); }
+    .typing-dots { display: flex; gap: 4px; padding: 0.9rem 1.1rem; background: #1a1a1d; border: 1px solid rgba(95,202,201,0.08); border-radius: 18px 4px 18px 18px; }
     .typing-dots span {
       width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim);
       animation: blink 1.4s infinite both;
@@ -135,7 +140,6 @@
     <section class="hero" id="hero">
       <div class="hero-intro">
         <h1>Hi, I'm <span class="highlight">Pardeep.</span></h1>
-        <p>Let me introduce myself through a conversation.</p>
       </div>
 
       <div class="chat" id="chat">
@@ -294,10 +298,10 @@
           <div class="chat-bubble">Pick your channel — I'm friendly, I promise.</div>
         </div>
 
-        <!-- Typing indicator (shown during animation) -->
+        <!-- Typing indicator — Pardeep typing a reply -->
         <div class="typing" id="typingIndicator">
           <div class="chat-avatar">
-            <img src="/bot.png" alt="Bot">
+            <img src="/profile.png" alt="Pardeep" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=profile-initials>PD</span>'">
           </div>
           <div class="typing-dots"><span></span><span></span><span></span></div>
         </div>
@@ -420,13 +424,12 @@
     let animIndex = 0;
 
     function scrollToElement(el) {
-      // Smooth scroll so the new message is visible with some padding
+      // Only scroll if the element is below the visible viewport
       setTimeout(() => {
-        el.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
-        // Extra nudge: scroll a bit more so it's not right at the edge
-        setTimeout(() => {
-          window.scrollBy({ top: 60, behavior: 'smooth' });
-        }, 300);
+        const rect = el.getBoundingClientRect();
+        if (rect.bottom > window.innerHeight - 40) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+        }
       }, 100);
     }
 
@@ -475,18 +478,26 @@
       }
     }
 
-    // Start chat when hero comes into view
-    const chatObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting && !chatStarted) {
-          chatStarted = true;
-          setTimeout(showNextMessage, 800);
-          chatObserver.disconnect();
-        }
-      });
-    }, { threshold: 0.2 });
+    // Start chat animation only if user landed on the page without a hash
+    // (i.e., they're viewing the profile/hero). If they navigated to #contact
+    // or #blog via URL, show all messages immediately — no animation, no scroll.
     const chatContainer = document.getElementById('chat');
-    if (chatContainer) chatObserver.observe(chatContainer);
+    const hasHash = window.location.hash && window.location.hash !== '#' && window.location.hash !== '#hero';
+
+    if (hasHash) {
+      // Direct section navigation — reveal all chat instantly, no animation
+      chatRows.forEach(row => {
+        row.style.transition = 'none';
+        row.classList.add('visible');
+      });
+      chatCta.style.transition = 'none';
+      chatCta.classList.add('visible');
+      chatStarted = true;
+    } else {
+      // Normal page load — start chat animation after a short delay
+      chatStarted = true;
+      setTimeout(showNextMessage, 800);
+    }
 
     // Scroll reveal for other sections
     const reveals = document.querySelectorAll('.reveal');
@@ -499,6 +510,45 @@
       });
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
     reveals.forEach(el => revealObserver.observe(el));
+  </script>
+
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" id="lightbox">
+    <button class="lightbox-close" aria-label="Close">&times;</button>
+    <img src="" alt="">
+  </div>
+  <script>
+  (function(){
+    const overlay = document.getElementById('lightbox');
+    const lbImg = overlay.querySelector('img');
+    const lbClose = overlay.querySelector('.lightbox-close');
+
+    // Mark all content images as lightbox-enabled (skip tiny avatars & icons)
+    document.querySelectorAll('img').forEach(img => {
+      if (img.closest('.nav') || img.closest('.lightbox-overlay')) return;
+      if (img.naturalWidth < 40 && img.naturalHeight < 40) return;
+      img.setAttribute('data-lightbox', '');
+    });
+
+    document.addEventListener('click', e => {
+      const img = e.target.closest('img[data-lightbox]');
+      if (!img) return;
+      e.preventDefault();
+      e.stopPropagation();
+      lbImg.src = img.src;
+      lbImg.alt = img.alt || '';
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+
+    function closeLightbox() {
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    lbClose.addEventListener('click', closeLightbox);
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeLightbox(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+  })();
   </script>
 </body>
 </html>

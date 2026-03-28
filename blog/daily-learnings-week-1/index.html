@@ -571,5 +571,38 @@
       initQuiz('quiz2', quiz2Data);
     });
   </script>
+
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" id="lightbox">
+    <button class="lightbox-close" aria-label="Close">&times;</button>
+    <img src="" alt="">
+  </div>
+  <script>
+  (function(){
+    var overlay = document.getElementById("lightbox");
+    var lbImg = overlay.querySelector("img");
+    var lbClose = overlay.querySelector(".lightbox-close");
+    document.querySelectorAll("img").forEach(function(img){
+      if (img.closest(".nav") || img.closest(".lightbox-overlay")) return;
+      img.setAttribute("data-lightbox","");
+    });
+    document.addEventListener("click", function(e){
+      var img = e.target.closest("img[data-lightbox]");
+      if (!img) return;
+      e.preventDefault(); e.stopPropagation();
+      lbImg.src = img.src; lbImg.alt = img.alt || "";
+      overlay.classList.add("active");
+      document.body.style.overflow = "hidden";
+    });
+    function closeLightbox(){
+      overlay.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+    lbClose.addEventListener("click", closeLightbox);
+    overlay.addEventListener("click", function(e){ if(e.target===overlay) closeLightbox(); });
+    document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeLightbox(); });
+  })();
+  </script>
+
 </body>
 </html>
