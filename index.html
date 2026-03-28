@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pardeep Dhingra — Full Stack Engineer & Solution Architect</title>
-  <meta name="description" content="Pardeep Dhingra builds scalable products and shares daily tech learnings. Full Stack Engineer & Solution Architect.">
+  <title>Pardeep Dhingra — Lead Engineer</title>
+  <meta name="description" content="Pardeep Dhingra — Lead Engineer. TypeScript, Node.js, React, Ruby, Rails, AWS, Google Cloud. Building scalable systems at Upflowy/Psyke.">
   <meta property="og:title" content="Pardeep Dhingra — pardeepbuilds">
-  <meta property="og:description" content="Full Stack Engineer & Solution Architect. Building things that scale.">
+  <meta property="og:description" content="Lead Engineer. Building things that scale.">
   <meta property="og:type" content="website">
   <link rel="canonical" href="https://pardeepbuilds.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -48,8 +48,8 @@
     .chat-avatar img {
       width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
     }
-    /* Bot icon SVG */
-    .bot-icon { width: 20px; height: 20px; color: var(--text-dim); }
+    /* Bot avatar image */
+    .chat-row.bot .chat-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
     /* Profile fallback */
     .profile-initials {
       font-size: 0.7rem; font-weight: 700; color: var(--bg);
@@ -143,7 +143,7 @@
         <!-- Q1 -->
         <div class="chat-row bot" data-q="1">
           <div class="chat-avatar">
-            <svg class="bot-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="10" rx="3"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v5"/><circle cx="12" cy="2" r="1"/><path d="M6 11V9a6 6 0 0 1 12 0v2"/></svg>
+            <img src="/bot.png" alt="Bot">
           </div>
           <div class="chat-bubble">So, who are you in one sentence?</div>
         </div>
@@ -153,16 +153,16 @@
             <img src="/profile.png" alt="Pardeep" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=profile-initials>PD</span>'">
           </div>
           <div class="chat-bubble">
-            <strong>Full Stack Engineer & Solution Architect</strong> who's spent 15+ years
+            <strong>Lead Engineer</strong> who's spent 15+ years
             turning messy problems into clean, scalable systems. Currently building at
-            <span class="accent">Upflowy</span>.
+            <span class="accent">Upflowy / Psyke</span>.
           </div>
         </div>
 
         <!-- Q2 -->
         <div class="chat-row bot" data-q="2">
           <div class="chat-avatar">
-            <svg class="bot-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="10" rx="3"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v5"/><circle cx="12" cy="2" r="1"/><path d="M6 11V9a6 6 0 0 1 12 0v2"/></svg>
+            <img src="/bot.png" alt="Bot">
           </div>
           <div class="chat-bubble">What's your superpower?</div>
         </div>
@@ -181,7 +181,7 @@
         <!-- Q3 -->
         <div class="chat-row bot" data-q="3">
           <div class="chat-avatar">
-            <svg class="bot-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="10" rx="3"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v5"/><circle cx="12" cy="2" r="1"/><path d="M6 11V9a6 6 0 0 1 12 0v2"/></svg>
+            <img src="/bot.png" alt="Bot">
           </div>
           <div class="chat-bubble">What does your toolkit look like?</div>
         </div>
@@ -196,15 +196,16 @@
               <span class="chat-pill">TypeScript</span>
               <span class="chat-pill">Node.js</span>
               <span class="chat-pill">React</span>
-              <span class="chat-pill">AWS CDK</span>
+              <span class="chat-pill">Ruby</span>
+              <span class="chat-pill">Ruby on Rails</span>
+              <span class="chat-pill">AWS</span>
+              <span class="chat-pill">Google Cloud</span>
               <span class="chat-pill">Lambda</span>
               <span class="chat-pill">DynamoDB</span>
               <span class="chat-pill">PostgreSQL</span>
               <span class="chat-pill">Docker</span>
-              <span class="chat-pill">Redis</span>
               <span class="chat-pill">Next.js</span>
               <span class="chat-pill">GraphQL</span>
-              <span class="chat-pill">Terraform</span>
             </div>
           </div>
         </div>
@@ -212,7 +213,7 @@
         <!-- Q4 -->
         <div class="chat-row bot" data-q="4">
           <div class="chat-avatar">
-            <svg class="bot-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="10" rx="3"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v5"/><circle cx="12" cy="2" r="1"/><path d="M6 11V9a6 6 0 0 1 12 0v2"/></svg>
+            <img src="/bot.png" alt="Bot">
           </div>
           <div class="chat-bubble">Walk me through your career — the short version.</div>
         </div>
@@ -226,8 +227,8 @@
             <div class="chat-timeline">
               <div class="chat-timeline-item">
                 <span class="chat-timeline-year">2022 — Now</span>
-                <span class="chat-timeline-role">Full Stack / Solution Architect</span>
-                <span class="chat-timeline-co">@ Upflowy</span>
+                <span class="chat-timeline-role">Lead Engineer</span>
+                <span class="chat-timeline-co">@ Upflowy / Psyke</span>
               </div>
               <div class="chat-timeline-item">
                 <span class="chat-timeline-year">2019 — 2022</span>
@@ -244,7 +245,7 @@
         <!-- Q5 -->
         <div class="chat-row bot" data-q="5">
           <div class="chat-avatar">
-            <svg class="bot-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="10" rx="3"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v5"/><circle cx="12" cy="2" r="1"/><path d="M6 11V9a6 6 0 0 1 12 0v2"/></svg>
+            <img src="/bot.png" alt="Bot">
           </div>
           <div class="chat-bubble">What are you obsessed with right now?</div>
         </div>
@@ -263,7 +264,7 @@
         <!-- Q6 -->
         <div class="chat-row bot" data-q="6">
           <div class="chat-avatar">
-            <svg class="bot-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="10" rx="3"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v5"/><circle cx="12" cy="2" r="1"/><path d="M6 11V9a6 6 0 0 1 12 0v2"/></svg>
+            <img src="/bot.png" alt="Bot">
           </div>
           <div class="chat-bubble">What's your unpopular engineering opinion?</div>
         </div>
@@ -281,7 +282,7 @@
         <!-- Q7 -->
         <div class="chat-row bot" data-q="7">
           <div class="chat-avatar">
-            <svg class="bot-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="10" rx="3"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v5"/><circle cx="12" cy="2" r="1"/><path d="M6 11V9a6 6 0 0 1 12 0v2"/></svg>
+            <img src="/bot.png" alt="Bot">
           </div>
           <div class="chat-bubble">How can I reach you?</div>
         </div>
@@ -296,7 +297,7 @@
         <!-- Typing indicator (shown during animation) -->
         <div class="typing" id="typingIndicator">
           <div class="chat-avatar">
-            <svg class="bot-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="10" rx="3"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v5"/><circle cx="12" cy="2" r="1"/><path d="M6 11V9a6 6 0 0 1 12 0v2"/></svg>
+            <img src="/bot.png" alt="Bot">
           </div>
           <div class="typing-dots"><span></span><span></span><span></span></div>
         </div>
@@ -411,17 +412,31 @@
       });
     });
 
-    // Chat animation — sequential reveal with typing indicator
+    // Chat animation — sequential reveal with typing indicator + auto-scroll
     const chatRows = document.querySelectorAll('.chat-row');
     const typingEl = document.getElementById('typingIndicator');
     const chatCta = document.getElementById('chatCta');
     let chatStarted = false;
     let animIndex = 0;
 
+    function scrollToElement(el) {
+      // Smooth scroll so the new message is visible with some padding
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+        // Extra nudge: scroll a bit more so it's not right at the edge
+        setTimeout(() => {
+          window.scrollBy({ top: 60, behavior: 'smooth' });
+        }, 300);
+      }, 100);
+    }
+
     function showNextMessage() {
       if (animIndex >= chatRows.length) {
         typingEl.classList.remove('active');
-        setTimeout(() => chatCta.classList.add('visible'), 500);
+        setTimeout(() => {
+          chatCta.classList.add('visible');
+          scrollToElement(chatCta);
+        }, 500);
         return;
       }
 
@@ -429,21 +444,34 @@
       const isBot = row.classList.contains('bot');
       const nextIsMe = animIndex + 1 < chatRows.length && chatRows[animIndex + 1].classList.contains('me');
 
-      // Show typing indicator before bot messages
       if (isBot) {
-        typingEl.classList.add('active');
-        setTimeout(() => {
-          typingEl.classList.remove('active');
-          row.classList.add('visible');
-          animIndex++;
-          // If next is "me" reply, show after a pause
-          setTimeout(showNextMessage, nextIsMe ? 800 : 1400);
-        }, 1200);
-      } else {
-        // "Me" response — show with delay
+        // Bot question: show immediately, then show typing for "me" reply
         row.classList.add('visible');
+        scrollToElement(row);
         animIndex++;
-        setTimeout(showNextMessage, 2000);
+
+        if (nextIsMe) {
+          // Show typing indicator after bot asks — simulates Pardeep typing
+          setTimeout(() => {
+            typingEl.classList.add('active');
+            scrollToElement(typingEl);
+          }, 600);
+          // Then show the "me" reply after typing delay
+          setTimeout(() => {
+            typingEl.classList.remove('active');
+            showNextMessage();
+          }, 2000);
+        } else {
+          // Next is another bot message, short pause
+          setTimeout(showNextMessage, 1200);
+        }
+      } else {
+        // "Me" response — reveal it
+        row.classList.add('visible');
+        scrollToElement(row);
+        animIndex++;
+        // Pause before next bot question
+        setTimeout(showNextMessage, 1800);
       }
     }
 
@@ -452,11 +480,11 @@
       entries.forEach(entry => {
         if (entry.isIntersecting && !chatStarted) {
           chatStarted = true;
-          setTimeout(showNextMessage, 1000);
+          setTimeout(showNextMessage, 800);
           chatObserver.disconnect();
         }
       });
-    }, { threshold: 0.3 });
+    }, { threshold: 0.2 });
     const chatContainer = document.getElementById('chat');
     if (chatContainer) chatObserver.observe(chatContainer);
 
