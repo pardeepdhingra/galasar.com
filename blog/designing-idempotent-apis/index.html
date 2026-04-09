@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Designing Idempotent APIs — Pardeep Dhingra</title>
+    <meta name="description" content="Practical patterns for making APIs safe to retry. Idempotency keys, database-level guarantees, Stripe's model dissected, and an interactive request simulator you can break.">
+    <link rel="canonical" href="https://galasar.com/blog/designing-idempotent-apis">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/blog/components/engagement.css">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "Designing Idempotent APIs",
+      "description": "Practical patterns for making APIs safe to retry. Idempotency keys, database-level guarantees, and an interactive request simulator.",
+      "author": {
+        "@type": "Person",
+        "name": "Pardeep Dhingra",
+        "url": "https://galasar.com"
+      },
+      "datePublished": "2026-03-30",
+      "dateModified": "2026-03-30",
+      "publisher": {
+        "@type": "Person",
+        "name": "Pardeep Dhingra"
+      },
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://galasar.com/blog/designing-idempotent-apis"
+      },
+      "keywords": ["idempotency", "API design", "distributed systems", "retry safety", "idempotency keys"]
+    }
+    </script>
+
+    <style>
+        .back-link {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            color: var(--text-dim); text-decoration: none; font-size: 0.85rem;
+            margin-bottom: 1.5rem; transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+
+        .blog-meta {
+            display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .blog-item-author {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.8rem; color: var(--text-dim); margin-bottom: 2.5rem;
+        }
+        .blog-item-author img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+        .blog-item-author strong { color: var(--text-body); font-weight: 550; }
+
+        /* Prose */
+        .prose { font-size: 0.95rem; line-height: 1.8; color: var(--text-body); }
+        .prose p { margin-bottom: 1.25rem; }
+        .prose h2 {
+            font-size: 1.35rem; font-weight: 700; color: var(--text);
+            margin: 2.5rem 0 1rem; letter-spacing: -0.02em;
+        }
+        .prose h3 {
+            font-size: 1.1rem; font-weight: 600; color: var(--accent);
+            margin: 2rem 0 0.75rem;
+        }
+        .prose strong { color: var(--text); font-weight: 600; }
+        .prose code {
+            font-family: var(--font-mono); background: rgba(95,202,201,0.08);
+            padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.85em;
+            color: var(--accent);
+        }
+        .prose ul { margin-bottom: 1.25rem; padding-left: 1.25rem; }
+        .prose li { margin-bottom: 0.4rem; line-height: 1.7; }
+
+        .callout {
+            padding: 1.25rem 1.5rem; background: rgba(95,202,201,0.06);
+            border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0; font-size: 0.9rem; color: var(--text-body); line-height: 1.7;
+        }
+        .callout-warn {
+            background: rgba(239,68,68,0.06); border-left-color: #ef4444;
+        }
+        .callout-gold {
+            background: rgba(174,154,100,0.08); border-left-color: #ae9a64;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: #0a0a0c; border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden; margin: 1.5rem 0;
+        }
+        .code-header {
+            display: flex; align-items: center; gap: 8px; padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border); font-size: 0.75rem;
+            color: var(--text-dim); font-family: var(--font-mono);
+        }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.r { background: #ef4444; }
+        .code-dot.y { background: #eab308; }
+        .code-dot.g { background: #22c55e; }
+        .code-body {
+            padding: 1rem 1.25rem; font-family: var(--font-mono);
+            font-size: 0.82rem; line-height: 1.7; color: var(--text-body);
+            overflow-x: auto; white-space: pre;
+        }
+        .code-body .kw { color: var(--accent); }
+        .code-body .str { color: #ae9a64; }
+        .code-body .cmt { color: var(--text-dim); font-style: italic; }
+        .code-body .fn { color: #c084fc; }
+        .code-body .prop { color: #60a5fa; }
+        .code-body .num { color: #c084fc; }
+
+        /* Expandable Sections */
+        .expand-section {
+            margin: 1.5rem 0; border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden;
+        }
+        .expand-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 1.25rem; cursor: pointer;
+            background: var(--bg-chat); transition: background 0.2s;
+        }
+        .expand-header:hover { background: rgba(95,202,201,0.05); }
+        .expand-header h3 {
+            font-size: 1rem; font-weight: 600; color: var(--text);
+            display: flex; align-items: center; gap: 0.6rem; margin: 0;
+        }
+        .expand-arrow {
+            color: var(--text-dim); transition: transform 0.3s; font-size: 0.9rem;
+        }
+        .expand-section.open .expand-arrow { transform: rotate(180deg); }
+        .expand-body {
+            max-height: 0; overflow: hidden; transition: max-height 0.4s ease;
+        }
+        .expand-section.open .expand-body { max-height: 3000px; }
+        .expand-content {
+            padding: 0 1.25rem 1.25rem; color: var(--text-body);
+            font-size: 0.9rem; line-height: 1.7;
+        }
+
+        /* Comparison Cards */
+        .compare-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0;
+        }
+        .compare-card {
+            padding: 1.25rem; background: var(--bg-chat);
+            border: 1px solid var(--border); border-radius: 12px;
+        }
+        .compare-card.bad { border-color: rgba(239,68,68,0.3); }
+        .compare-card.good { border-color: rgba(34,197,94,0.3); }
+        .compare-label {
+            font-size: 0.72rem; font-family: var(--font-mono); text-transform: uppercase;
+            letter-spacing: 0.06em; margin-bottom: 0.6rem; font-weight: 600;
+        }
+        .compare-card.bad .compare-label { color: #ef4444; }
+        .compare-card.good .compare-label { color: #22c55e; }
+        .compare-card .code-body { padding: 0; background: none; font-size: 0.78rem; }
+
+        /* Request Simulator */
+        .simulator {
+            margin: 2rem 0; padding: 1.5rem; background: var(--bg-chat);
+            border: 1px solid var(--border); border-radius: 12px;
+        }
+        .simulator-title {
+            font-size: 1.05rem; font-weight: 600; color: var(--text);
+            margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;
+        }
+        .simulator-desc {
+            font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1.25rem; line-height: 1.6;
+        }
+        .sim-controls {
+            display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;
+        }
+        .sim-btn {
+            padding: 0.6rem 1.2rem; border-radius: 8px; border: 1px solid var(--border);
+            background: rgba(255,255,255,0.03); color: var(--text-body);
+            font-family: var(--font); font-size: 0.85rem; cursor: pointer;
+            transition: all 0.2s; font-weight: 500;
+        }
+        .sim-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .sim-btn.primary {
+            background: var(--accent); color: var(--bg); border-color: var(--accent);
+            font-weight: 600;
+        }
+        .sim-btn.primary:hover { opacity: 0.9; }
+        .sim-btn.danger {
+            background: rgba(239,68,68,0.1); color: #ef4444; border-color: rgba(239,68,68,0.3);
+        }
+        .sim-btn.danger:hover { background: rgba(239,68,68,0.2); }
+        .sim-log {
+            background: #0a0a0c; border: 1px solid var(--border); border-radius: 8px;
+            padding: 1rem; font-family: var(--font-mono); font-size: 0.78rem;
+            line-height: 1.8; color: var(--text-dim); min-height: 120px;
+            max-height: 300px; overflow-y: auto;
+        }
+        .sim-log .log-ok { color: #22c55e; }
+        .sim-log .log-warn { color: #eab308; }
+        .sim-log .log-err { color: #ef4444; }
+        .sim-log .log-info { color: var(--accent); }
+        .sim-log .log-dim { color: var(--text-dim); }
+
+        /* Toggle */
+        .toggle-row {
+            display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;
+        }
+        .toggle-label { font-size: 0.85rem; color: var(--text-body); }
+        .toggle-switch {
+            position: relative; width: 44px; height: 24px; cursor: pointer;
+        }
+        .toggle-switch input { display: none; }
+        .toggle-track {
+            position: absolute; inset: 0; background: rgba(255,255,255,0.1);
+            border-radius: 12px; transition: background 0.3s;
+        }
+        .toggle-switch input:checked + .toggle-track { background: var(--accent); }
+        .toggle-knob {
+            position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+            background: #fff; border-radius: 50%; transition: transform 0.3s;
+            pointer-events: none;
+        }
+        .toggle-switch input:checked ~ .toggle-knob { transform: translateX(20px); }
+
+        /* Interactive Flow Diagram */
+        .flow-diagram {
+            margin: 2rem 0; padding: 1.5rem; background: var(--bg-chat);
+            border: 1px solid var(--border); border-radius: 12px; overflow-x: auto;
+        }
+        .flow-title {
+            font-size: 0.85rem; font-weight: 600; color: var(--text);
+            margin-bottom: 1.25rem; text-align: center;
+        }
+        .flow-steps {
+            display: flex; align-items: center; justify-content: center;
+            gap: 0; flex-wrap: nowrap; min-width: 600px;
+        }
+        .flow-node {
+            padding: 0.75rem 1rem; border-radius: 10px; text-align: center;
+            font-size: 0.78rem; font-weight: 500; min-width: 110px;
+            transition: all 0.3s; cursor: pointer; position: relative;
+            border: 1px solid var(--border); background: var(--bg-msg);
+            color: var(--text-body);
+        }
+        .flow-node:hover { border-color: var(--accent); color: var(--accent); }
+        .flow-node.active {
+            border-color: var(--accent); background: rgba(95,202,201,0.1);
+            color: var(--accent); font-weight: 600;
+        }
+        .flow-node.hit {
+            border-color: #22c55e; background: rgba(34,197,94,0.1);
+            color: #22c55e;
+        }
+        .flow-node.miss {
+            border-color: #eab308; background: rgba(234,179,8,0.1);
+            color: #eab308;
+        }
+        .flow-arrow {
+            color: var(--text-dim); font-size: 1.2rem; padding: 0 0.3rem; flex-shrink: 0;
+        }
+        .flow-detail {
+            margin-top: 1rem; padding: 1rem; background: rgba(95,202,201,0.04);
+            border-radius: 8px; font-size: 0.85rem; color: var(--text-body);
+            line-height: 1.7; display: none;
+        }
+        .flow-detail.visible { display: block; animation: fadeSlide 0.3s ease; }
+
+        /* Impact Counter */
+        .impact-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
+            margin: 2rem 0;
+        }
+        .impact-card {
+            padding: 1.5rem; background: var(--bg-chat); border: 1px solid var(--border);
+            border-radius: 12px; text-align: center;
+        }
+        .impact-number {
+            font-family: var(--font-mono); font-size: 2rem; font-weight: 700;
+            color: var(--accent); margin-bottom: 0.3rem;
+        }
+        .impact-number.warn { color: #ef4444; }
+        .impact-number.gold { color: #ae9a64; }
+        .impact-label {
+            font-size: 0.8rem; color: var(--text-dim); line-height: 1.5;
+        }
+
+        /* Quiz */
+        .quiz-card {
+            margin: 2rem 0; padding: 1.5rem; background: var(--bg-chat);
+            border: 1px solid var(--border); border-radius: 12px;
+        }
+        .quiz-question {
+            font-size: 1.05rem; font-weight: 600; color: var(--text);
+            margin-bottom: 1rem;
+        }
+        .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+        .quiz-option {
+            display: block; padding: 0.75rem 1rem; background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+            font-size: 0.88rem; color: var(--text-body); transition: all 0.2s;
+            text-align: left; font-family: inherit; width: 100%;
+        }
+        .quiz-option:hover { border-color: rgba(95,202,201,0.3); }
+        .quiz-option.correct {
+            border-color: #22c55e; background: rgba(34,197,94,0.08); color: #22c55e;
+        }
+        .quiz-option.wrong {
+            border-color: #ef4444; background: rgba(239,68,68,0.08); color: #ef4444;
+        }
+        .quiz-explanation {
+            display: none; margin-top: 1rem; padding: 1rem; font-size: 0.85rem;
+            background: rgba(95,202,201,0.05); border-radius: 8px;
+            color: var(--text-body); line-height: 1.7;
+        }
+        .quiz-explanation.visible { display: block; animation: fadeSlide 0.3s ease; }
+
+        /* Tabbed Panels */
+        .tab-container { margin: 1.5rem 0; }
+        .tab-nav {
+            display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 0;
+        }
+        .tab-btn {
+            padding: 0.75rem 1.25rem; background: none; border: none;
+            font-family: var(--font); font-size: 0.85rem; color: var(--text-dim);
+            cursor: pointer; border-bottom: 2px solid transparent;
+            transition: all 0.2s; font-weight: 500;
+        }
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab-panel {
+            display: none; padding: 1.25rem; background: var(--bg-chat);
+            border: 1px solid var(--border); border-top: none; border-radius: 0 0 12px 12px;
+            font-size: 0.9rem; line-height: 1.7; color: var(--text-body);
+        }
+        .tab-panel.active { display: block; }
+
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            .compare-grid { grid-template-columns: 1fr; }
+            .impact-grid { grid-template-columns: 1fr; }
+            .flow-steps { min-width: 500px; }
+            .sim-controls { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+  <nav class="nav scrolled">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">pardeep<span>builds</span></a>
+      <div class="nav-links" id="navLinks">
+        <a href="/">Home</a>
+        <a href="/portfolio">Portfolio</a>
+        <a href="/resume">Resume</a>
+        <a href="/blog" class="active">Blog</a>
+        <a href="/#contact">Contact</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <main>
+    <article class="section section-narrow" style="padding-top:9rem">
+      <div class="section-label">Blog</div>
+      <a href="/blog" class="back-link">&larr; Back to Blog</a>
+
+      <div class="blog-meta">
+        <span class="blog-item-date">30 Mar 2026</span>
+        <span class="blog-item-tag">Engineering</span>
+        <span class="blog-item-readtime">12 min read</span>
+      </div>
+
+      <h1 class="section-title">Designing Idempotent APIs</h1>
+
+      <div class="blog-item-author">
+        <img src="/profile.png" alt="Pardeep" onerror="this.style.display='none'">
+        By <strong>Pardeep Dhingra</strong>
+      </div>
+
+      <div class="prose">
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span>
+            <span>terminal</span>
+          </div>
+          <div class="code-body"><span class="cmt"># User clicks "Pay" twice. Network hiccup on first attempt.</span>
+<span class="fn">POST</span> /api/payments  <span class="str">{ "amount": 99.00, "card": "****4242" }</span>
+<span class="log-warn">&rarr; 504 Gateway Timeout</span>
+
+<span class="cmt"># Client retries automatically.</span>
+<span class="fn">POST</span> /api/payments  <span class="str">{ "amount": 99.00, "card": "****4242" }</span>
+<span class="log-ok">&rarr; 200 OK  { "charge_id": "ch_9f3k2" }</span>
+
+<span class="cmt"># Check the ledger...</span>
+<span class="fn">GET</span> /api/payments?card=4242
+<span class="log-err">&rarr; Two charges: $99.00 + $99.00 = $198.00</span></div>
+        </div>
+
+        <p>That's a double charge. The customer gets billed twice. Your support queue fills up. Your Stripe dispute rate ticks upward. All because the API treated two identical requests as two distinct operations.</p>
+
+        <p>I've shipped this bug. In 2019, a payment endpoint I owned double-charged 340 customers over a weekend because our mobile client retried on timeout and the API had no idempotency protection. It took us three days to identify every affected transaction, issue refunds, and send apology emails. Total cost: ~$14,000 in refunds, a 0.3% dispute rate spike, and a lot of trust burned.</p>
+
+        <p>This post is the complete playbook for making APIs safe to retry.</p>
+
+      </div>
+
+      <!-- Interactive 1: Animated Impact Stats -->
+      <div class="impact-grid" id="impactGrid">
+        <div class="impact-card">
+          <div class="impact-number warn" data-target="340">0</div>
+          <div class="impact-label">Customers double-charged in one weekend</div>
+        </div>
+        <div class="impact-card">
+          <div class="impact-number gold" data-target="14">0</div>
+          <div class="impact-label">Thousand dollars in refunds issued</div>
+        </div>
+        <div class="impact-card">
+          <div class="impact-number" data-target="72">0</div>
+          <div class="impact-label">Hours to fully resolve the incident</div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>What Idempotency Actually Means</h2>
+
+        <p>An operation is <strong>idempotent</strong> if performing it once produces the same result as performing it N times. <code>DELETE /users/42</code> is naturally idempotent: deleting the same user twice leaves you with the same state (user gone). <code>POST /payments</code> is not: each call creates a new charge.</p>
+
+        <p>HTTP gives you some idempotency for free. GET, PUT, DELETE, and HEAD are idempotent by spec. POST and PATCH are not. But "by spec" means nothing if your implementation violates it. I've seen PUT endpoints that append to a list instead of replacing it. I've seen DELETE endpoints that decrement a counter. The HTTP method is a promise, not a guarantee.</p>
+
+        <div class="callout">
+          <strong>The real definition:</strong> f(x) = f(f(x)). Same input, same side effects, same response. Not "same status code" &mdash; same observable outcome in your system.
+        </div>
+
+        <h2>The HTTP Method Cheat Sheet</h2>
+      </div>
+
+      <!-- Interactive 2: Tabbed Method Comparison -->
+      <div class="tab-container" id="methodTabs">
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="tab-get">GET</button>
+          <button class="tab-btn" data-tab="tab-put">PUT</button>
+          <button class="tab-btn" data-tab="tab-delete">DELETE</button>
+          <button class="tab-btn" data-tab="tab-post">POST</button>
+          <button class="tab-btn" data-tab="tab-patch">PATCH</button>
+        </div>
+        <div class="tab-panel active" id="tab-get">
+          <strong style="color:#22c55e">Idempotent by spec.</strong> No side effects. Same resource, same representation. Safe to retry infinitely.<br><br>
+          <strong>Watch out for:</strong> GET endpoints that trigger analytics events or write audit logs as a side effect. If <code>GET /report</code> increments a "views" counter, that's technically not idempotent. Decide if you care.
+        </div>
+        <div class="tab-panel" id="tab-put">
+          <strong style="color:#22c55e">Idempotent by spec.</strong> Replaces the entire resource. <code>PUT /users/42 { name: "Pardeep" }</code> should produce the same state whether called once or ten times.<br><br>
+          <strong>Watch out for:</strong> PUT handlers that merge instead of replace. If your PUT does <code>Object.assign(existing, body)</code>, it's behaving like PATCH and you lose the idempotency contract. Replace the full resource or don't call it PUT.
+        </div>
+        <div class="tab-panel" id="tab-delete">
+          <strong style="color:#22c55e">Idempotent by spec.</strong> First call deletes the resource. Second call finds nothing to delete &mdash; same end state.<br><br>
+          <strong>Watch out for:</strong> Returning 404 on the second call. Technically correct, but it confuses retry logic. Consider returning 200/204 with a <code>"already_deleted": true</code> flag instead. Also: soft-delete toggles that re-delete (un-soft-delete) on a second call.
+        </div>
+        <div class="tab-panel" id="tab-post">
+          <strong style="color:#ef4444">NOT idempotent by spec.</strong> Creates a new resource each time. This is where you need idempotency keys.<br><br>
+          <strong>The fix:</strong> Accept an <code>Idempotency-Key</code> header. Store the key + response on first execution. Return the stored response on retries. More on this below.
+        </div>
+        <div class="tab-panel" id="tab-patch">
+          <strong style="color:#eab308">Conditionally idempotent.</strong> Depends entirely on the operation. <code>PATCH { "name": "Pardeep" }</code> is idempotent. <code>PATCH { "balance": { "$increment": 10 } }</code> is not.<br><br>
+          <strong>The fix:</strong> If your PATCH performs relative operations (increment, append, push), treat it like POST and require an idempotency key.
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>The Idempotency Key Pattern</h2>
+
+        <p>Stripe popularized this. The client generates a unique key (UUID v4) and sends it with the request. The server uses this key to deduplicate.</p>
+      </div>
+
+      <!-- Interactive 3: Request Flow Diagram -->
+      <div class="flow-diagram" id="flowDiagram">
+        <div class="flow-title">Click each step to see what happens</div>
+        <div class="flow-steps">
+          <div class="flow-node" data-step="client" id="fn-client">Client sends<br>POST + Key</div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-node" data-step="lookup" id="fn-lookup">Lookup key<br>in store</div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-node" data-step="decide" id="fn-decide">Cache hit<br>or miss?</div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-node" data-step="execute" id="fn-execute">Execute or<br>return cached</div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-node" data-step="respond" id="fn-respond">Return<br>response</div>
+        </div>
+        <div class="flow-detail" id="flow-detail"></div>
+      </div>
+
+      <div class="prose">
+        <p>Here's the implementation. This is close to what we run in production:</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span>
+          <span>idempotency-middleware.ts</span>
+        </div>
+        <div class="code-body"><span class="kw">import</span> { <span class="prop">DynamoDB</span> } <span class="kw">from</span> <span class="str">'@aws-sdk/client-dynamodb'</span>;
+
+<span class="kw">const</span> <span class="prop">IDEMPOTENCY_TABLE</span> = <span class="str">'idempotency-keys'</span>;
+<span class="kw">const</span> <span class="prop">TTL_SECONDS</span> = <span class="num">86400</span>; <span class="cmt">// 24 hours</span>
+
+<span class="kw">export async function</span> <span class="fn">idempotencyMiddleware</span>(req, res, next) {
+  <span class="kw">const</span> key = req.headers[<span class="str">'idempotency-key'</span>];
+  <span class="kw">if</span> (!key) <span class="kw">return</span> <span class="fn">next</span>();
+
+  <span class="cmt">// Step 1: Try to claim the key with a conditional write</span>
+  <span class="kw">try</span> {
+    <span class="kw">await</span> dynamo.<span class="fn">putItem</span>({
+      TableName: <span class="prop">IDEMPOTENCY_TABLE</span>,
+      Item: {
+        pk: { S: key },
+        status: { S: <span class="str">'processing'</span> },
+        ttl: { N: <span class="fn">String</span>(Math.<span class="fn">floor</span>(Date.<span class="fn">now</span>() / <span class="num">1000</span>) + <span class="prop">TTL_SECONDS</span>) }
+      },
+      ConditionExpression: <span class="str">'attribute_not_exists(pk)'</span>
+    });
+  } <span class="kw">catch</span> (err) {
+    <span class="kw">if</span> (err.name === <span class="str">'ConditionalCheckFailedException'</span>) {
+      <span class="cmt">// Key exists &mdash; return cached response</span>
+      <span class="kw">const</span> existing = <span class="kw">await</span> <span class="fn">getIdempotencyRecord</span>(key);
+      <span class="kw">if</span> (existing.status === <span class="str">'processing'</span>) {
+        <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">409</span>).<span class="fn">json</span>({ error: <span class="str">'Request in progress'</span> });
+      }
+      <span class="kw">return</span> res.<span class="fn">status</span>(existing.statusCode).<span class="fn">json</span>(existing.body);
+    }
+    <span class="kw">throw</span> err;
+  }
+
+  <span class="cmt">// Step 2: Execute the actual handler</span>
+  <span class="kw">const</span> originalJson = res.json.<span class="fn">bind</span>(res);
+  res.<span class="fn">json</span> = <span class="kw">async</span> (body) =&gt; {
+    <span class="kw">await</span> <span class="fn">updateIdempotencyRecord</span>(key, res.statusCode, body);
+    <span class="kw">return</span> <span class="fn">originalJson</span>(body);
+  };
+  <span class="fn">next</span>();
+}</div>
+      </div>
+
+      <div class="prose">
+        <p>The critical line is <code>ConditionExpression: 'attribute_not_exists(pk)'</code>. This is an atomic compare-and-set. Two concurrent requests with the same key will race to claim it, and exactly one will win. The loser gets the cached response or a 409 "in progress" status.</p>
+
+        <div class="callout-gold callout">
+          <strong>Why DynamoDB?</strong> The conditional write is atomic and strongly consistent in DynamoDB. If you use Postgres, use <code>INSERT ... ON CONFLICT DO NOTHING</code> with a <code>RETURNING</code> clause. Redis works too with <code>SET NX</code>. The key property is: the store operation must be atomic.
+        </div>
+
+        <h2>The Three Storage Backends</h2>
+
+        <p>Your idempotency store needs three properties: atomicity, TTL support, and low latency. Here's how the common options compare:</p>
+      </div>
+
+      <!-- Interactive 4: Expandable Storage Comparison -->
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>DynamoDB &mdash; Best for serverless</h3>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p><strong>Atomic write:</strong> <code>ConditionExpression</code> on <code>putItem</code>. Single-item transactions are strongly consistent.</p>
+            <p><strong>TTL:</strong> Built-in. Set a <code>ttl</code> attribute and DynamoDB garbage-collects expired items automatically (within ~48h).</p>
+            <p><strong>Latency:</strong> Single-digit milliseconds for single-item operations.</p>
+            <p><strong>Cost:</strong> $1.25 per million writes (on-demand). At 100k idempotent requests/day, that's ~$3.75/month.</p>
+            <p><strong>Downside:</strong> Eventually consistent reads by default. Use <code>ConsistentRead: true</code> when fetching cached responses, or you might return stale "processing" status.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>PostgreSQL &mdash; Best if you already run it</h3>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p><strong>Atomic write:</strong> <code>INSERT INTO idempotency_keys (key, status) VALUES ($1, 'processing') ON CONFLICT (key) DO NOTHING RETURNING *</code>. If <code>RETURNING</code> gives you a row, you claimed it. If not, someone else did.</p>
+            <p><strong>TTL:</strong> No built-in TTL. Run a cron job: <code>DELETE FROM idempotency_keys WHERE created_at &lt; NOW() - INTERVAL '24 hours'</code>. Or use <code>pg_cron</code>.</p>
+            <p><strong>Latency:</strong> Sub-millisecond on the same machine. 1-5ms over the network.</p>
+            <p><strong>Cost:</strong> Free if you already have a Postgres instance. But you're adding write load to your primary database.</p>
+            <p><strong>Downside:</strong> Adds load to your transactional database. Under heavy write contention, the idempotency table can become a bottleneck. Consider a separate read replica or a dedicated instance.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>Redis &mdash; Best for raw speed</h3>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p><strong>Atomic write:</strong> <code>SET idempotency:{key} "processing" NX EX 86400</code>. <code>NX</code> means "only set if not exists." Returns <code>nil</code> if key already claimed.</p>
+            <p><strong>TTL:</strong> Built-in with <code>EX</code> (seconds) or <code>PX</code> (milliseconds).</p>
+            <p><strong>Latency:</strong> Sub-millisecond. Fastest option by far.</p>
+            <p><strong>Cost:</strong> ElastiCache starts at ~$12/month for a cache.t3.micro. Upstash offers pay-per-request at $0.20 per 100k commands.</p>
+            <p><strong>Downside:</strong> Data loss risk. If Redis restarts without persistence (AOF/RDB), all in-flight idempotency keys disappear. Use Redis Cluster with AOF <code>appendfsync everysec</code> for durability, or accept the small window of risk.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>The Danger Zone: Concurrent Duplicate Requests</h2>
+
+        <p>Here's the scenario that breaks naive implementations. Two identical requests arrive at the same millisecond. If your idempotency check is read-then-write (instead of compare-and-set), both reads see "no existing key," both proceed to execute, and you get a double charge.</p>
+      </div>
+
+      <!-- Before/After Comparison -->
+      <div class="compare-grid">
+        <div class="compare-card bad">
+          <div class="compare-label">Broken: Read-then-write</div>
+          <div class="code-body" style="font-size:0.78rem"><span class="cmt">// RACE CONDITION</span>
+<span class="kw">const</span> exists = <span class="kw">await</span> db.<span class="fn">get</span>(key);
+<span class="kw">if</span> (!exists) {
+  <span class="kw">await</span> <span class="fn">processPayment</span>();  <span class="cmt">// Both execute!</span>
+  <span class="kw">await</span> db.<span class="fn">set</span>(key, result);
+}</div>
+        </div>
+        <div class="compare-card good">
+          <div class="compare-label">Safe: Compare-and-set</div>
+          <div class="code-body" style="font-size:0.78rem"><span class="cmt">// ATOMIC</span>
+<span class="kw">const</span> claimed = <span class="kw">await</span> db.<span class="fn">set</span>(
+  key, <span class="str">'processing'</span>,
+  { <span class="prop">NX</span>: <span class="kw">true</span> }  <span class="cmt">// Only one wins</span>
+);
+<span class="kw">if</span> (claimed) {
+  <span class="kw">await</span> <span class="fn">processPayment</span>();
+}</div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <p>The difference: a single atomic operation that claims the key and checks existence in one step. No gap between "check" and "claim" for another request to slip through.</p>
+
+        <h2>Try It Yourself: The Retry Simulator</h2>
+        <p>This simulator lets you see idempotency in action. Send requests, toggle idempotency on/off, and watch how duplicate requests are handled.</p>
+      </div>
+
+      <!-- Interactive 5: Request Retry Simulator -->
+      <div class="simulator" id="retrySim">
+        <div class="simulator-title">&#9881; API Request Simulator</div>
+        <div class="simulator-desc">Send payment requests and see how duplicates are handled with and without idempotency protection.</div>
+        <div class="toggle-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="idempotencyToggle" checked>
+            <div class="toggle-track"></div>
+            <div class="toggle-knob"></div>
+          </label>
+          <span class="toggle-label">Idempotency enabled</span>
+        </div>
+        <div class="sim-controls">
+          <button class="sim-btn primary" id="simSend">Send POST /payments</button>
+          <button class="sim-btn" id="simRetry">Retry (same key)</button>
+          <button class="sim-btn danger" id="simFlood">Flood (5x concurrent)</button>
+          <button class="sim-btn" id="simReset">Reset</button>
+        </div>
+        <div class="sim-log" id="simLog">
+          <div class="log-dim">Waiting for requests...</div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>Edge Cases That Will Bite You</h2>
+
+        <p>The basic pattern is straightforward. The edge cases are where teams get burned. I've hit each of these in production.</p>
+      </div>
+
+      <!-- Interactive 6: Expandable Edge Cases -->
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>1. Key reuse across different payloads</h3>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p>Client sends <code>Idempotency-Key: abc</code> with <code>{ amount: 50 }</code>, then reuses the same key with <code>{ amount: 100 }</code>. Should you return the cached $50 response? Execute the $100 request?</p>
+            <p><strong>The answer:</strong> Return a 422 error. Hash the request body and store it alongside the key. On retry, compare the hash. If it doesn't match, the client is misusing the key. Stripe does exactly this and returns <code>"idempotency_key_in_use"</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>2. Handler crashes mid-execution</h3>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p>The key is claimed (status: "processing"), but the handler throws before storing the response. Now the key is stuck. Every retry returns 409 "in progress" forever.</p>
+            <p><strong>The fix:</strong> Add a <code>locked_at</code> timestamp. If a key has been "processing" for more than 60 seconds, consider it abandoned. Allow the next request to re-claim it. This is a lease pattern &mdash; the lock expires if the holder dies.</p>
+            <div class="code-block" style="margin-top:1rem">
+              <div class="code-header"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span><span>lease-check.ts</span></div>
+              <div class="code-body"><span class="kw">const</span> <span class="prop">LEASE_TIMEOUT</span> = <span class="num">60_000</span>; <span class="cmt">// 60 seconds</span>
+<span class="kw">if</span> (
+  existing.status === <span class="str">'processing'</span> &&
+  Date.<span class="fn">now</span>() - existing.lockedAt > <span class="prop">LEASE_TIMEOUT</span>
+) {
+  <span class="cmt">// Lease expired, re-claim the key</span>
+  <span class="kw">await</span> <span class="fn">reclaimKey</span>(key);
+}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>3. TTL is too short</h3>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p>You set a 1-hour TTL. Client retries after 2 hours (mobile app that went to background). The key expired. The request executes again. Double charge.</p>
+            <p><strong>The fix:</strong> 24-hour minimum TTL. For financial operations, consider 7 days. Match your TTL to your longest realistic retry window. Stripe uses 24 hours. For webhook retries that can span days, store the idempotency record permanently in your domain table instead.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="expand-section" data-expand>
+        <div class="expand-header">
+          <h3>4. Natural vs. synthetic idempotency keys</h3>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          <div class="expand-content">
+            <p>UUIDs work, but they push the deduplication responsibility to the client. If the client generates a new UUID per retry, idempotency is defeated.</p>
+            <p><strong>Better approach:</strong> Use natural keys when possible. For a payment, the key could be <code>user:{userId}:order:{orderId}</code>. The same user paying for the same order always produces the same key, regardless of retries. This makes idempotency automatic &mdash; no client cooperation needed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>How Stripe Does It</h2>
+
+        <p>Stripe's idempotency implementation is the gold standard. Here's what they do that most teams skip:</p>
+
+        <ul>
+          <li><strong>Body fingerprinting:</strong> They hash the request body and reject retries with different bodies using the same key.</li>
+          <li><strong>In-progress locking:</strong> Concurrent duplicates receive a 409 while the first request is executing.</li>
+          <li><strong>Stored responses:</strong> The full HTTP response (status code + body) is cached, not just a boolean "done" flag.</li>
+          <li><strong>24-hour TTL:</strong> Keys expire after 24 hours. Long enough for any reasonable retry window, short enough to not bloat storage.</li>
+          <li><strong>Client-generated keys:</strong> The client sends <code>Idempotency-Key</code> as a header. Server never generates keys &mdash; that would defeat the purpose.</li>
+        </ul>
+
+        <div class="callout">
+          <strong>Copy this exactly.</strong> Unless you have a specific reason to deviate, Stripe's model is battle-tested across billions of API calls. Don't get creative with your idempotency implementation.
+        </div>
+
+        <h2>Quick Knowledge Check</h2>
+      </div>
+
+      <!-- Interactive 7: Quiz -->
+      <div class="quiz-card" id="quiz1">
+        <div class="quiz-question">A client sends the same idempotency key with a different request body. What should the server do?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" data-correct="false">Execute the new request and update the cached response</button>
+          <button class="quiz-option" data-correct="false">Return the original cached response (ignore the new body)</button>
+          <button class="quiz-option" data-correct="true">Return a 422 error indicating key reuse with different parameters</button>
+          <button class="quiz-option" data-correct="false">Generate a new key automatically and process the request</button>
+        </div>
+        <div class="quiz-explanation">
+          Returning a 422 (or 400) is the correct approach. The client is either misusing the key or has a bug. Silently executing would break idempotency. Silently returning the old response would give the client wrong data for their actual request. The error surfaces the problem immediately. Stripe returns <code>"idempotency_key_in_use"</code> in this case.
+        </div>
+      </div>
+
+      <div class="quiz-card" id="quiz2">
+        <div class="quiz-question">Which storage operation is safe for concurrent idempotency checks?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" data-correct="false">SELECT then INSERT in a transaction</button>
+          <button class="quiz-option" data-correct="true">INSERT ... ON CONFLICT DO NOTHING (single atomic operation)</button>
+          <button class="quiz-option" data-correct="false">Check a local in-memory cache before writing to the database</button>
+          <button class="quiz-option" data-correct="false">Use a mutex lock in application code</button>
+        </div>
+        <div class="quiz-explanation">
+          <code>INSERT ... ON CONFLICT DO NOTHING</code> is a single atomic database operation. SELECT-then-INSERT has a race window between the two statements, even inside a transaction (unless you use SERIALIZABLE isolation, which has its own costs). In-memory caches don't work across multiple server instances. Application-level mutexes don't work across processes or machines.
+        </div>
+      </div>
+
+      <div class="prose">
+        <h2>The Implementation Checklist</h2>
+
+        <p>Here's what to do Monday morning. This is the minimal viable idempotency setup for any POST endpoint that creates resources or triggers side effects:</p>
+
+        <ul>
+          <li><strong>Accept <code>Idempotency-Key</code> header</strong> on all POST/PATCH endpoints that have side effects.</li>
+          <li><strong>Use atomic compare-and-set</strong> to claim keys. No read-then-write.</li>
+          <li><strong>Store the full response</strong> (status code + body), not just a flag.</li>
+          <li><strong>Hash the request body</strong> and reject mismatched retries with 422.</li>
+          <li><strong>Set a 24-hour TTL</strong> minimum. 7 days for financial operations.</li>
+          <li><strong>Add a lease timeout</strong> (60s) for stuck "processing" keys.</li>
+          <li><strong>Return 409</strong> for concurrent in-flight duplicates.</li>
+          <li><strong>Log every cache hit</strong> with the original request ID for debugging.</li>
+          <li><strong>Make the key optional</strong> on non-critical endpoints. Required on payments, transfers, anything involving money.</li>
+        </ul>
+
+        <div class="callout-gold callout">
+          <strong>For your client SDK:</strong> Generate the idempotency key on the first attempt and reuse it for all retries. Store it alongside the request in your retry queue. If you're using Axios, add a request interceptor that attaches a key from a Map keyed by request URL + body hash.
+        </div>
+
+        <h2>When NOT to Use Idempotency Keys</h2>
+
+        <p>Idempotency keys add latency (one extra database round-trip) and storage cost. Don't use them where you don't need them:</p>
+
+        <ul>
+          <li><strong>Read-only endpoints.</strong> GET is already idempotent.</li>
+          <li><strong>Full-replacement PUTs.</strong> If your PUT replaces the entire resource, it's naturally idempotent.</li>
+          <li><strong>Deletes with no side effects.</strong> Deleting an already-deleted resource is a no-op.</li>
+          <li><strong>Internal service-to-service calls with message queues.</strong> If you're using SQS with deduplication IDs, the queue handles idempotency for you.</li>
+        </ul>
+
+        <p>Use idempotency keys on: payment creation, account creation, order submission, email/notification triggers, any operation where a duplicate would cause real-world harm.</p>
+
+        <h2>Measuring Success</h2>
+
+        <p>After implementing idempotency, track three metrics:</p>
+
+        <ul>
+          <li><strong>Cache hit rate</strong> &mdash; percentage of requests that returned a cached response. Baseline: 0.1-2% for a well-behaved system. If it's higher, your clients are retrying too aggressively.</li>
+          <li><strong>409 rate</strong> &mdash; concurrent duplicates. Should be near zero. If it spikes, you have a client bug (rapid-fire requests) or a webhook delivery issue.</li>
+          <li><strong>Duplicate side-effect rate</strong> &mdash; the metric you actually care about. Count double charges, double emails, double account creations. This should be zero after deployment.</li>
+        </ul>
+
+        <p>We went from 0.3% duplicate charge rate to zero within a week of deploying idempotency middleware. The 409 rate settled at 0.02%, all from legitimate concurrent retries during network partitions. The extra DynamoDB cost was $4.50/month.</p>
+
+        <div class="callout">
+          <strong>The bottom line:</strong> Idempotency is not optional for any API that handles money, sends notifications, or creates user-visible state. The implementation takes a day. The alternative is explaining to 340 customers why they got charged twice.
+        </div>
+      </div>
+
+    </article>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 Pardeep Dhingra. Built with curiosity.</p>
+  </footer>
+
+  <script>
+    // Nav toggle
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', function() { links.classList.toggle('open'); });
+    links.querySelectorAll('a').forEach(function(a) { a.addEventListener('click', function() { links.classList.remove('open'); }); });
+
+    // Expandable sections
+    document.querySelectorAll('[data-expand]').forEach(function(section) {
+      section.querySelector('.expand-header').addEventListener('click', function() {
+        section.classList.toggle('open');
+      });
+    });
+
+    // Tabs
+    document.querySelectorAll('.tab-container').forEach(function(container) {
+      var btns = container.querySelectorAll('.tab-btn');
+      var panels = container.querySelectorAll('.tab-panel');
+      btns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          btns.forEach(function(b) { b.classList.remove('active'); });
+          panels.forEach(function(p) { p.classList.remove('active'); });
+          btn.classList.add('active');
+          document.getElementById(btn.dataset.tab).classList.add('active');
+        });
+      });
+    });
+
+    // Flow diagram
+    (function() {
+      var details = {
+        client: '<strong>Step 1: Client generates a UUID v4</strong> and attaches it as <code>Idempotency-Key</code> header. The same key is reused for every retry of this specific request. If the client generates a new key per retry, idempotency is defeated.',
+        lookup: '<strong>Step 2: Server looks up the key</strong> in the idempotency store (DynamoDB, Postgres, or Redis). This must be a single atomic operation &mdash; not a separate read followed by a write.',
+        decide: '<strong>Step 3: Cache hit or miss?</strong> If the key exists with status "completed," return the cached response. If "processing," return 409. If not found, claim it with a conditional write.',
+        execute: '<strong>Step 4: Execute the handler.</strong> On cache miss, run the actual business logic (charge the card, create the user, send the email). Store the full response (status + body) when done.',
+        respond: '<strong>Step 5: Return the response.</strong> First request gets a fresh response. Retries get the identical cached response. The client can\'t tell the difference &mdash; that\'s the point.'
+      };
+      var nodes = document.querySelectorAll('.flow-node');
+      var detail = document.getElementById('flow-detail');
+      nodes.forEach(function(node) {
+        node.addEventListener('click', function() {
+          nodes.forEach(function(n) { n.classList.remove('active'); });
+          node.classList.add('active');
+          detail.innerHTML = details[node.dataset.step];
+          detail.classList.add('visible');
+        });
+      });
+    })();
+
+    // Impact counter animation
+    (function() {
+      var observed = false;
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting && !observed) {
+            observed = true;
+            document.querySelectorAll('.impact-number[data-target]').forEach(function(el) {
+              var target = parseInt(el.dataset.target);
+              var duration = 1500;
+              var start = performance.now();
+              function tick(now) {
+                var progress = Math.min((now - start) / duration, 1);
+                var eased = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.floor(target * eased);
+                if (progress < 1) requestAnimationFrame(tick);
+                else el.textContent = target;
+              }
+              requestAnimationFrame(tick);
+            });
+          }
+        });
+      }, { threshold: 0.3 });
+      var grid = document.getElementById('impactGrid');
+      if (grid) observer.observe(grid);
+    })();
+
+    // Request Retry Simulator
+    (function() {
+      var log = document.getElementById('simLog');
+      var toggle = document.getElementById('idempotencyToggle');
+      var chargeCount = 0;
+      var currentKey = null;
+      var keyStore = {};
+      var requestId = 0;
+
+      function uuid() {
+        return 'ik_' + Math.random().toString(36).substring(2, 10);
+      }
+
+      function addLog(msg, cls) {
+        if (log.querySelector('.log-dim')) log.innerHTML = '';
+        var div = document.createElement('div');
+        div.className = cls || '';
+        div.innerHTML = msg;
+        log.appendChild(div);
+        log.scrollTop = log.scrollHeight;
+      }
+
+      function timestamp() {
+        return new Date().toISOString().split('T')[1].split('.')[0];
+      }
+
+      function processRequest(key, idempotent) {
+        requestId++;
+        var rid = 'req_' + requestId;
+        addLog('[' + timestamp() + '] <span class="log-info">POST /api/payments</span> ' + rid + (key ? ' key=' + key : ''), '');
+
+        if (idempotent && key) {
+          if (keyStore[key]) {
+            addLog('[' + timestamp() + '] <span class="log-warn">CACHE HIT</span> &mdash; Returning stored response (charge ' + keyStore[key] + '). No new charge created.', '');
+            addLog('[' + timestamp() + '] <span class="log-ok">&rarr; 200 OK</span> { charge: "' + keyStore[key] + '", cached: true }', '');
+            return;
+          }
+        }
+
+        chargeCount++;
+        var chargeId = 'ch_' + Math.random().toString(36).substring(2, 8);
+        if (idempotent && key) {
+          keyStore[key] = chargeId;
+          addLog('[' + timestamp() + '] <span class="log-info">KEY STORED</span> &mdash; ' + key + ' &rarr; ' + chargeId, '');
+        }
+        addLog('[' + timestamp() + '] <span class="log-ok">&rarr; 200 OK</span> { charge: "' + chargeId + '" }', '');
+
+        if (chargeCount > 1 && !idempotent) {
+          addLog('[' + timestamp() + '] <span class="log-err">WARNING: ' + chargeCount + ' total charges! Customer billed $' + (chargeCount * 99) + '.00</span>', '');
+        }
+      }
+
+      document.getElementById('simSend').addEventListener('click', function() {
+        currentKey = uuid();
+        chargeCount = 0;
+        keyStore = {};
+        addLog('<br><span class="log-dim">&mdash;&mdash;&mdash; New payment attempt &mdash;&mdash;&mdash;</span>', '');
+        addLog('[' + timestamp() + '] <span class="log-dim">Generated key: ' + currentKey + '</span>', '');
+        processRequest(currentKey, toggle.checked);
+      });
+
+      document.getElementById('simRetry').addEventListener('click', function() {
+        if (!currentKey) {
+          addLog('[' + timestamp() + '] <span class="log-err">No active request to retry. Click "Send" first.</span>', '');
+          return;
+        }
+        addLog('[' + timestamp() + '] <span class="log-warn">RETRY</span> with same key: ' + currentKey, '');
+        processRequest(currentKey, toggle.checked);
+      });
+
+      document.getElementById('simFlood').addEventListener('click', function() {
+        currentKey = uuid();
+        chargeCount = 0;
+        keyStore = {};
+        addLog('<br><span class="log-dim">&mdash;&mdash;&mdash; Flood test (5 concurrent) &mdash;&mdash;&mdash;</span>', '');
+        addLog('[' + timestamp() + '] <span class="log-dim">Key: ' + currentKey + '</span>', '');
+        for (var i = 0; i < 5; i++) {
+          processRequest(currentKey, toggle.checked);
+        }
+        if (toggle.checked) {
+          addLog('[' + timestamp() + '] <span class="log-ok">Result: 1 charge created. 4 cache hits. Customer billed $99.00</span>', '');
+        } else {
+          addLog('[' + timestamp() + '] <span class="log-err">Result: 5 charges created! Customer billed $495.00</span>', '');
+        }
+      });
+
+      document.getElementById('simReset').addEventListener('click', function() {
+        log.innerHTML = '<div class="log-dim">Waiting for requests...</div>';
+        chargeCount = 0;
+        currentKey = null;
+        keyStore = {};
+        requestId = 0;
+      });
+    })();
+
+    // Quiz logic
+    document.querySelectorAll('.quiz-card').forEach(function(card) {
+      var answered = false;
+      card.querySelectorAll('.quiz-option').forEach(function(opt) {
+        opt.addEventListener('click', function() {
+          if (answered) return;
+          answered = true;
+          var correct = opt.dataset.correct === 'true';
+          opt.classList.add(correct ? 'correct' : 'wrong');
+          if (!correct) {
+            card.querySelector('[data-correct="true"]').classList.add('correct');
+          }
+          card.querySelector('.quiz-explanation').classList.add('visible');
+        });
+      });
+    });
+  </script>
+
+  <!-- Firebase + Engagement -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="/blog/components/firebase-config.js"></script>
+  <script src="/blog/components/engagement.js"></script>
+
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" id="lightbox">
+    <button class="lightbox-close" aria-label="Close">&times;</button>
+    <img src="" alt="">
+  </div>
+  <script>
+  (function(){
+    var overlay = document.getElementById("lightbox");
+    var lbImg = overlay.querySelector("img");
+    var lbClose = overlay.querySelector(".lightbox-close");
+    document.querySelectorAll("img").forEach(function(img){
+      if (img.closest(".nav") || img.closest(".lightbox-overlay")) return;
+      img.setAttribute("data-lightbox","");
+    });
+    document.addEventListener("click", function(e){
+      var img = e.target.closest("img[data-lightbox]");
+      if (!img) return;
+      e.preventDefault(); e.stopPropagation();
+      lbImg.src = img.src; lbImg.alt = img.alt || "";
+      overlay.classList.add("active");
+      document.body.style.overflow = "hidden";
+    });
+    function closeLightbox(){
+      overlay.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+    lbClose.addEventListener("click", closeLightbox);
+    overlay.addEventListener("click", function(e){ if(e.target===overlay) closeLightbox(); });
+    document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeLightbox(); });
+  })();
+  </script>
+
+</body>
+</html>

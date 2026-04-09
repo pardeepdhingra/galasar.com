@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CI/CD Pipelines That Actually Work — Pardeep Dhingra</title>
+    <meta name="description" content="Practical patterns for CI/CD pipelines that are fast, reliable, and actually ship code safely. Test layering, artifact promotion, rollback strategies, and an interactive pipeline simulator.">
+    <link rel="canonical" href="https://pardeepbuilds.com/blog/cicd-pipelines-that-work">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "CI/CD Pipelines That Actually Work",
+      "description": "Practical patterns for CI/CD pipelines that are fast, reliable, and actually ship code safely. Test layering, artifact promotion, rollback strategies, and an interactive pipeline simulator.",
+      "author": {
+        "@type": "Person",
+        "name": "Pardeep Dhingra",
+        "url": "https://pardeepbuilds.com"
+      },
+      "datePublished": "2026-04-08",
+      "dateModified": "2026-04-08",
+      "url": "https://pardeepbuilds.com/blog/cicd-pipelines-that-work",
+      "publisher": {
+        "@type": "Person",
+        "name": "Pardeep Dhingra"
+      },
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://pardeepbuilds.com/blog/cicd-pipelines-that-work"
+      }
+    }
+    </script>
+
+    <style>
+        .back-link {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            color: var(--text-dim); text-decoration: none; font-size: 0.85rem;
+            margin-bottom: 1.5rem; transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+        .blog-meta {
+            display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .blog-item-author {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.8rem; color: var(--text-dim); margin-bottom: 2.5rem;
+        }
+        .blog-item-author img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+        .blog-item-author strong { color: var(--text-body); font-weight: 550; }
+
+        .prose { font-size: 0.95rem; line-height: 1.8; color: var(--text-body); }
+        .prose p { margin-bottom: 1.25rem; }
+        .prose h2 {
+            font-size: 1.35rem; font-weight: 700; color: var(--text);
+            margin: 2.5rem 0 1rem; letter-spacing: -0.02em;
+        }
+        .prose h3 {
+            font-size: 1.1rem; font-weight: 600; color: var(--accent);
+            margin: 2rem 0 0.75rem;
+        }
+        .prose strong { color: var(--text); font-weight: 600; }
+        .prose code {
+            font-family: var(--font-mono); background: rgba(95,202,201,0.08);
+            padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.85em;
+            color: var(--accent);
+        }
+        .prose ul { margin: 0 0 1.25rem 1.5rem; }
+        .prose li { margin-bottom: 0.4rem; line-height: 1.7; }
+
+        .callout {
+            padding: 1.25rem 1.5rem; background: rgba(95,202,201,0.06);
+            border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0; font-size: 0.9rem; color: var(--text-body); line-height: 1.7;
+        }
+        .callout-warn {
+            background: rgba(239,68,68,0.06); border-left-color: #ef4444;
+        }
+        .callout-gold {
+            background: rgba(174,154,100,0.08); border-left-color: #ae9a64;
+        }
+
+        .code-block {
+            background: #0a0a0c; border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden; margin: 1.5rem 0;
+        }
+        .code-header {
+            display: flex; align-items: center; gap: 8px; padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border); font-size: 0.75rem;
+            color: var(--text-dim); font-family: var(--font-mono);
+        }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .code-dot.r { background: #ef4444; }
+        .code-dot.y { background: #eab308; }
+        .code-dot.g { background: #22c55e; }
+        .code-body {
+            padding: 1rem 1.25rem; font-family: var(--font-mono);
+            font-size: 0.82rem; line-height: 1.7; color: var(--text-body);
+            overflow-x: auto; white-space: pre;
+        }
+        .code-body .kw { color: var(--accent); }
+        .code-body .str { color: #ae9a64; }
+        .code-body .cmt { color: var(--text-dim); font-style: italic; }
+        .code-body .fn { color: #c084fc; }
+        .code-body .prop { color: #60a5fa; }
+        .code-body .num { color: #c084fc; }
+
+        .stat-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
+            margin: 2rem 0;
+        }
+        .stat-card {
+            background: var(--bg-chat); border: 1px solid var(--border);
+            border-radius: 12px; padding: 1.25rem; text-align: center;
+        }
+        .stat-card .stat-num {
+            font-size: 2rem; font-weight: 700; color: var(--accent);
+            font-family: var(--font-mono); line-height: 1;
+        }
+        .stat-card .stat-label {
+            font-size: 0.78rem; color: var(--text-dim); margin-top: 0.4rem; line-height: 1.4;
+        }
+
+        /* ─── Interactive 1: Pipeline Simulator ─── */
+        #pipeline-sim {
+            background: #0a0a0c; border: 1px solid var(--border);
+            border-radius: 16px; padding: 1.5rem; margin: 2rem 0;
+        }
+        #pipeline-sim h3 {
+            margin: 0 0 0.25rem; font-size: 1rem; color: var(--text);
+        }
+        #pipeline-sim p.sim-desc {
+            font-size: 0.82rem; color: var(--text-dim); margin: 0 0 1.25rem;
+        }
+        .sim-controls {
+            display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem;
+        }
+        .sim-btn {
+            padding: 0.45rem 1rem; border-radius: 8px; border: 1px solid var(--border);
+            background: var(--bg-chat); color: var(--text-body);
+            font-family: var(--font-mono); font-size: 0.8rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .sim-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .sim-btn.primary {
+            background: var(--accent); color: #0f0f10; border-color: var(--accent); font-weight: 600;
+        }
+        .sim-btn.primary:hover { opacity: 0.85; }
+        .sim-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .pipeline-stages {
+            display: flex; gap: 0; align-items: stretch; flex-wrap: wrap;
+        }
+        .pipeline-stage {
+            flex: 1; min-width: 100px; background: var(--bg-chat);
+            border: 1px solid var(--border); position: relative;
+            overflow: hidden;
+        }
+        .pipeline-stage:first-child { border-radius: 10px 0 0 10px; }
+        .pipeline-stage:last-child { border-radius: 0 10px 10px 0; }
+        .pipeline-stage + .pipeline-stage { border-left: none; }
+
+        .stage-header {
+            padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border);
+            font-size: 0.72rem; font-family: var(--font-mono); color: var(--text-dim);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .stage-status-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: var(--border);
+            transition: background 0.3s;
+        }
+        .stage-status-dot.running { background: #eab308; animation: pulse 1s infinite; }
+        .stage-status-dot.pass { background: #22c55e; }
+        .stage-status-dot.fail { background: #ef4444; }
+        .stage-status-dot.skip { background: var(--text-dim); }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        .stage-jobs {
+            padding: 0.5rem 0.75rem; display: flex; flex-direction: column; gap: 0.35rem;
+        }
+        .stage-job {
+            font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-dim);
+            padding: 0.25rem 0.5rem; border-radius: 4px;
+            border: 1px solid transparent; transition: all 0.3s;
+            display: flex; align-items: center; gap: 0.4rem;
+        }
+        .stage-job::before { content: '○'; font-size: 0.65rem; }
+        .stage-job.running { color: #eab308; border-color: rgba(234,179,8,0.2); background: rgba(234,179,8,0.05); }
+        .stage-job.running::before { content: '●'; animation: pulse 1s infinite; }
+        .stage-job.pass { color: #22c55e; border-color: rgba(34,197,94,0.2); background: rgba(34,197,94,0.05); }
+        .stage-job.pass::before { content: '✓'; }
+        .stage-job.fail { color: #ef4444; border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.05); }
+        .stage-job.fail::before { content: '✗'; }
+        .stage-job.skip { opacity: 0.4; }
+        .stage-job.skip::before { content: '–'; }
+
+        .stage-progress {
+            height: 3px; background: var(--border); position: absolute; bottom: 0; left: 0; right: 0;
+        }
+        .stage-progress-bar {
+            height: 100%; background: var(--accent); width: 0%; transition: width 0.3s linear;
+        }
+
+        .sim-log {
+            margin-top: 1rem; background: rgba(0,0,0,0.4); border-radius: 8px;
+            padding: 0.75rem 1rem; font-family: var(--font-mono); font-size: 0.75rem;
+            color: var(--text-dim); max-height: 120px; overflow-y: auto; line-height: 1.6;
+        }
+        .sim-log .log-ok { color: #22c55e; }
+        .sim-log .log-err { color: #ef4444; }
+        .sim-log .log-warn { color: #eab308; }
+        .sim-log .log-info { color: var(--accent); }
+
+        .sim-badge {
+            display: inline-block; padding: 0.2rem 0.6rem; border-radius: 100px;
+            font-size: 0.72rem; font-family: var(--font-mono); font-weight: 600;
+            background: rgba(95,202,201,0.1); color: var(--accent); border: 1px solid rgba(95,202,201,0.2);
+            margin-left: 0.5rem;
+        }
+
+        /* ─── Interactive 2: Before/After Toggle ─── */
+        .compare-widget {
+            border: 1px solid var(--border); border-radius: 16px;
+            overflow: hidden; margin: 2rem 0;
+        }
+        .compare-tabs {
+            display: flex; border-bottom: 1px solid var(--border);
+        }
+        .compare-tab {
+            flex: 1; padding: 0.75rem 1rem; text-align: center;
+            font-size: 0.82rem; font-family: var(--font-mono);
+            cursor: pointer; color: var(--text-dim);
+            border-bottom: 2px solid transparent; transition: all 0.2s;
+            background: transparent; border-top: none; border-left: none; border-right: none;
+        }
+        .compare-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .compare-tab:first-child { border-right: 1px solid var(--border); }
+        .compare-panel { display: none; padding: 1.25rem; }
+        .compare-panel.active { display: block; }
+
+        .timeline {
+            display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .tl-row {
+            display: flex; align-items: center; gap: 0.75rem;
+            font-size: 0.8rem; font-family: var(--font-mono);
+        }
+        .tl-label { width: 140px; flex-shrink: 0; color: var(--text-dim); font-size: 0.73rem; }
+        .tl-bar {
+            flex: 1; height: 22px; border-radius: 4px; position: relative;
+            display: flex; align-items: center; padding: 0 0.5rem;
+            font-size: 0.7rem; font-weight: 600; overflow: hidden;
+        }
+        .tl-bar.bad { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
+        .tl-bar.ok { background: rgba(34,197,94,0.12); color: #22c55e; border: 1px solid rgba(34,197,94,0.2); }
+        .tl-bar.warn { background: rgba(234,179,8,0.1); color: #eab308; border: 1px solid rgba(234,179,8,0.2); }
+        .tl-total {
+            margin-top: 1rem; padding: 0.75rem 1rem; border-radius: 8px;
+            font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600;
+            display: flex; justify-content: space-between;
+        }
+        .tl-total.bad { background: rgba(239,68,68,0.08); color: #ef4444; border: 1px solid rgba(239,68,68,0.15); }
+        .tl-total.ok { background: rgba(34,197,94,0.08); color: #22c55e; border: 1px solid rgba(34,197,94,0.15); }
+
+        /* ─── Interactive 3: Accordion Deep-Dives ─── */
+        .accordion { margin: 2rem 0; }
+        .accordion-item {
+            border: 1px solid var(--border); border-radius: 10px;
+            margin-bottom: 0.5rem; overflow: hidden;
+        }
+        .accordion-header {
+            width: 100%; text-align: left; padding: 1rem 1.25rem;
+            background: var(--bg-chat); border: none; cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.9rem; font-weight: 600; color: var(--text);
+            transition: background 0.2s;
+        }
+        .accordion-header:hover { background: rgba(95,202,201,0.05); }
+        .accordion-header .acc-icon {
+            width: 22px; height: 22px; border-radius: 50%;
+            border: 1px solid var(--border); display: flex; align-items: center;
+            justify-content: center; font-size: 0.7rem; color: var(--text-dim);
+            flex-shrink: 0; transition: transform 0.3s, border-color 0.2s;
+        }
+        .accordion-item.open .accordion-header .acc-icon {
+            transform: rotate(45deg); border-color: var(--accent); color: var(--accent);
+        }
+        .accordion-body {
+            max-height: 0; overflow: hidden; transition: max-height 0.4s ease;
+        }
+        .accordion-item.open .accordion-body { max-height: 1200px; }
+        .accordion-content {
+            padding: 1.25rem; border-top: 1px solid var(--border);
+            font-size: 0.87rem; color: var(--text-body); line-height: 1.7;
+        }
+        .accordion-content code {
+            font-family: var(--font-mono); background: rgba(95,202,201,0.08);
+            padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.83em; color: var(--accent);
+        }
+        .accordion-content pre {
+            background: #0a0a0c; border: 1px solid var(--border);
+            border-radius: 8px; padding: 1rem; overflow-x: auto;
+            font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.65;
+            color: var(--text-body); margin: 0.75rem 0; white-space: pre;
+        }
+
+        /* ─── Checklist ─── */
+        .checklist-widget {
+            background: var(--bg-chat); border: 1px solid var(--border);
+            border-radius: 16px; padding: 1.5rem; margin: 2rem 0;
+        }
+        .checklist-widget h3 {
+            margin: 0 0 0.25rem; font-size: 1rem; color: var(--text);
+        }
+        .checklist-widget .cl-desc {
+            font-size: 0.82rem; color: var(--text-dim); margin: 0 0 1.25rem;
+        }
+        .cl-item {
+            display: flex; align-items: flex-start; gap: 0.75rem;
+            padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+            cursor: pointer; user-select: none;
+        }
+        .cl-item:last-child { border-bottom: none; }
+        .cl-box {
+            width: 18px; height: 18px; border: 1.5px solid var(--border);
+            border-radius: 4px; flex-shrink: 0; margin-top: 2px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .cl-item.checked .cl-box {
+            background: var(--accent); border-color: var(--accent); color: #0f0f10;
+        }
+        .cl-item.checked .cl-box::after { content: '✓'; font-size: 0.7rem; font-weight: 700; }
+        .cl-text { font-size: 0.85rem; color: var(--text-body); line-height: 1.5; }
+        .cl-item.checked .cl-text { text-decoration: line-through; color: var(--text-dim); }
+        .cl-category {
+            font-size: 0.72rem; font-family: var(--font-mono); color: var(--accent);
+            text-transform: uppercase; letter-spacing: 0.06em; margin: 1rem 0 0.25rem;
+            padding: 0.25rem 0; border-bottom: 1px solid rgba(95,202,201,0.15);
+        }
+        .cl-category:first-of-type { margin-top: 0; }
+        .cl-progress {
+            margin-top: 1rem; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;
+        }
+        .cl-progress-fill {
+            height: 100%; background: var(--accent); border-radius: 2px;
+            transition: width 0.3s ease; width: 0%;
+        }
+        .cl-progress-label {
+            font-size: 0.75rem; color: var(--text-dim); font-family: var(--font-mono);
+            text-align: right; margin-top: 0.4rem;
+        }
+
+        @media (max-width: 640px) {
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+            .pipeline-stages { flex-direction: column; }
+            .pipeline-stage { border-radius: 0 !important; border-left: 1px solid var(--border) !important; }
+            .pipeline-stage + .pipeline-stage { border-top: none; }
+            .tl-label { width: 100px; font-size: 0.68rem; }
+        }
+    </style>
+</head>
+<body>
+
+  <nav class="nav scrolled">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">pardeep<span>builds</span></a>
+      <div class="nav-links" id="navLinks">
+        <a href="/">Home</a>
+        <a href="/portfolio">Portfolio</a>
+        <a href="/resume">Resume</a>
+        <a href="/blog" class="active">Blog</a>
+        <a href="/#contact">Contact</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <main>
+    <section class="section section-narrow" style="padding-top:9rem">
+
+      <a href="/blog" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 5 5 12 12 19"/></svg>
+        All posts
+      </a>
+
+      <div class="blog-meta">
+        <span class="blog-item-date">08 Apr 2026</span>
+        <span class="blog-item-tag">Engineering</span>
+        <span class="blog-item-readtime">13 min read</span>
+      </div>
+
+      <h1 class="section-title" style="font-size:2.2rem;margin-bottom:0.75rem">CI/CD Pipelines That Actually Work</h1>
+
+      <div class="blog-item-author">
+        <img src="/profile.png" alt="Pardeep Dhingra" onerror="this.style.display='none'">
+        By <strong>Pardeep Dhingra</strong>
+      </div>
+
+      <div class="prose">
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span>
+            <span>$ gh run list --workflow=deploy.yml --limit=10</span>
+          </div>
+          <div class="code-body"><span class="prop">STATUS    DURATION  BRANCH</span>
+<span class="log-err" style="color:#ef4444">✗ failure  47m 22s   main     deploy: bump version</span>
+<span class="log-err" style="color:#ef4444">✗ failure  43m 11s   main     fix: retry deploy</span>
+<span class="log-err" style="color:#ef4444">✗ failure  51m 04s   main     fix: actually fix deploy</span>
+<span class="log-ok" style="color:#22c55e">✓ success  44m 58s   main     Merge PR #211</span>
+<span class="log-ok" style="color:#22c55e">✓ success  46m 12s   main     Merge PR #208</span></div>
+        </div>
+
+        <p>That's a real pipeline history. Three failed deploys in a row, each taking 45+ minutes to tell you it failed. That's two and a half hours of developer time, wasted on feedback that could have arrived in four minutes.</p>
+
+        <p>Most CI/CD pipelines aren't bad because the tools are bad. GitHub Actions, CircleCI, and GitLab CI are all fine. They're bad because of structural decisions made early that compound over time: running everything serially, not caching, testing at the wrong layer, deploying the wrong artifact. This post is about the structural patterns that fix those problems.</p>
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-num">4×</div>
+            <div class="stat-label">median speedup from parallelising test stages</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">83%</div>
+            <div class="stat-label">of pipeline failures are caught in the first two stages when fail-fast is structured correctly</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">&lt; 5m</div>
+            <div class="stat-label">target for pre-merge feedback on any PR</div>
+          </div>
+        </div>
+
+        <h2>The Core Problem: Sequential Everything</h2>
+
+        <p>The default GitHub Actions workflow runs jobs one after another. Install dependencies. Lint. Test. Build. Deploy. Each step waits for the last. A 40-minute pipeline is almost always a sequential pipeline. Parallelism is the first thing to fix.</p>
+
+        <p>But parallelism alone isn't the answer. The second problem is <strong>running the wrong tests at the wrong time</strong>. Integration tests that spin up Docker, seed a database, and hit real endpoints take 8–15 minutes. Running those on every push to a feature branch is expensive and slow. Unit tests that run in-process take 30 seconds. You want those on every commit. The architecture of your pipeline should match the architecture of your test suite.</p>
+
+        <h2>Test Layers and When to Run Them</h2>
+
+        <p>This is the most important structural decision you'll make. Three layers, three triggers:</p>
+
+        <div class="callout">
+          <strong>Layer 1 — Unit tests:</strong> in-process, no network, no database. Target: under 60 seconds. Run on every push to every branch.<br><br>
+          <strong>Layer 2 — Integration tests:</strong> real database (Dockerised), real queues, fake HTTP. Target: under 5 minutes. Run on PRs targeting main and on main itself.<br><br>
+          <strong>Layer 3 — E2E tests:</strong> real browser, deployed environment, real APIs. Target: under 15 minutes. Run on merge to main, before promoting to production.
+        </div>
+
+        <p>Most teams run all three layers on every push. That's the behaviour you want for Layer 1, not for all three. An E2E suite on a feature branch PR creates 15 minutes of noise for a change that might be one line. Worse, E2E tests are flaky by nature — network timeouts, race conditions, timing issues. You don't want flaky gates blocking feature branch pushes.</p>
+
+        <h2>Fail Fast: The Gate Structure</h2>
+
+        <p>A well-structured pipeline has explicit gates. Pass a gate: proceed. Fail a gate: stop, report, and stop wasting compute. The fail-fast structure looks like this:</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span>
+            <span>.github/workflows/ci.yml (simplified structure)</span>
+          </div>
+          <div class="code-body"><span class="cmt"># Gate 1: Fast checks — should complete in under 2 minutes</span>
+<span class="prop">jobs</span>:
+  <span class="prop">fast-checks</span>:
+    <span class="prop">runs-on</span>: <span class="str">ubuntu-latest</span>
+    <span class="prop">steps</span>:
+      - <span class="prop">uses</span>: <span class="str">actions/checkout@v4</span>
+      - <span class="prop">uses</span>: <span class="str">actions/setup-node@v4</span>
+        <span class="prop">with</span>: { <span class="prop">node-version</span>: <span class="str">'20'</span>, <span class="prop">cache</span>: <span class="str">'npm'</span> }
+      - <span class="prop">run</span>: npm ci --prefer-offline
+      - <span class="prop">run</span>: npm run lint
+      - <span class="prop">run</span>: npm run typecheck
+      - <span class="prop">run</span>: npm run test:unit
+
+<span class="cmt"># Gate 2: Integration — only runs if Gate 1 passed</span>
+  <span class="prop">integration</span>:
+    <span class="prop">needs</span>: [<span class="str">fast-checks</span>]
+    <span class="prop">runs-on</span>: <span class="str">ubuntu-latest</span>
+    <span class="prop">services</span>:
+      <span class="prop">postgres</span>:
+        <span class="prop">image</span>: <span class="str">postgres:16-alpine</span>
+        <span class="prop">env</span>: { <span class="prop">POSTGRES_PASSWORD</span>: <span class="str">test</span> }
+    <span class="prop">steps</span>:
+      - <span class="prop">uses</span>: <span class="str">actions/checkout@v4</span>
+      - <span class="prop">run</span>: npm ci --prefer-offline
+      - <span class="prop">run</span>: npm run test:integration
+
+<span class="cmt"># Gate 3: Build artifact — only runs if Gate 2 passed</span>
+  <span class="prop">build</span>:
+    <span class="prop">needs</span>: [<span class="str">integration</span>]
+    <span class="prop">runs-on</span>: <span class="str">ubuntu-latest</span>
+    <span class="prop">steps</span>:
+      - <span class="prop">run</span>: npm run build
+      - <span class="prop">uses</span>: <span class="str">actions/upload-artifact@v4</span>
+        <span class="prop">with</span>: { <span class="prop">name</span>: <span class="str">dist-${{ github.sha }}</span>, <span class="prop">path</span>: <span class="str">dist/</span> }</div>
+        </div>
+
+        <p>The <code>needs</code> key is the gate. Gate 2 will not run if Gate 1 fails. Gate 3 will not run if Gate 2 fails. This means a lint error surfaces in 90 seconds, not 45 minutes.</p>
+
+        <h2>Artifact Promotion, Not Rebuilding</h2>
+
+        <p>This is the single most underused pattern. Most pipelines build the application separately for staging and production. Same source commit. Two builds. Two slightly different binaries. This is wrong.</p>
+
+        <p><strong>What you actually want:</strong> build once, promote the same artifact through environments. The artifact is a Docker image tagged with the git SHA, or a zip file, or an S3 object. The same bytes that ran in staging are the bytes that go to production. No rebuild means no chance that a different dependency version, environment variable, or build toolchain version sneaks in.</p>
+
+        <div class="callout-gold callout">
+          <strong>The rule:</strong> one commit SHA → one build artifact. The artifact is immutable. What changes between environments is configuration, not code. If you rebuild for each environment, you're not doing continuous delivery — you're doing continuous building.
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span>
+            <span>Artifact promotion with Docker + ECR</span>
+          </div>
+          <div class="code-body"><span class="cmt"># Build job: runs once, tags with git SHA</span>
+<span class="prop">build</span>:
+  <span class="prop">steps</span>:
+    - <span class="prop">run</span>: |
+        docker build -t <span class="str">$ECR_REPO:${{ github.sha }}</span> .
+        docker push <span class="str">$ECR_REPO:${{ github.sha }}</span>
+
+<span class="cmt"># Deploy-staging: downloads the same image, deploys with staging config</span>
+<span class="prop">deploy-staging</span>:
+  <span class="prop">needs</span>: [<span class="str">build</span>]
+  <span class="prop">environment</span>: <span class="str">staging</span>
+  <span class="prop">steps</span>:
+    - <span class="prop">run</span>: |
+        aws ecs update-service \
+          --cluster staging \
+          --service api \
+          --force-new-deployment \
+          --task-definition <span class="str">$ECR_REPO:${{ github.sha }}</span>
+
+<span class="cmt"># Deploy-prod: same image, different environment variables</span>
+<span class="prop">deploy-prod</span>:
+  <span class="prop">needs</span>: [<span class="str">deploy-staging</span>, <span class="str">e2e-staging</span>]
+  <span class="prop">environment</span>: <span class="str">production</span>
+  <span class="prop">steps</span>:
+    - <span class="prop">run</span>: |
+        aws ecs update-service \
+          --cluster production \
+          --service api \
+          --force-new-deployment \
+          --task-definition <span class="str">$ECR_REPO:${{ github.sha }}</span></div>
+        </div>
+
+        <h2>Interactive: Pipeline Simulator</h2>
+        <p>Run a deployment through different pipeline configurations. Watch how fail-fast changes the time-to-feedback.</p>
+
+      </div><!-- end prose -->
+
+      <!-- ─── Interactive 1: Pipeline Simulator ─── -->
+      <div id="pipeline-sim">
+        <h3>Pipeline Simulator <span class="sim-badge" id="sim-mode-badge">Optimised</span></h3>
+        <p class="sim-desc">Select a scenario, then run the pipeline. Watch the stages execute and see when failures surface.</p>
+
+        <div class="sim-controls">
+          <button class="sim-btn" onclick="setScenario('happy')">✓ Happy path</button>
+          <button class="sim-btn" onclick="setScenario('lint-fail')">✗ Lint failure</button>
+          <button class="sim-btn" onclick="setScenario('test-fail')">✗ Integration failure</button>
+          <button class="sim-btn" onclick="setScenario('deploy-fail')">✗ Deploy failure</button>
+          <button class="sim-btn primary" id="runBtn" onclick="runSim()">▶ Run Pipeline</button>
+        </div>
+
+        <div class="pipeline-stages" id="pipelineStages">
+          <!-- Stages injected by JS -->
+        </div>
+
+        <div class="sim-log" id="simLog">
+          <span style="color:var(--text-dim)">Select a scenario and press Run Pipeline…</span>
+        </div>
+      </div>
+
+      <div class="prose">
+
+        <h2>Caching: The Biggest Easy Win</h2>
+
+        <p>A cold <code>npm ci</code> on a node_modules directory with 800 packages takes 90–120 seconds. A cached restore takes 4 seconds. Over 100 pipeline runs a day, that's 24 minutes of wall-clock time saved per developer, per day.</p>
+
+        <p>The cache key strategy matters as much as caching itself. Cache on <code>package-lock.json</code> hash, not <code>package.json</code>. A lockfile change means real dependency changes and you want a fresh install. A <code>package.json</code> change might just be a description update — you don't need to bust the cache.</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span>
+            <span>Correct cache key strategy</span>
+          </div>
+          <div class="code-body"><span class="cmt"># Good: cache key on lockfile hash</span>
+- <span class="prop">uses</span>: <span class="str">actions/cache@v4</span>
+  <span class="prop">with</span>:
+    <span class="prop">path</span>: ~/.npm
+    <span class="prop">key</span>: <span class="str">npm-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}</span>
+    <span class="prop">restore-keys</span>: |
+      npm-${{ runner.os }}-
+
+<span class="cmt"># Also cache build outputs when inputs are deterministic</span>
+- <span class="prop">uses</span>: <span class="str">actions/cache@v4</span>
+  <span class="prop">with</span>:
+    <span class="prop">path</span>: .next/cache
+    <span class="prop">key</span>: <span class="str">nextjs-${{ runner.os }}-${{ hashFiles('**/*.ts','**/*.tsx','**/package-lock.json') }}</span>
+    <span class="prop">restore-keys</span>: |
+      nextjs-${{ runner.os }}-</div>
+        </div>
+
+        <p>TypeScript compilation output is also cacheable. If none of your <code>.ts</code> files changed, <code>tsc</code> doesn't need to run. The <code>incremental</code> compiler option in <code>tsconfig.json</code> writes a <code>.tsbuildinfo</code> file — cache that file and the cache key covers all TypeScript source. A 45-second typecheck becomes a 3-second cache restore on unchanged code.</p>
+
+        <h2>Deployment Strategies</h2>
+
+        <p>Getting code built and tested is half the problem. Getting it to production safely is the other half. The strategy you pick determines how a bad deploy affects users.</p>
+
+      </div><!-- end prose -->
+
+      <!-- ─── Interactive 2: Before/After Toggle ─── -->
+      <div class="compare-widget">
+        <div class="compare-tabs">
+          <button class="compare-tab active" onclick="switchPanel('before', this)">❌ Naive pipeline (sequential)</button>
+          <button class="compare-tab" onclick="switchPanel('after', this)">✅ Optimised pipeline (parallel + gated)</button>
+        </div>
+        <div class="compare-panel active" id="panel-before">
+          <p style="font-size:0.82rem;color:var(--text-dim);margin:0 0 1rem">Every step runs sequentially. A failing integration test surfaces after 22 minutes.</p>
+          <div class="timeline">
+            <div class="tl-row"><span class="tl-label">npm install</span><div class="tl-bar bad" style="width:18%">120s</div></div>
+            <div class="tl-row"><span class="tl-label">lint</span><div class="tl-bar bad" style="width:8%">50s</div></div>
+            <div class="tl-row"><span class="tl-label">typecheck</span><div class="tl-bar bad" style="width:10%">65s</div></div>
+            <div class="tl-row"><span class="tl-label">unit tests</span><div class="tl-bar bad" style="width:8%">55s</div></div>
+            <div class="tl-row"><span class="tl-label">npm install (again)</span><div class="tl-bar bad" style="width:18%">120s</div></div>
+            <div class="tl-row"><span class="tl-label">integration tests</span><div class="tl-bar bad" style="width:38%">8 min</div></div>
+            <div class="tl-row"><span class="tl-label">build</span><div class="tl-bar warn" style="width:18%">never reached if tests fail</div></div>
+          </div>
+          <div class="tl-total bad">
+            <span>Total time to know tests failed:</span>
+            <span>~22 min</span>
+          </div>
+        </div>
+        <div class="compare-panel" id="panel-after">
+          <p style="font-size:0.82rem;color:var(--text-dim);margin:0 0 1rem">Parallel fast-checks gate: lint, typecheck, and unit tests run in parallel. Integration only if they all pass.</p>
+          <div class="timeline">
+            <div class="tl-row"><span class="tl-label">npm ci (cached)</span><div class="tl-bar ok" style="width:3%">4s</div></div>
+            <div class="tl-row" style="align-items:flex-start">
+              <span class="tl-label">lint<br>typecheck<br>unit (parallel)</span>
+              <div style="flex:1">
+                <div class="tl-bar ok" style="width:90%;margin-bottom:4px">50s</div>
+                <div class="tl-bar ok" style="width:100%;margin-bottom:4px">65s ← slowest, sets gate time</div>
+                <div class="tl-bar ok" style="width:80%">55s</div>
+              </div>
+            </div>
+            <div class="tl-row"><span class="tl-label">integration</span><div class="tl-bar ok" style="width:38%">8 min (own runner)</div></div>
+          </div>
+          <div class="tl-total ok">
+            <span>Total time to know integration tests failed:</span>
+            <span>~9 min 30s</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose">
+
+        <h2>Rollback: Design It Before You Need It</h2>
+
+        <p>Every pipeline needs a rollback path that takes under five minutes to execute. If your rollback takes 45 minutes, it's not a rollback — it's a second deployment. During an incident at 2am, the pressure to just push a fix forward is immense. That pressure exists because rollback wasn't designed in advance.</p>
+
+        <p>The artifact promotion pattern makes rollback almost free. You already have the previous SHA's image in ECR. Rollback is just pointing the ECS task definition back at the previous image tag. No rebuild, no waiting for tests. The same pipeline that promoted that image already validated it.</p>
+
+        <div class="callout-warn callout">
+          <strong>Database migrations break simple rollbacks.</strong> If the current deploy ran a migration that dropped a column, rolling back the application code doesn't bring the column back. This is why migrations must be backward-compatible. Add the column first. Deploy. Use it. Drop the old column in a separate deploy days later. Never drop in the same deploy that adds.
+        </div>
+
+      </div><!-- end prose -->
+
+      <!-- ─── Interactive 3: Accordion Deep-Dives ─── -->
+      <div class="accordion">
+        <div class="accordion-item">
+          <button class="accordion-header" onclick="toggleAcc(this)">
+            <span>Blue-Green Deployments</span>
+            <span class="acc-icon">+</span>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-content">
+              <p>Blue-green maintains two identical production environments. Blue is live. Green gets the new deployment. When green is healthy, you flip the load balancer. Rollback is switching the load balancer back to blue — takes 30 seconds.</p>
+              <p>The cost: you need double the production capacity during deploys. For an ECS service with 4 tasks, you're running 8 tasks during the cutover window. On large instance types this matters. For Lambda or Fargate Spot, the cost is negligible.</p>
+              <pre><span style="color:var(--accent)"># ECS blue-green with CodeDeploy</span>
+aws deploy create-deployment \
+  --application-name my-app \
+  --deployment-group-name prod \
+  --revision imageFile=imageDetail.json
+
+<span style="color:var(--text-dim)"># The deployment group is configured with:
+# - deployment type: BLUE_GREEN
+# - termination wait time: 5 minutes (keep blue alive for quick rollback)
+# - traffic routing: AllAtOnce or Canary10Percent5Minutes</span></pre>
+              <p>The <code>terminationWaitTimeInMinutes</code> setting is critical. It keeps the old (blue) environment running after the switch, so rollback is instant for that window. Set it to 5–10 minutes minimum. After that window, the blue tasks are terminated and you're past easy rollback territory.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-header" onclick="toggleAcc(this)">
+            <span>Canary Deployments</span>
+            <span class="acc-icon">+</span>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-content">
+              <p>Send 5% of traffic to the new version. Watch error rates, latency, and business metrics for 10–15 minutes. If metrics are clean, increment to 25%, then 100%. If metrics degrade, roll back automatically.</p>
+              <p>This requires feature parity between the old and new version for the canary window. If you're changing the API contract, you can't run both versions simultaneously — that's a pre-condition for using canary deploys.</p>
+              <pre><span style="color:var(--accent)"># AWS Lambda weighted alias</span>
+aws lambda update-alias \
+  --function-name my-function \
+  --name LIVE \
+  --routing-config AdditionalVersionWeights={"2"=0.05}
+
+<span style="color:var(--text-dim)"># 5% of traffic goes to version 2, 95% stays on version 1
+# CloudWatch alarm triggers rollback automatically:
+# aws lambda update-alias --routing-config {} (back to 100% old)</span></pre>
+              <p>CloudWatch Alarms are the automation layer. Define the error rate threshold before the deploy. If <code>5xx error rate &gt; 1%</code> during the canary window, the alarm fires and CodeDeploy executes a rollback automatically. No human needed at 2am.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-header" onclick="toggleAcc(this)">
+            <span>Secret and Config Management in Pipelines</span>
+            <span class="acc-icon">+</span>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-content">
+              <p>Never bake secrets into Docker images. Never pass them as build args. The image layer history stores build args in plaintext. If the image is ever pushed to a shared registry, those secrets are exposed.</p>
+              <p>The correct pattern: inject secrets at runtime, not build time. Application reads from AWS Secrets Manager or Parameter Store on startup. The pipeline only needs the AWS credentials to deploy — it never touches the application secrets.</p>
+              <pre><span style="color:var(--accent)"># Bad: secret in build arg (ends up in layer history)</span>
+docker build --build-arg DATABASE_URL=$DATABASE_URL .
+
+<span style="color:var(--accent)"># Good: ECS task definition references Secrets Manager</span>
+{
+  "secrets": [
+    {
+      "name": "DATABASE_URL",
+      "valueFrom": "arn:aws:secretsmanager:us-east-1:123:secret:prod/db-url"
+    }
+  ]
+}</pre>
+              <p>For GitHub Actions specifically, use OIDC federation with AWS. The pipeline assumes an IAM role directly, no long-lived credentials needed. The role is scoped to exactly what the pipeline needs — push to ECR, update an ECS service. Nothing more.</p>
+              <pre><span style="color:var(--accent)"># OIDC-based role assumption (no ACCESS_KEY stored in GitHub)</span>
+- uses: aws-actions/configure-aws-credentials@v4
+  with:
+    role-to-assume: arn:aws:iam::123456789:role/github-ci-role
+    aws-region: us-east-1</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-header" onclick="toggleAcc(this)">
+            <span>Flaky Tests: The Silent Pipeline Killer</span>
+            <span class="acc-icon">+</span>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-content">
+              <p>A flaky test that fails 10% of the time sounds minor. At 50 pipeline runs per day, that's 5 pipeline failures per day that aren't real failures. Developers learn to re-run the pipeline. The pipeline becomes a speed bump, not a quality gate. Eventually, people stop trusting the pipeline entirely.</p>
+              <p>Flakiness comes from three sources: timing (async operations with fixed waits), shared state (tests that depend on execution order), and external dependencies (tests that hit real APIs). The fix for each:</p>
+              <ul>
+                <li><strong>Timing:</strong> replace <code>setTimeout(fn, 500)</code> with polling: <code>await waitFor(() =&gt; expect(el).toBeVisible(), { timeout: 5000 })</code></li>
+                <li><strong>Shared state:</strong> each test creates and tears down its own data. No shared fixtures, no global state mutation.</li>
+                <li><strong>External dependencies:</strong> mock them. If your integration test hits a real Stripe API, it's an E2E test masquerading as an integration test.</li>
+              </ul>
+              <p>Track flakiness as a metric. GitHub Actions doesn't expose this natively, but you can query the API: <code>gh run list --workflow=ci.yml --json conclusion,createdAt</code>. If a test suite's failure rate exceeds 2% on unchanged code, quarantine the offending tests and fix them before re-enabling.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose">
+
+        <h2>Pipeline Observability</h2>
+
+        <p>Your pipeline is production infrastructure. Treat it like one. Measure pipeline duration, failure rate per stage, flakiness rate, and cache hit rate. Graph these over time. A pipeline that was taking 8 minutes three months ago and now takes 22 minutes has a problem — you just haven't noticed because there's no dashboard.</p>
+
+        <p>GitHub Actions exposes timing data via the REST API. A simple script that runs nightly and posts to a Datadog custom metric tells you everything: which stage is growing, when the growth started, and what commit correlated with it. This is a two-hour investment that pays back in hours of debugging time saved.</p>
+
+        <div class="callout">
+          Correlate pipeline duration spikes with dependency additions. Nine times out of ten, a pipeline that started taking 8 minutes longer added a new npm package that has a large install-time compilation step (<code>node-gyp</code>, <code>sharp</code>, <code>canvas</code>). The fix is usually finding a pre-built binary or switching to a version that ships one.
+        </div>
+
+        <h2>The Monday Morning Checklist</h2>
+        <p>Run this against your current pipeline and fix what's broken.</p>
+
+      </div><!-- end prose -->
+
+      <!-- ─── Interactive 4: Checklist ─── -->
+      <div class="checklist-widget">
+        <h3>Pipeline Health Checklist</h3>
+        <p class="cl-desc">Click items to mark them done. Progress saves in your browser session.</p>
+
+        <div class="cl-category">Fail Fast</div>
+        <div class="cl-item" onclick="toggleCheck(this)"><div class="cl-box"></div><div class="cl-text">Lint and typecheck run in parallel with unit tests — not sequentially</div></div>
+        <div class="cl-item" onclick="toggleCheck(this)"><div class="cl-box"></div><div class="cl-text">Integration tests have a <code>needs</code> gate that requires unit tests to pass first</div></div>
+        <div class="cl-item" onclick="toggleCheck(this)"><div class="cl-box"></div><div class="cl-text">A lint failure surfaces in under 2 minutes on any branch</div></div>
+
+        <div class="cl-category">Caching</div>
+        <div class="cl-item" onclick="toggleCheck(this)"><div class="cl-box"></div><div class="cl-text">npm/yarn/pnpm cache keyed on lockfile hash, not package.json</div></div>
+        <div class="cl-item" onclick="toggleCheck(this)"><div class="cl-box"></div><div class="cl-text">TypeScript incremental build output (<code>.tsbuildinfo</code>) is cached</div></div>
+        <div class="cl-item" onclick="toggleCheck(this)"><div class="cl-box"></div><div class="cl-text">Docker layer cache is enabled (BuildKit + <code>cache-from</code>)</div></div>
+
+        <div class="cl-category">Artifact Promotion</div>
+        <div class="cl-item" onclick="toggleCheck(this)"><div class="cl-box"></div><div class="cl-text">Staging and production deploy the same image/artifact (tagged by SHA)</div></div>
+        <div class="cl-item" onclick="toggleCheck(this)"><div class="cl-box"></div><div class="cl-text">No rebuild step between staging and production deploy jobs</div></div>
+
+        <div class="cl-category">Secrets</div>
+        <div class="cl-item" onclick="toggleCheck(this)"><div class="cl-box"></div><div class="cl-text">No secrets passed as Docker build args</div></div>
+        <div class="cl-item" onclick="toggleCheck(this)"><div class="cl-box"></div><div class="cl-text">Pipeline uses OIDC role assumption (no long-lived access keys in GitHub secrets)</div></div>
+
+        <div class="cl-category">Rollback</div>
+        <div class="cl-item" onclick="toggleCheck(this)"><div class="cl-box"></div><div class="cl-text">Rollback procedure documented and tested in the last 30 days</div></div>
+        <div class="cl-item" onclick="toggleCheck(this)"><div class="cl-box"></div><div class="cl-text">Rollback takes under 5 minutes to execute</div></div>
+        <div class="cl-item" onclick="toggleCheck(this)"><div class="cl-box"></div><div class="cl-text">Database migrations are backward-compatible (never drop in same deploy as add)</div></div>
+
+        <div class="cl-category">Observability</div>
+        <div class="cl-item" onclick="toggleCheck(this)"><div class="cl-box"></div><div class="cl-text">Pipeline duration is tracked over time (not just pass/fail)</div></div>
+        <div class="cl-item" onclick="toggleCheck(this)"><div class="cl-box"></div><div class="cl-text">Flakiness rate is tracked — any suite above 2% failure on unchanged code is quarantined</div></div>
+
+        <div class="cl-progress"><div class="cl-progress-fill" id="clProgressFill"></div></div>
+        <div class="cl-progress-label" id="clProgressLabel">0 / 15 complete</div>
+      </div>
+
+      <div class="prose">
+
+        <h2>Putting It Together</h2>
+
+        <p>A pipeline that works has five properties: it's fast (under 5 minutes to pre-merge feedback), it's honest (a failure means something actually broke), it's safe (the artifact you test is the artifact you deploy), it's recoverable (rollback takes minutes), and it's visible (you can see its health trending over time).</p>
+
+        <p>None of these require exotic tooling. GitHub Actions, a caching strategy, a gate structure, OIDC auth, and a Dockerised artifact. The structure matters more than the platform. A well-structured pipeline on GitHub Actions beats a poorly structured pipeline on any enterprise CI tool.</p>
+
+        <p>Fix the structure first. Measure the metrics. Then optimise the slowest gate. Repeat.</p>
+
+      </div>
+
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 Pardeep Dhingra. Built with curiosity.</p>
+  </footer>
+
+  <script>
+    // Nav toggle
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => links.classList.toggle('open'));
+    links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
+
+    // ─── Interactive 2: Before/After Toggle ───
+    function switchPanel(id, btn) {
+      document.querySelectorAll('.compare-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.compare-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('panel-' + id).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // ─── Interactive 3: Accordion ───
+    function toggleAcc(header) {
+      const item = header.parentElement;
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.accordion-item.open').forEach(i => i.classList.remove('open'));
+      if (!isOpen) item.classList.add('open');
+    }
+
+    // ─── Interactive 4: Checklist ───
+    function toggleCheck(item) {
+      item.classList.toggle('checked');
+      updateProgress();
+    }
+    function updateProgress() {
+      const items = document.querySelectorAll('.cl-item');
+      const done = document.querySelectorAll('.cl-item.checked').length;
+      const pct = Math.round((done / items.length) * 100);
+      document.getElementById('clProgressFill').style.width = pct + '%';
+      document.getElementById('clProgressLabel').textContent = done + ' / ' + items.length + ' complete';
+    }
+
+    // ─── Interactive 1: Pipeline Simulator ───
+    const STAGES = [
+      {
+        name: 'fast-checks',
+        jobs: ['lint', 'typecheck', 'unit tests'],
+        parallelLabel: '(parallel)'
+      },
+      {
+        name: 'integration',
+        jobs: ['db migrate', 'api tests', 'queue tests'],
+        parallelLabel: ''
+      },
+      {
+        name: 'build',
+        jobs: ['docker build', 'push to ECR'],
+        parallelLabel: ''
+      },
+      {
+        name: 'deploy-staging',
+        jobs: ['ecs update', 'health check'],
+        parallelLabel: ''
+      },
+      {
+        name: 'deploy-prod',
+        jobs: ['canary 10%', 'canary 100%'],
+        parallelLabel: ''
+      }
+    ];
+
+    const SCENARIOS = {
+      'happy': {
+        label: 'Optimised',
+        stageDurations: [4000, 5000, 4000, 3000, 3500],
+        failAt: null,
+        failJob: null
+      },
+      'lint-fail': {
+        label: 'Optimised',
+        stageDurations: [3000, 5000, 4000, 3000, 3500],
+        failAt: 0,
+        failJob: 'lint'
+      },
+      'test-fail': {
+        label: 'Optimised',
+        stageDurations: [4000, 5000, 4000, 3000, 3500],
+        failAt: 1,
+        failJob: 'api tests'
+      },
+      'deploy-fail': {
+        label: 'Optimised',
+        stageDurations: [4000, 5000, 4000, 3000, 3500],
+        failAt: 3,
+        failJob: 'health check'
+      }
+    };
+
+    let currentScenario = 'happy';
+    let simRunning = false;
+
+    function setScenario(key) {
+      currentScenario = key;
+      renderStages();
+      clearLog();
+      document.getElementById('runBtn').disabled = false;
+    }
+
+    function renderStages(states) {
+      const container = document.getElementById('pipelineStages');
+      container.innerHTML = '';
+      STAGES.forEach((stage, si) => {
+        const el = document.createElement('div');
+        el.className = 'pipeline-stage';
+        el.id = 'stage-' + si;
+
+        const st = states ? states[si] : 'idle';
+        let dotClass = '';
+        if (st === 'running') dotClass = 'running';
+        else if (st === 'pass') dotClass = 'pass';
+        else if (st === 'fail') dotClass = 'fail';
+        else if (st === 'skip') dotClass = 'skip';
+
+        const jobsHtml = stage.jobs.map(j => {
+          const sc = SCENARIOS[currentScenario];
+          let jc = '';
+          if (st === 'running') jc = 'running';
+          else if (st === 'pass') jc = 'pass';
+          else if (st === 'fail') jc = (j === sc.failJob) ? 'fail' : 'pass';
+          else if (st === 'skip') jc = 'skip';
+          return `<div class="stage-job ${jc}">${j}</div>`;
+        }).join('');
+
+        el.innerHTML = `
+          <div class="stage-header">
+            <span>${stage.name}${stage.parallelLabel ? ' <span style="opacity:0.5;font-size:0.65rem">parallel</span>' : ''}</span>
+            <div class="stage-status-dot ${dotClass}"></div>
+          </div>
+          <div class="stage-jobs">${jobsHtml}</div>
+          <div class="stage-progress"><div class="stage-progress-bar" id="prog-${si}"></div></div>
+        `;
+        container.appendChild(el);
+      });
+    }
+
+    function clearLog() {
+      document.getElementById('simLog').innerHTML = '<span style="color:var(--text-dim)">Select a scenario and press Run Pipeline…</span>';
+    }
+
+    function log(msg, cls) {
+      const el = document.getElementById('simLog');
+      if (el.querySelector('span[style]')) el.innerHTML = '';
+      const line = document.createElement('div');
+      if (cls) line.className = cls;
+      line.textContent = msg;
+      el.appendChild(line);
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    async function runSim() {
+      if (simRunning) return;
+      simRunning = true;
+      document.getElementById('runBtn').disabled = true;
+      document.querySelectorAll('.sim-btn:not(#runBtn)').forEach(b => b.disabled = true);
+
+      const sc = SCENARIOS[currentScenario];
+      const stageStates = Array(STAGES.length).fill('idle');
+
+      log('[pipeline] Starting run — commit sha: a3f9c12', 'log-info');
+      await sleep(400);
+
+      for (let si = 0; si < STAGES.length; si++) {
+        if (si > 0 && stageStates[si - 1] === 'fail') {
+          stageStates[si] = 'skip';
+          for (let j = si; j < STAGES.length; j++) stageStates[j] = 'skip';
+          renderStages(stageStates);
+          log(`[${STAGES[si].name}] Skipped — upstream stage failed`, 'log-warn');
+          break;
+        }
+
+        stageStates[si] = 'running';
+        renderStages(stageStates);
+        log(`[${STAGES[si].name}] Stage started`, 'log-info');
+
+        const dur = sc.stageDurations[si];
+        const progBar = document.getElementById('prog-' + si);
+        const steps = 20;
+        const stepDur = dur / steps;
+
+        for (let s = 0; s <= steps; s++) {
+          if (progBar) progBar.style.width = (s * 100 / steps) + '%';
+          await sleep(stepDur);
+        }
+
+        const failed = sc.failAt === si;
+        stageStates[si] = failed ? 'fail' : 'pass';
+        renderStages(stageStates);
+
+        if (failed) {
+          log(`[${STAGES[si].name}] ✗ Job "${sc.failJob}" failed`, 'log-err');
+          log(`[pipeline] Run failed at stage ${si + 1}/${STAGES.length}. Time to failure: ~${Math.round(sc.stageDurations.slice(0, si + 1).reduce((a, b) => a + b, 0) / 1000)}s`, 'log-err');
+          break;
+        } else {
+          log(`[${STAGES[si].name}] ✓ All jobs passed`, 'log-ok');
+        }
+      }
+
+      const allPassed = stageStates.every(s => s === 'pass');
+      if (allPassed) {
+        log('[pipeline] ✓ Run complete — artifact promoted to production', 'log-ok');
+      }
+
+      simRunning = false;
+      document.getElementById('runBtn').disabled = false;
+      document.querySelectorAll('.sim-btn:not(#runBtn)').forEach(b => b.disabled = false);
+    }
+
+    renderStages();
+  </script>
+
+</body>
+</html>
